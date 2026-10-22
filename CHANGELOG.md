@@ -2,6 +2,13 @@
 
 Alterações relevantes de cada versão. Formato [Keep a Changelog](https://keepachangelog.com/pt-PT/1.1.0/), versões [SemVer](https://semver.org/lang/pt-PT/).
 
+## [1.3.3] - 2026-10-22
+
+Diagnóstico dos testes no GitHub mais completo. A app não muda.
+
+### Corrigido
+- Os registos dos testes no GitHub passam a ficar guardados e mostram a causa de cada falha.
+
 ## [1.3.2] - 2026-10-22
 
 Fotografias semelhantes deixa de falhar em silêncio.
@@ -121,6 +128,7 @@ Primeira versão pública.
 
 - Primeira versão: Análise Inteligente, Painel, limpeza, privacidade, otimização, manutenção, desinstalador, atualizador, extensões, Lente de Espaço, ficheiros grandes, duplicados e destruidor.
 
+[1.3.3]: https://github.com/viniciuslopesgit/prune/releases/tag/v1.3.3
 [1.3.2]: https://github.com/viniciuslopesgit/prune/releases/tag/v1.3.2
 [1.3.1]: https://github.com/viniciuslopesgit/prune/releases/tag/v1.3.1
 [1.3.0]: https://github.com/viniciuslopesgit/prune/releases/tag/v1.3.0

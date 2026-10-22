@@ -6,3 +6,5 @@ analytics.env
 # Cache do Python (scripts/stable.py e os testes)
 __pycache__/
 *.pyc
+# Definições pessoais de editores
+.vscode/

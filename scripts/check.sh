@@ -128,7 +128,8 @@ ok "debug, avisos tratados como erros"
 step "Testes de unidade"
 LOG=.build/check-tests.log
 if ! ./scripts/test.sh --enable-code-coverage >$LOG 2>&1; then
-    grep -E "✘|error:" $LOG | grep -v "^✘ Suite" | head -40
+    # ✘ é o teste que falhou; ↳ são os comentários dele (ex.: a causa registada pelo próprio teste).
+    grep -E "✘|↳|error:" $LOG | grep -vE "^✘ Suite|↳ (Testing Library|Target Platform)" | head -40
     fail "Há testes a falhar (registo completo em $LOG)."
 fi
 ok "$(grep -oE 'Test run with [0-9]+ tests in [0-9]+ suites' $LOG | sed 's/Test run with/passaram/; s/tests in/testes em/; s/suites/grupos/')"

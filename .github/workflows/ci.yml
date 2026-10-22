@@ -47,5 +47,6 @@ jobs:
         with:
           name: registos-${{ matrix.os }}
           path: .build/check-*.log
+          include-hidden-files: true   # .build é uma pasta oculta
           if-no-files-found: ignore
           retention-days: 14
