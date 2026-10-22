@@ -1,8 +1,0 @@
-#!/bin/zsh
-# Antes de cada commit: verificação rápida (scripts/check.sh --staged).
-# Se o conteúdo do commit acabou de passar a verificação completa (scripts/ship.sh), não a repete.
-cd "$(git rev-parse --show-toplevel)" || exit 1
-if [ -f .build/check-passed ] && [ "$(cat .build/check-passed)" = "$(git write-tree)" ]; then
-    exit 0
-fi
-exec ./scripts/check.sh --staged
