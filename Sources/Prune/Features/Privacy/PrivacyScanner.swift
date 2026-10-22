@@ -59,7 +59,7 @@ enum PrivacyScanner {
         items += files(["Downloads.plist"], base: safari, detail: "Histórico de transferências")
         items += files(["RecentlyClosedTabs.plist"], base: safari, detail: "Separadores fechados recentemente")
         items += files(["TopSites.plist"], base: safari, detail: "Sites mais visitados", selected: false)
-        if let i = FS.item(container.appendingPathComponent("Cookies"), name: "Cookies", detail: "Sessões iniciadas serão terminadas") { items.append(i) }
+        if let i = FS.item(container.appendingPathComponent("Cookies"), name: "Cookies", detail: "Termina as sessões iniciadas") { items.append(i) }
         if let i = FS.item(container.appendingPathComponent("Caches/com.apple.Safari"), name: "Cache do Safari", detail: "Cache de páginas web") { items.append(i) }
         if let i = FS.item(safari.appendingPathComponent("LocalStorage"), selected: false, name: "Armazenamento local", detail: "Dados guardados por sites") { items.append(i) }
         if let i = FS.item(container.appendingPathComponent("WebKit/WebsiteData"), selected: false, name: "Dados de sites", detail: "IndexedDB, Service Workers…") { items.append(i) }
@@ -68,9 +68,9 @@ enum PrivacyScanner {
         }
         return CleanCategory(
             id: "safari", name: "Safari", icon: "safari",
-            info: "Histórico, cookies e cache do Safari. O Safari tem de estar fechado.",
+            info: "Histórico, cookies e cache. Feche o Safari para limpar.",
             items: items,
-            warning: Permissions.hasFullDiskAccess ? nil : "Conceda Acesso Total ao Disco para ver todos os dados do Safari."
+            warning: Permissions.hasFullDiskAccess ? nil : "Dê Acesso Total ao Disco para ver todos os dados do Safari."
         )
     }
 
@@ -88,8 +88,8 @@ enum PrivacyScanner {
             items += files(["Visited Links"], base: profile, detail: "Ligações visitadas\(tag)")
             items += files(["Top Sites"], base: profile, detail: "Sites mais visitados\(tag)")
             items += files(["Shortcuts"], base: profile, detail: "Sugestões da barra de endereço\(tag)")
-            items += files(["Cookies", "Network/Cookies"], base: profile, detail: "Cookies — sessões serão terminadas\(tag)")
-            items += files(["Web Data"], base: profile, detail: "Dados de preenchimento automático (não inclui palavras-passe)\(tag)", selected: false)
+            items += files(["Cookies", "Network/Cookies"], base: profile, detail: "Cookies. Termina as sessões iniciadas\(tag)")
+            items += files(["Web Data"], base: profile, detail: "Preenchimento automático, sem palavras-passe\(tag)", selected: false)
             for cache in ["Cache", "Code Cache", "GPUCache", "Service Worker/CacheStorage"] {
                 if let i = FS.item(profile.appendingPathComponent(cache), name: cache, detail: "Cache\(tag)") { items.append(i) }
             }
@@ -98,7 +98,7 @@ enum PrivacyScanner {
         guard !items.isEmpty else { return nil }
         return CleanCategory(
             id: b.bundleID, name: b.name, icon: "globe",
-            info: "Histórico, cookies e caches do \(b.name). As palavras-passe e os marcadores nunca são tocados. O navegador tem de estar fechado.",
+            info: "Histórico, cookies e caches. Palavras-passe e marcadores ficam intactos. Feche o \(b.name) para limpar.",
             items: items
         )
     }
@@ -132,7 +132,7 @@ enum PrivacyScanner {
         guard !items.isEmpty else { return nil }
         return CleanCategory(
             id: "org.mozilla.firefox", name: "Firefox", icon: "flame",
-            info: "Histórico, cookies e cache do Firefox. Os marcadores e as palavras-passe são mantidos. O Firefox tem de estar fechado.",
+            info: "Histórico, cookies e cache. Palavras-passe e marcadores ficam intactos. Feche o Firefox para limpar.",
             items: items
         )
     }
@@ -159,12 +159,12 @@ enum PrivacyScanner {
         ))
         items.append(CleanItem(
             url: URL.home("Library/Caches/com.apple.QuickLook.thumbnailcache"), name: "Miniaturas do Quick Look", size: 4096,
-            detail: "Pré-visualizações em cache de ficheiros que abriu",
+            detail: "Pré-visualizações em cache",
             customAction: { await Shell.run("/usr/bin/qlmanage", ["-r", "cache"]).ok }
         ))
         return CleanCategory(
             id: "recent", name: "Itens recentes", icon: "clock",
-            info: "Listas de documentos, apps e servidores usados recentemente.",
+            info: "Documentos, apps e servidores usados recentemente.",
             items: items
         )
     }

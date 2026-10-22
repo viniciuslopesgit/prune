@@ -95,9 +95,8 @@ final class UninstallerModel {
         apps.removeAll { removedApps.contains($0) }
         checked.subtract(removedApps)
         if let f = focused, removedApps.contains(f) { focused = nil; leftovers = [] }
-        message = failed.isEmpty
-            ? "Removido: \(Fmt.bytes(freed))."
-            : "Removido \(Fmt.bytes(freed)). \(failed.count) item(ns) não puderam ser removidos."
+        message = "\(Fmt.bytes(freed)) libertados."
+            + (failed.isEmpty ? "" : " \(Fmt.count(failed.count, "item não foi removido", "itens não foram removidos")).")
         working = false
     }
 
@@ -106,7 +105,7 @@ final class UninstallerModel {
         working = true
         await quitIfRunning(app)
         let r = await Cleaner.remove(urls: leftovers.filter(\.selected).map(\.url), mode: AppSettings.shared.filesDeleteMode)
-        message = "\(app.name) foi reposta (\(Fmt.bytes(r.freed)) removidos)."
+        message = "\(app.name) reposta. \(Fmt.bytes(r.freed)) libertados."
         await focus(app)
         working = false
     }
@@ -117,7 +116,7 @@ final class UninstallerModel {
         let r = await Cleaner.remove(urls: selected.map(\.url), mode: AppSettings.shared.filesDeleteMode)
         let removed = Set(selected.map(\.url)).subtracting(r.failed)
         orphans.removeAll { removed.contains($0.url) }
-        message = "Restos removidos: \(Fmt.bytes(r.freed))."
+        message = "\(Fmt.bytes(r.freed)) libertados."
         working = false
     }
 }

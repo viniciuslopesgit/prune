@@ -18,7 +18,7 @@ struct DashboardView: View {
                         }
                         gaugeCard(title: "Memória", value: stats.memoryFraction, icon: "memorychip",
                                   lines: ["\(Fmt.bytes(stats.memoryUsed)) usados", "de \(Fmt.bytes(stats.memoryTotal)) · swap \(Fmt.bytes(stats.swapUsed))"]) {
-                            Button("Ver o que usa memória") {
+                            Button("Ver processos") {
                                 state.optimization.tab = .heavy
                                 state.optimization.sortByMemory = true
                                 state.selection = .optimization
@@ -27,7 +27,7 @@ struct DashboardView: View {
                         }
                         gaugeCard(title: "Processador", value: stats.cpu, icon: "cpu",
                                   lines: ["Temperatura: \(stats.thermalText)", "\(ProcessInfo.processInfo.activeProcessorCount) núcleos"]) {
-                            Button("Ver consumidores") {
+                            Button("Ver processos") {
                                 state.optimization.tab = .heavy
                                 state.selection = .optimization
                             }.buttonStyle(.bordered)
@@ -98,7 +98,7 @@ struct DashboardView: View {
                     if let c = b.cycleCount { row("Ciclos", "\(c)") }
                     if let cond = b.condition { row("Estado", cond == "Good" ? "Bom" : cond) }
                 } else {
-                    Text("Sem bateria (computador de secretária)").foregroundStyle(.secondary)
+                    Text("Sem bateria").foregroundStyle(.secondary)
                 }
                 Spacer(minLength: 0)
             }
@@ -148,7 +148,7 @@ struct DashboardView: View {
                     ForEach((security ?? SecurityStatus()).items) { securityItem($0) }
                 }
                 HStack(spacing: 6) {
-                    if let xp = security?.xprotectVersion { Text("XProtect (antimalware integrado) versão \(xp)") }
+                    if let xp = security?.xprotectVersion { Text("XProtect \(xp)") }
                     if let date = security?.checked { Text("· verificado \(Fmt.relative(date))") }
                 }
                 .font(.caption).foregroundStyle(.secondary)

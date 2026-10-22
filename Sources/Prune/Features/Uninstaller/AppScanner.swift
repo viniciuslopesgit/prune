@@ -146,7 +146,7 @@ enum AppScanner {
                 }
                 let lower = stem.lowercased()
                 guard pattern.firstMatch(in: stem, range: NSRange(stem.startIndex..., in: stem)) != nil else { continue }
-                if lower.hasPrefix("com.apple.") || lower.hasPrefix("apple.") || lower.hasPrefix("group.") { continue }
+                if systemPrefixes.contains(where: lower.hasPrefix) || lower == ownBundleID { continue }
                 let parts = lower.split(separator: ".")
                 if parts.count >= 2, vendors.contains("\(parts[0]).\(parts[1])") { continue }
                 // Ignora identificadores que pertencem (por prefixo) a apps ou componentes instalados.
@@ -160,6 +160,10 @@ enum AppScanner {
             CleanItem(url: $0, size: max($1, 1), selected: false, detail: $0.deletingLastPathComponent().displayPath)
         }.sorted { $0.size > $1.size }
     }
+
+    /// Domínios do macOS que não pertencem a nenhuma app (impressão, iCloud, grupos partilhados…).
+    private static let systemPrefixes = ["com.apple.", "apple.", "group.", "systemgroup.", "org.cups.", "com.openssh."]
+    private static let ownBundleID = Bundle.main.bundleIdentifier?.lowercased() ?? "app.prune.prune"
 
     /// Mesmo programador e produto (ex.: com.foo.app e com.foo.app-helper).
     private static func sharedVendorPrefix(_ a: String, _ b: String) -> Bool {

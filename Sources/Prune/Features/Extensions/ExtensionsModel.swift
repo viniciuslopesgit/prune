@@ -47,7 +47,7 @@ final class ExtensionsModel {
     func remove(_ ext: BrowserExtension) async {
         let bundleIDs = PrivacyScanner.browserBundleIDs.filter { ext.browser.hasPrefix($0.value) }.map(\.key)
         if bundleIDs.contains(where: { !NSRunningApplication.runningApplications(withBundleIdentifier: $0).isEmpty }) {
-            message = "Feche o \(ext.browser) antes de remover a extensão."
+            message = "Feche o \(ext.browser) para remover a extensão."
             return
         }
         let r = await Cleaner.remove(urls: [ext.url], mode: .trash)

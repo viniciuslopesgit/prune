@@ -23,4 +23,7 @@ enum Fmt {
     }
 
     static func percent(_ v: Double) -> String { String(format: "%.0f%%", v * 100) }
+
+    /// "1 item", "3 itens".
+    static func count(_ n: Int, _ one: String, _ many: String) -> String { "\(n) \(n == 1 ? one : many)" }
 }

@@ -40,9 +40,9 @@ struct SettingsView: View {
                         Spacer()
                         Button("Abrir Definições") { Permissions.openFullDiskAccessSettings() }
                     }
-                    Text("Com esta permissão o macOS deixa de pedir autorização para cada pasta (Documentos, Secretária, Transferências, dados de outras apps). Arraste o Prune para a lista em Privacidade e segurança ▸ Acesso total ao disco.")
+                    Text("Sem esta permissão, o macOS pede autorização para cada pasta protegida.")
                         .font(.caption).foregroundStyle(.secondary)
-                    Toggle("Mostrar o assistente ao abrir enquanto faltar a permissão", isOn: Binding(
+                    Toggle("Lembrar ao abrir enquanto faltar a permissão", isOn: Binding(
                         get: { !settings.fdaOnboardingDismissed }, set: { settings.fdaOnboardingDismissed = !$0 }))
                 }
             }
@@ -72,7 +72,7 @@ struct SettingsView: View {
                         }
                     }
                 } header: {
-                    Text("Ficheiros e pastas que o Prune nunca vai remover")
+                    Text("O Prune nunca remove estes ficheiros e pastas")
                 }
             }
             .formStyle(.grouped)

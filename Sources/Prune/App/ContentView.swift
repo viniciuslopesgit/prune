@@ -33,8 +33,8 @@ struct ContentView: View {
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(access == .needsRelaunch ? "Reabra o Prune" : "Acesso Total ao Disco").font(.caption.bold())
                                 Text(access == .needsRelaunch
-                                     ? "A permissão já está ativa; o macOS aplica-a ao reabrir a app."
-                                     : "Necessário para analisar Safari, Mail e outras pastas protegidas.").font(.caption2)
+                                     ? "Permissão ativa. Reabra o Prune para a aplicar."
+                                     : "Necessário para analisar Safari, Mail e pastas protegidas.").font(.caption2)
                                     .foregroundStyle(.secondary)
                             }
                         }
@@ -131,23 +131,23 @@ struct ContentView: View {
         case .systemJunk:
             CleanupModuleView(
                 model: state.systemJunk, module: m,
-                headline: "Liberte espaço ocupado por lixo",
-                message: "Remova caches, registos, ficheiros temporários e restos de programação que se acumulam com o uso diário.",
+                headline: "Liberte espaço no disco",
+                message: "Caches, registos e ficheiros temporários acumulam-se com o uso. O Prune encontra-os e remove-os com segurança.",
                 features: [("shippingbox", "Caches de apps e do sistema"), ("doc.text", "Registos e relatórios de falhas"),
-                           ("hammer", "Lixo do Xcode e de gestores de pacotes"), ("wrench.and.screwdriver", "Preferências e itens de arranque danificados")]
+                           ("hammer", "Xcode e gestores de pacotes"), ("wrench.and.screwdriver", "Preferências e itens de arranque danificados")]
             )
         case .mailAttachments:
             CleanupModuleView(
                 model: state.mail, module: m,
                 headline: "Recupere espaço do Mail",
-                message: "Remova cópias locais de anexos e ficheiros abertos a partir do Mail. As mensagens no servidor não são afetadas.",
-                features: [("paperclip", "Anexos que abriu no Mail"), ("envelope", "Cópias locais nas caixas de correio")]
+                message: "Remova cópias locais de anexos. As mensagens no servidor ficam intactas.",
+                features: [("paperclip", "Anexos abertos"), ("envelope", "Cópias locais nas caixas de correio")]
             )
         case .trashBins:
             CleanupModuleView(
                 model: state.trash, module: m,
                 headline: "Esvazie todos os Lixos",
-                message: "Esvazie o Lixo do disco de arranque e dos discos externos ligados, de uma só vez.",
+                message: "O Lixo do Mac e dos discos externos, de uma vez.",
                 features: [("trash", "Lixo do utilizador"), ("externaldrive", "Lixo de discos externos")],
                 cleanTitle: "Esvaziar"
             )
@@ -155,7 +155,7 @@ struct ContentView: View {
             CleanupModuleView(
                 model: state.privacy, module: m,
                 headline: "Apague o seu rasto digital",
-                message: "Limpe o histórico de navegação, cookies, caches e listas de itens recentes. Palavras-passe e marcadores nunca são tocados.",
+                message: "Histórico, cookies, caches e itens recentes. Palavras-passe e marcadores ficam intactos.",
                 features: [("safari", "Safari, Chrome, Firefox, Edge, Brave, Opera, Arc…"), ("clock", "Documentos e apps recentes"),
                            ("eye", "Miniaturas do Quick Look")]
             )

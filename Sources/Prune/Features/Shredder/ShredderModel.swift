@@ -12,7 +12,7 @@ final class ShredderModel {
 
     func add(_ urls: [URL]) {
         for u in urls where !items.contains(u) {
-            if SafetyGuard.canDelete(u) { items.append(u) } else { message = "\(u.lastPathComponent) está protegido e não pode ser destruído." }
+            if SafetyGuard.canDelete(u) { items.append(u) } else { message = "\(u.lastPathComponent) está protegido." }
         }
     }
 
@@ -25,7 +25,7 @@ final class ShredderModel {
         }
         let done = items.count - failed.count
         items = failed
-        message = failed.isEmpty ? "\(done) item(ns) destruídos de forma segura." : "\(done) destruídos · \(failed.count) não puderam ser destruídos."
+        message = failed.isEmpty ? "\(Fmt.count(done, "item destruído", "itens destruídos"))." : "\(Fmt.count(done, "item destruído", "itens destruídos")). \(Fmt.count(failed.count, "não foi destruído", "não foram destruídos"))."
         working = false
     }
 }

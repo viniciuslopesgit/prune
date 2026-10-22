@@ -11,14 +11,14 @@ struct AnalyticsConsentView: View {
                 LeafMark(size: 44)
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Ajudar a melhorar o Prune?").font(Theme.display(20))
-                    Text("Pode partilhar estatísticas anónimas de utilização. Ajudam a perceber que secções são úteis e o que corrigir.")
+                    Text("Partilhe estatísticas anónimas de utilização. Mostram-nos o que melhorar.")
                         .foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
                 }
             }
 
             VStack(alignment: .leading, spacing: 10) {
-                item("checkmark", Theme.leaf, "Que secções abre e quando faz uma análise ou limpeza")
-                item("checkmark", Theme.leaf, "Totais: espaço encontrado e libertado, número de itens")
+                item("checkmark", Theme.leaf, "Secções que usa, análises e limpezas")
+                item("checkmark", Theme.leaf, "Totais de espaço encontrado e libertado")
                 item("checkmark", Theme.leaf, "Versão do Prune e do macOS")
                 item("xmark", Theme.amber, "Nunca nomes de ficheiros, pastas, apps ou conteúdos")
             }
@@ -26,14 +26,14 @@ struct AnalyticsConsentView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(Theme.inset, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
 
-            Text("Os dados são enviados para o Google Analytics. Pode mudar de ideias a qualquer momento em Definições ▸ Geral ▸ Estatísticas.")
+            Text("Enviado para o Google Analytics. Mude a qualquer momento em Definições ▸ Geral.")
                 .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
 
             HStack {
                 Spacer()
                 Button("Não partilhar") { answer(false) }
                     .controlSize(.large)
-                Button("Partilhar estatísticas") { answer(true) }
+                Button("Partilhar") { answer(true) }
                     .controlSize(.large)
             }
         }

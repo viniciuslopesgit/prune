@@ -6,7 +6,7 @@ struct OptimizationView: View {
     var body: some View {
         @Bindable var model = state.optimization
         VStack(spacing: 0) {
-            ModuleHeader(module: .optimization, subtitle: "Controle o que arranca com o Mac e o que consome recursos") {
+            ModuleHeader(module: .optimization, subtitle: "O que arranca com o Mac e o que consome recursos") {
                 Button { Task { await model.load() } } label: { Label("Atualizar", systemImage: "arrow.clockwise") }.buttonStyle(.bordered)
             }
             Picker("", selection: $model.tab) {
@@ -47,13 +47,13 @@ struct OptimizationView: View {
             if model.loadingLoginItems && model.loginItems.isEmpty {
                 VStack(spacing: 10) {
                     ProgressView()
-                    Text("A pedir a lista ao macOS… Se aparecer um pedido de autorização para \"System Events\", aceite-o.")
+                    Text("A carregar… Se o macOS pedir acesso ao \"System Events\", aceite.")
                         .font(.callout).foregroundStyle(.secondary).multilineTextAlignment(.center)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity).padding()
             } else if model.loginItems.isEmpty {
                 EmptyStateView(icon: "person.badge.key", title: "Sem itens de início de sessão",
-                               message: "Não foram encontradas apps que abram automaticamente (pode ser preciso autorizar o acesso a \"System Events\").")
+                               message: "Nenhuma app abre automaticamente. Se esperava ver alguma, autorize o acesso ao \"System Events\".")
             } else {
                 List(model.loginItems) { item in
                     HStack(spacing: 10) {
@@ -71,7 +71,7 @@ struct OptimizationView: View {
             }
             Divider().opacity(0.3)
             HStack {
-                Text("Itens em segundo plano geridos pelo macOS aparecem nas Definições do Sistema.").font(.caption).foregroundStyle(.secondary)
+                Text("Os itens em segundo plano do macOS estão nas Definições do Sistema.").font(.caption).foregroundStyle(.secondary)
                 Spacer()
                 Button("Abrir Definições") { Permissions.openLoginItemsSettings() }.buttonStyle(.bordered)
             }

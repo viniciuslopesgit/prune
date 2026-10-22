@@ -44,7 +44,7 @@ final class UpdaterModel {
             case .sparkle:
                 // A app trata da atualização através do Sparkle ao abrir; se não, abre a transferência.
                 if let app = u.appURL {
-                    log.append("A abrir \(u.name) para instalar a atualização…")
+                    log.append("A abrir \(u.name) para atualizar…")
                     NSWorkspace.shared.openApplication(at: app, configuration: .init()) { _, _ in }
                 } else if let d = u.downloadURL {
                     NSWorkspace.shared.open(d)

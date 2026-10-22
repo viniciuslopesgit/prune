@@ -64,7 +64,7 @@ final class OptimizationModel {
 
     func remove(_ item: LoginItem) async {
         if !(await OptimizationService.removeLoginItem(item)) {
-            message = "Não foi possível remover \(item.name). Verifique a permissão de Automação para \"System Events\"."
+            message = "Não foi possível remover \(item.name). Autorize o Prune em Automação ▸ System Events."
         }
         loginItems = await OptimizationService.loginItems()
     }

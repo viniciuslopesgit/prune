@@ -12,8 +12,8 @@ struct SmartScanView: View {
                 HeroView(
                     module: .smartScan,
                     headline: "Bem-vindo ao Prune",
-                    message: "Uma análise do seu Mac num clique: o lixo que pode limpar e o estado das proteções do macOS.",
-                    features: [("externaldrive.badge.xmark", "Caches, registos e Lixo para limpar"),
+                    message: "Lixo para limpar e estado das proteções do macOS, num clique.",
+                    features: [("externaldrive.badge.xmark", "Caches, registos e Lixo"),
                                ("checkmark.shield", "Estado das proteções do macOS")]
                 ) {
                     Task { await model.scan() }
@@ -48,16 +48,16 @@ struct SmartScanView: View {
         HStack(spacing: 16) {
             ResultCard(
                 icon: "externaldrive.badge.xmark", title: "Limpeza",
-                value: Fmt.bytes(model.junkSize), caption: model.junk.isEmpty ? "Nada a limpar" : "de lixo para remover",
-                enabled: $model.runCleanup, colors: Module.systemJunk.colors,
+                value: Fmt.bytes(model.junkSize), caption: model.junk.isEmpty ? "Nada a limpar" : "para limpar",
+                enabled: $model.runCleanup,
                 review: { state.selection = .systemJunk }
             )
             // Proteção: só informação (estado das proteções do macOS), sem ações a executar.
             ResultCard(
                 icon: model.security.disabledCount == 0 ? "checkmark.shield" : "exclamationmark.shield", title: "Proteção",
-                value: model.security.disabledCount == 0 ? "Tudo ativo" : "\(model.security.disabledCount) desativada(s)",
-                caption: "\(model.security.activeCount) de \(model.security.items.count) proteções do macOS ativas",
-                enabled: nil, colors: Module.privacy.colors,
+                value: model.security.disabledCount == 0 ? "Tudo ativo" : "\(Fmt.count(model.security.disabledCount, "desativada", "desativadas"))",
+                caption: "\(model.security.activeCount) de \(model.security.items.count) proteções ativas",
+                enabled: nil,
                 review: { state.selection = .dashboard }
             )
         }
@@ -83,7 +83,6 @@ private struct ResultCard: View {
     let caption: String
     /// nil = cartão só informativo (sem interruptor).
     var enabled: Binding<Bool>?
-    let colors: [Color]
     let review: () -> Void
 
     var body: some View {
@@ -97,7 +96,7 @@ private struct ResultCard: View {
             Spacer()
             Text(value).font(Theme.display(38)).monospacedDigit().minimumScaleFactor(0.5).lineLimit(1)
             Text(caption).foregroundStyle(.secondary)
-            Button("Rever detalhes", action: review).buttonStyle(.bordered)
+            Button("Ver detalhes", action: review).buttonStyle(.bordered)
         }
         .padding(20)
         .frame(maxWidth: .infinity, minHeight: 260, maxHeight: 300)

@@ -12,20 +12,20 @@ struct UpdaterView: View {
                 ModuleHeader(module: .updater)
                 HeroView(
                     module: .updater, headline: "Mantenha as apps atualizadas",
-                    message: "Verifica as apps que se atualizam pelo site do programador (Sparkle) e os pacotes do Homebrew.",
+                    message: "Apps descarregadas da Internet e pacotes do Homebrew, num só lugar.",
                     features: [("globe", "Apps descarregadas da Internet"), ("mug", model.hasBrew ? "Apps e ferramentas do Homebrew" : "Homebrew (não instalado)"),
-                               ("bag", "Atalho para atualizações da App Store")],
+                               ("bag", "Atalho para a App Store")],
                     buttonTitle: "Verificar"
                 ) { Task { await model.check() } }
             } else {
-                ModuleHeader(module: .updater, subtitle: model.updates.isEmpty ? "Tudo atualizado" : "\(model.updates.count) atualização(ões) disponível(eis)") {
+                ModuleHeader(module: .updater, subtitle: model.updates.isEmpty ? "Tudo atualizado" : "\(Fmt.count(model.updates.count, "atualização disponível", "atualizações disponíveis"))") {
                     Button("App Store") { model.openAppStoreUpdates() }.buttonStyle(.bordered)
                     Button { Task { await model.check() } } label: { Image(systemName: "arrow.clockwise") }.buttonStyle(.bordered)
                 }
                 GlassPanel {
                     if model.updates.isEmpty {
                         EmptyStateView(icon: "checkmark.seal", title: "Todas as apps estão atualizadas",
-                                       message: "As apps da App Store são atualizadas na própria App Store.")
+                                       message: "As apps da App Store atualizam-se na App Store.")
                     } else {
                         List {
                             ForEach($model.updates) { $u in
@@ -57,7 +57,7 @@ struct UpdaterView: View {
                     }
                     .frame(height: 70).padding(.horizontal, 32)
                 }
-                ActionFooter(summary: "\(model.updates.filter(\.selected).count) selecionada(s)",
+                ActionFooter(summary: Fmt.count(model.updates.filter(\.selected).count, "selecionada", "selecionadas"),
                              buttonTitle: model.installing ? "A atualizar…" : "Atualizar",
                              disabled: model.installing || !model.updates.contains(where: \.selected)) {
                     Task { await model.updateSelected() }

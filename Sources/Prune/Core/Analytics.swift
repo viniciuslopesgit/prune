@@ -23,7 +23,7 @@ enum Analytics {
     }
 
     /// Texto que explica o que é enviado (Definições e pedido de consentimento).
-    nonisolated static let disclosure = "Envia ao Google Analytics que secções abre e quanto espaço liberta (só totais), a versão da app e do macOS. Nunca envia nomes de ficheiros, pastas ou apps. Pode desligar a qualquer momento."
+    nonisolated static let disclosure = "Secções usadas, espaço libertado (só totais) e versões da app e do macOS, enviados para o Google Analytics. Nunca nomes de ficheiros, pastas ou apps."
 
     /// Há chaves neste build (sem elas, a opção nem aparece).
     static var isAvailable: Bool { config != nil }

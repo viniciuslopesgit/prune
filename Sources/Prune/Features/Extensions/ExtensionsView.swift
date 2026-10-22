@@ -6,7 +6,7 @@ struct ExtensionsView: View {
     var body: some View {
         @Bindable var model = state.extensions
         VStack(spacing: 0) {
-            ModuleHeader(module: .extensions, subtitle: "Extensões, plug-ins e widgets instalados") {
+            ModuleHeader(module: .extensions, subtitle: "Extensões, plug-ins e widgets") {
                 Toggle("Mostrar do sistema", isOn: $model.showSystem).toggleStyle(.switch)
                 Button { Task { await model.load() } } label: { Image(systemName: "arrow.clockwise") }.buttonStyle(.bordered)
             }
@@ -76,7 +76,7 @@ struct ExtensionsView: View {
             let files = model.files[cat] ?? []
             if exts.isEmpty && files.isEmpty {
                 EmptyStateView(icon: cat.icon, title: "Nada instalado nesta categoria",
-                               message: model.showSystem ? nil : "Ative \"Mostrar do sistema\" para ver também as extensões da Apple.")
+                               message: model.showSystem ? nil : "Ative \"Mostrar do sistema\" para incluir as da Apple.")
             } else {
                 List {
                     if !exts.isEmpty {

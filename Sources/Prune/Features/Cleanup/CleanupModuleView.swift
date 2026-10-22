@@ -24,12 +24,12 @@ struct CleanupModuleView: View {
             case .cleaning:
                 ScanningView(module: module, title: "A limpar…", detail: model.progressText)
             case .results:
-                ModuleHeader(module: module, subtitle: model.categories.isEmpty ? nil : "Encontrado: \(Fmt.bytes(model.totalSize))") {
+                ModuleHeader(module: module, subtitle: model.categories.isEmpty ? nil : "\(Fmt.bytes(model.totalSize)) encontrados") {
                     Button { Task { await model.scan() } } label: { Label("Analisar de novo", systemImage: "arrow.clockwise") }
                         .buttonStyle(.bordered)
                 }
                 if model.categories.isEmpty {
-                    EmptyStateView(icon: "sparkles", title: "Está tudo limpo", message: "Não foi encontrado nada para remover.")
+                    EmptyStateView(icon: "sparkles", title: "Tudo limpo", message: "Nada para remover.")
                     Button("Voltar") { model.reset() }.buttonStyle(.bordered).padding(.bottom, 30)
                 } else {
                     results
@@ -37,7 +37,7 @@ struct CleanupModuleView: View {
             case .done:
                 DoneView(
                     module: module, title: "Concluído",
-                    message: "Foram libertados \(Fmt.bytes(model.report.freed)) (\(model.report.removed) itens).",
+                    message: "\(Fmt.bytes(model.report.freed)) libertados · \(Fmt.count(model.report.removed, "item", "itens")).",
                     failedCount: model.report.failed.count,
                     onRetryAdmin: { Task { await model.retryFailedAsAdmin() } },
                     onBack: { model.phase = model.categories.contains { !$0.items.isEmpty } ? .results : .idle }
@@ -51,7 +51,7 @@ struct CleanupModuleView: View {
             let blockers = model.runningBlockers
             if !blockers.isEmpty {
                 StatusBanner(
-                    text: "Feche \(blockers.compactMap(\.localizedName).joined(separator: ", ")) para limpar os dados com segurança.",
+                    text: "Feche \(blockers.compactMap(\.localizedName).joined(separator: ", ")) para limpar com segurança.",
                     icon: "exclamationmark.triangle", actionTitle: "Fechar apps"
                 ) { blockers.forEach { $0.terminate() } }
                 .padding(.horizontal, 32).padding(.bottom, 10)
@@ -79,14 +79,14 @@ struct CleanupModuleView: View {
             .padding(.bottom, 14)
 
             ActionFooter(
-                summary: "Selecionado: \(Fmt.bytes(model.selectedSize))",
+                summary: "\(Fmt.bytes(model.selectedSize)) selecionados",
                 buttonTitle: cleanTitle,
                 disabled: model.selectedCount == 0,
                 secondary: ("Selecionar tudo", { model.setAll(true) })
             ) { confirming = true }
         }
         .confirm("\(cleanTitle) \(Fmt.bytes(model.selectedSize))?", isPresented: $confirming,
-                 message: "Serão removidos \(model.selectedCount) itens.", button: cleanTitle) {
+                 message: "\(Fmt.count(model.selectedCount, "item será removido", "itens serão removidos")).", button: cleanTitle) {
             Task { await model.clean() }
         }
     }
@@ -97,7 +97,7 @@ struct CleanupModuleView: View {
             Image(systemName: cat.icon).frame(width: 22)
             VStack(alignment: .leading, spacing: 1) {
                 Text(cat.name).lineLimit(1)
-                Text("\(cat.items.count) itens").font(.caption).foregroundStyle(.secondary)
+                Text(Fmt.count(cat.items.count, "item", "itens")).font(.caption).foregroundStyle(.secondary)
             }
             Spacer()
             SizeLabel(bytes: cat.totalSize).font(.callout)
@@ -140,7 +140,7 @@ struct CleanupModuleView: View {
                     .listRowBackground(Color.clear)
                     .contextMenu {
                         Button("Mostrar no Finder") { FS.reveal(item.url) }
-                        Button("Ignorar sempre este item") {
+                        Button("Ignorar sempre") {
                             AppSettings.shared.ignoredPaths.append(item.url.path)
                             if item.selected { model.toggleItem(category: cat.id, item: item.id) }
                         }

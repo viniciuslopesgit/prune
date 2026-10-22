@@ -56,12 +56,16 @@ final class DuplicatesModel {
     }
 
     func removeMarked() async {
-        let urls = groups.flatMap(\.files).filter { marked.contains($0.id) }.map(\.url)
+        // Nunca apaga todas as cópias de um grupo: se estiverem todas marcadas, a primeira fica.
+        let urls = groups.flatMap { group -> [URL] in
+            let files = group.files.allSatisfy { marked.contains($0.id) } ? Array(group.files.dropFirst()) : group.files
+            return files.filter { marked.contains($0.id) }.map(\.url)
+        }
         let r = await Cleaner.remove(urls: urls, mode: AppSettings.shared.filesDeleteMode)
         let removed = Set(urls.map(\.path)).subtracting(r.failed.map(\.path))
         for i in groups.indices { groups[i].files.removeAll { removed.contains($0.id) } }
         groups.removeAll { $0.files.count < 2 }
         marked.subtract(removed)
-        message = "Libertados \(Fmt.bytes(r.freed))" + (r.failed.isEmpty ? "." : " · \(r.failed.count) falharam.")
+        message = "\(Fmt.bytes(r.freed)) libertados." + (r.failed.isEmpty ? "" : " \(Fmt.count(r.failed.count, "ficheiro não foi removido", "ficheiros não foram removidos")).")
     }
 }

@@ -64,10 +64,14 @@ final class CleanupModel {
         Analytics.track("clean_complete", ["module": analyticsName, "freed_mb": Analytics.mb(total.freed),
                                            "items_removed": total.removed, "failed": total.failed.count])
         let removed = Set(categories.flatMap { $0.items.filter(\.selected).map(\.url) }).subtracting(total.failed)
-        for i in categories.indices {
-            categories[i].items.removeAll { removed.contains($0.url) }
-        }
+        dropItems(removed)
         phase = .done
+    }
+
+    private func dropItems(_ urls: Set<URL>) {
+        for i in categories.indices { categories[i].items.removeAll { urls.contains($0.url) } }
+        categories.removeAll { $0.items.isEmpty }
+        if selectedCategory == nil { selectedCategoryID = categories.first?.id }
     }
 
     func retryFailedAsAdmin() async {
@@ -77,6 +81,7 @@ final class CleanupModel {
         report.freed += r.freed
         report.removed += r.removed
         report.failed = r.failed
+        dropItems(Set(failed).subtracting(r.failed))
     }
 
     func reset() {

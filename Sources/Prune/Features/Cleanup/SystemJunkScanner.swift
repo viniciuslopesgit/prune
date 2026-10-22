@@ -17,7 +17,7 @@ enum SystemJunkScanner {
         p.report("A analisar caches do utilizador…", force: true)
         cats.append(CleanCategory(
             id: "userCache", name: "Caches do utilizador", icon: "shippingbox",
-            info: "Ficheiros temporários criados pelas apps para acelerar o carregamento. São recriados quando necessário.",
+            info: "Ficheiros temporários das apps. São recriados quando necessário.",
             items: FS.childItems(of: lib.appendingPathComponent("Caches"), excluding: cacheExclusions.union(["Homebrew", "pip", "Yarn", "CocoaPods", "node-gyp", "ms-playwright", "com.apple.dt.Xcode"]))
         ))
 
@@ -26,21 +26,21 @@ enum SystemJunkScanner {
         if let i = cats.firstIndex(where: { $0.id == "userCache" }) {
             for j in cats[i].items.indices where running.contains(cats[i].items[j].name.lowercased()) {
                 cats[i].items[j].selected = false
-                cats[i].items[j].detail = "App aberta — feche-a para limpar com segurança"
+                cats[i].items[j].detail = "App aberta. Feche-a para limpar."
             }
         }
 
         p.report("A analisar caches do sistema…")
         cats.append(CleanCategory(
             id: "systemCache", name: "Caches do sistema", icon: "gearshape.2",
-            info: "Caches partilhados por todas as contas. Alguns podem requerer a palavra-passe de administrador.",
+            info: "Partilhados por todas as contas. Alguns pedem a palavra-passe de administrador.",
             items: FS.childItems(of: URL(fileURLWithPath: "/Library/Caches"), excluding: ["com.apple.iconservices", "com.apple.amsd"])
         ))
 
-        p.report("A analisar registos (logs)…")
+        p.report("A analisar registos…")
         cats.append(CleanCategory(
             id: "userLogs", name: "Registos do utilizador", icon: "doc.text",
-            info: "Registos de atividade das apps. Úteis apenas para diagnóstico.",
+            info: "Registos de atividade das apps. Só servem para diagnóstico.",
             items: FS.childItems(of: lib.appendingPathComponent("Logs"), excluding: ["DiagnosticReports"])
         ))
         cats.append(CleanCategory(
@@ -52,7 +52,7 @@ enum SystemJunkScanner {
         p.report("A analisar relatórios de falhas…")
         cats.append(CleanCategory(
             id: "crash", name: "Relatórios de falhas", icon: "exclamationmark.triangle",
-            info: "Relatórios gerados quando uma app falha ou bloqueia.",
+            info: "Gerados quando uma app falha ou bloqueia.",
             items: FS.childItems(of: lib.appendingPathComponent("Logs/DiagnosticReports"))
                 + FS.childItems(of: URL(fileURLWithPath: "/Library/Logs/DiagnosticReports"))
         ))
@@ -62,7 +62,7 @@ enum SystemJunkScanner {
         let twoDaysAgo = Date().addingTimeInterval(-2 * 86400)
         cats.append(CleanCategory(
             id: "temp", name: "Ficheiros temporários", icon: "clock.arrow.circlepath",
-            info: "Ficheiros temporários com mais de 2 dias que as apps deixaram para trás.",
+            info: "Ficheiros temporários com mais de 2 dias.",
             items: FS.childItems(of: tmp, excluding: ["Prune", "app.prune.Prune", "com.apple"], olderThan: twoDaysAgo)
         ))
 
@@ -72,7 +72,7 @@ enum SystemJunkScanner {
         p.report("A analisar caches de programação…")
         cats.append(devCaches())
 
-        p.report("A analisar atualizações e cópias de segurança de iPhone/iPad…")
+        p.report("A analisar ficheiros de iPhone e iPad…")
         cats.append(iosFiles())
 
         p.report("A procurar preferências danificadas…")
@@ -97,10 +97,10 @@ enum SystemJunkScanner {
         }
         if let i = FS.item(dev.appendingPathComponent("CoreSimulator/Caches"), name: "Caches do Simulador") { items.append(i) }
         if let i = FS.item(dev.appendingPathComponent("Xcode/UserData/Previews"), name: "Pré-visualizações SwiftUI") { items.append(i) }
-        items += FS.childItems(of: dev.appendingPathComponent("Xcode/Archives"), selected: false, detail: "Arquivo de compilação — confirme antes de remover")
+        items += FS.childItems(of: dev.appendingPathComponent("Xcode/Archives"), selected: false, detail: "Arquivo de compilação. Confirme antes de remover.")
         return CleanCategory(
             id: "xcode", name: "Lixo do Xcode", icon: "hammer",
-            info: "Dados de compilação, símbolos de dispositivos e caches do simulador. Os arquivos (Archives) não estão selecionados por defeito.",
+            info: "Dados de compilação, símbolos de dispositivos e caches do simulador. Os arquivos não vêm selecionados.",
             items: items
         )
     }
@@ -126,7 +126,7 @@ enum SystemJunkScanner {
         }
         return CleanCategory(
             id: "dev", name: "Caches de programação", icon: "chevron.left.forwardslash.chevron.right",
-            info: "Pacotes descarregados por gestores como npm, pip, Homebrew ou Gradle. São descarregados de novo quando necessário.",
+            info: "Pacotes de npm, pip, Homebrew, Gradle e outros. São descarregados de novo quando necessário.",
             items: items
         )
     }
@@ -147,10 +147,10 @@ enum SystemJunkScanner {
             return i
         }
         return CleanCategory(
-            id: "ios", name: "Ficheiros de iPhone/iPad", icon: "iphone",
-            info: "Atualizações de firmware descarregadas e cópias de segurança antigas. As cópias de segurança nunca são selecionadas automaticamente.",
+            id: "ios", name: "iPhone e iPad", icon: "iphone",
+            info: "Atualizações de firmware e cópias de segurança. As cópias de segurança nunca vêm selecionadas.",
             items: items,
-            warning: backups.isEmpty ? nil : "Remover uma cópia de segurança apaga-a de forma permanente."
+            warning: backups.isEmpty ? nil : "Uma cópia de segurança removida não se recupera."
         )
     }
 
@@ -161,12 +161,12 @@ enum SystemJunkScanner {
         for url in files where url.pathExtension == "plist" {
             guard let data = try? Data(contentsOf: url) else { continue }
             if data.isEmpty || (try? PropertyListSerialization.propertyList(from: data, format: nil)) == nil {
-                items.append(CleanItem(url: url, size: max(Int64(data.count), 4096), detail: "Não é possível ler este ficheiro de preferências"))
+                items.append(CleanItem(url: url, size: max(Int64(data.count), 4096), detail: "Ficheiro ilegível"))
             }
         }
         return CleanCategory(
             id: "brokenPrefs", name: "Preferências danificadas", icon: "wrench.and.screwdriver",
-            info: "Ficheiros .plist corrompidos que podem causar comportamentos estranhos nas apps.",
+            info: "Ficheiros .plist corrompidos que podem causar erros nas apps.",
             items: items
         )
     }
@@ -186,7 +186,7 @@ enum SystemJunkScanner {
         }
         return CleanCategory(
             id: "brokenAgents", name: "Itens de arranque quebrados", icon: "bolt.slash",
-            info: "Agentes de arranque que apontam para programas que já foram removidos.",
+            info: "Agentes de arranque de programas que já não existem.",
             items: items
         )
     }
@@ -198,7 +198,7 @@ enum SystemJunkScanner {
         }.compactMap { FS.item($0, detail: "Transferência incompleta") }
         return CleanCategory(
             id: "partialDownloads", name: "Transferências incompletas", icon: "arrow.down.circle.dotted",
-            info: "Ficheiros de transferências que foram interrompidas ou falharam.",
+            info: "Transferências interrompidas ou falhadas.",
             items: items
         )
     }

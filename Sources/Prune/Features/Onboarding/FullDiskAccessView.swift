@@ -26,20 +26,20 @@ struct FullDiskAccessView: View {
 
             if state == .denied {
                 VStack(alignment: .leading, spacing: 12) {
-                    step(1, "Abra as Definições do Sistema no painel certo.") {
+                    step(1, "Abra as Definições do Sistema.") {
                         Button("Abrir Definições") { Permissions.openFullDiskAccessSettings() }
                     }
-                    step(2, "Ative o Prune na lista. Se não aparecer, clique em \"+\" ou arraste a app para a lista.") {
+                    step(2, "Ative o Prune na lista. Se não aparecer, arraste a app para lá.") {
                         Button("Mostrar a app no Finder") { FS.reveal(Bundle.main.bundleURL) }
                     }
-                    step(3, "Volte aqui — a permissão é detetada automaticamente.") {
+                    step(3, "Volte ao Prune. A permissão é detetada automaticamente.") {
                         EmptyView()
                     }
                 }
                 .padding(14)
                 .background(Theme.inset, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
 
-                Text("O Prune usa esta permissão para analisar as pastas. Nada é apagado sem a sua confirmação.")
+                Text("Nada é apagado sem a sua confirmação.")
                     .font(.caption).foregroundStyle(.secondary)
             }
 
@@ -88,16 +88,16 @@ struct FullDiskAccessView: View {
     private var title: String {
         switch state {
         case .granted: "Acesso Total ao Disco ativo"
-        case .needsRelaunch: "Permissão ativa — falta reabrir"
-        case .denied: "Evite pedidos de autorização constantes"
+        case .needsRelaunch: "Falta reabrir o Prune"
+        case .denied: "Dê acesso total ao disco"
         }
     }
 
     private var subtitle: String {
         switch state {
-        case .granted: "O Prune já não vai pedir autorização para cada pasta."
-        case .needsRelaunch: "O macOS já deu o Acesso Total ao Disco ao Prune, mas só o aplica depois de reabrir a app."
-        case .denied: "Sem esta permissão, o macOS pergunta por cada pasta protegida que o Prune analisa."
+        case .granted: "O Prune já não pede autorização pasta a pasta."
+        case .needsRelaunch: "A permissão está ativa. O macOS aplica-a quando reabrir a app."
+        case .denied: "Sem esta permissão, o macOS pede autorização para cada pasta protegida."
         }
     }
 

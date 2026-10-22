@@ -11,7 +11,7 @@ enum MailAttachmentsScanner {
         ].flatMap { FS.childItems(of: $0, detail: "Anexo aberto a partir do Mail") }
         cats.append(CleanCategory(
             id: "mailDownloads", name: "Anexos abertos", icon: "paperclip",
-            info: "Cópias de anexos que abriu diretamente no Mail. Os originais continuam nas mensagens.",
+            info: "Cópias de anexos abertos no Mail. Os originais ficam nas mensagens.",
             items: downloads
         ))
 
@@ -20,9 +20,9 @@ enum MailAttachmentsScanner {
         attachments.sort { $0.size > $1.size }
         cats.append(CleanCategory(
             id: "mailAttachments", name: "Anexos nas mensagens", icon: "envelope",
-            info: "Cópias locais de anexos. Em contas IMAP/Exchange/iCloud continuam disponíveis no servidor.",
+            info: "Cópias locais. Em contas IMAP, Exchange e iCloud ficam no servidor.",
             items: attachments,
-            warning: Permissions.hasFullDiskAccess ? "Em contas POP, os anexos removidos não podem ser recuperados." : "Conceda Acesso Total ao Disco para analisar o Mail."
+            warning: Permissions.hasFullDiskAccess ? "Em contas POP, os anexos removidos não se recuperam." : "Conceda Acesso Total ao Disco para analisar o Mail."
         ))
         return cats
     }
@@ -44,7 +44,7 @@ enum MailAttachmentsScanner {
                     for file in allFiles(in: msg) {
                         let size = FS.size(of: file)
                         guard size > 0 else { continue }
-                        attachments.append(CleanItem(url: file, size: size, selected: false, detail: "Cópia local — pode voltar a ser descarregada do servidor"))
+                        attachments.append(CleanItem(url: file, size: size, selected: false, detail: "Cópia local, recuperável a partir do servidor"))
                     }
                 }
                 return true

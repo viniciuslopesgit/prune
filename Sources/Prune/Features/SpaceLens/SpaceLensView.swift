@@ -37,17 +37,17 @@ struct SpaceLensView: View {
                     }
                 }
                 .padding(.horizontal, 32).padding(.bottom, 14)
-                ActionFooter(summary: "Selecionado: \(Fmt.bytes(model.markedSize))", buttonTitle: "Remover",
+                ActionFooter(summary: "\(Fmt.bytes(model.markedSize)) selecionados", buttonTitle: "Remover",
                              disabled: model.marked.isEmpty) { confirming = true }
-                    .confirm("Remover \(model.marked.count) item(ns)?", isPresented: $confirming,
-                             message: AppSettings.shared.filesDeleteMode == .trash ? "Serão movidos para o Lixo." : "Serão apagados definitivamente.",
+                    .confirm("Remover \(Fmt.count(model.marked.count, "item", "itens"))?", isPresented: $confirming,
+                             message: AppSettings.shared.filesDeleteMode == .trash ? "Vão para o Lixo." : "São apagados definitivamente.",
                              button: "Remover") { Task { await model.removeMarked() } }
             } else {
                 ModuleHeader(module: .spaceLens)
                 VStack(spacing: 24) {
                     ModuleArtwork(module: .spaceLens).frame(width: 220, height: 220)
                     Text("Veja o que ocupa espaço").font(Theme.display(30))
-                    Text("Um mapa visual de pastas e ficheiros, do maior para o mais pequeno. Clique para explorar.")
+                    Text("Um mapa das suas pastas, do maior para o mais pequeno. Clique para explorar.")
                         .font(.title3).foregroundStyle(.secondary)
                     HStack(spacing: 12) {
                         Button { Task { await model.scan(home) } } label: { Label("Pasta pessoal", systemImage: "house") }
@@ -60,7 +60,7 @@ struct SpaceLensView: View {
                     }
                     .buttonStyle(.bordered).controlSize(.large)
                     if !Permissions.hasFullDiskAccess {
-                        Text("Sem Acesso Total ao Disco, algumas pastas protegidas não serão contabilizadas.").font(.caption).foregroundStyle(.secondary)
+                        Text("Sem Acesso Total ao Disco, algumas pastas protegidas ficam de fora.").font(.caption).foregroundStyle(.secondary)
                     }
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)

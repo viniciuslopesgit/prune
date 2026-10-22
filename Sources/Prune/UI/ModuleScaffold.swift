@@ -224,7 +224,7 @@ struct DoneView: View {
             Text(message).font(.title3).foregroundStyle(.secondary).multilineTextAlignment(.center).padding(.top, 10)
             if failedCount > 0 {
                 VStack(spacing: 8) {
-                    Text("\(failedCount) item(ns) não puderam ser removidos (em uso ou protegidos).")
+                    Text("\(Fmt.count(failedCount, "item não foi removido", "itens não foram removidos")): em uso ou protegidos.")
                         .font(.callout).foregroundStyle(.secondary)
                     if let onRetryAdmin {
                         Button("Tentar com privilégios de administrador", action: onRetryAdmin).buttonStyle(.bordered)

@@ -14,14 +14,14 @@ struct LargeFilesView: View {
                 ModuleHeader(module: .largeFiles)
                 HeroView(
                     module: .largeFiles, headline: "Encontre ficheiros grandes e esquecidos",
-                    message: "Localize vídeos, imagens de disco, arquivos e documentos enormes que já não abre há muito tempo.",
-                    features: [("arrow.up.right.and.arrow.down.left", "Filtre por tamanho"), ("calendar", "Filtre pela última abertura"),
-                               ("square.grid.2x2", "Filtre por tipo de ficheiro")],
+                    message: "Vídeos, imagens de disco e arquivos que já não abre há muito tempo.",
+                    features: [("arrow.up.right.and.arrow.down.left", "Por tamanho"), ("calendar", "Pela última abertura"),
+                               ("square.grid.2x2", "Por tipo de ficheiro")],
                     footnote: "Analisa a sua pasta pessoal\(model.includeLibrary ? ", incluindo a Biblioteca" : "")."
                 ) { Task { await model.scan() } }
                 Toggle("Incluir a pasta Biblioteca", isOn: $model.includeLibrary).padding(.bottom, 150)
             } else {
-                ModuleHeader(module: .largeFiles, subtitle: "\(model.filtered.count) ficheiros · \(Fmt.bytes(model.filtered.reduce(0) { $0 + $1.size }))") {
+                ModuleHeader(module: .largeFiles, subtitle: "\(Fmt.count(model.filtered.count, "ficheiro", "ficheiros")) · \(Fmt.bytes(model.filtered.reduce(0) { $0 + $1.size }))") {
                     Button { Task { await model.scan() } } label: { Label("Analisar de novo", systemImage: "arrow.clockwise") }.buttonStyle(.bordered)
                 }
                 filters(model)
@@ -70,15 +70,15 @@ struct LargeFilesView: View {
                     }
                 }
                 .padding(.horizontal, 32).padding(.bottom, 14)
-                ActionFooter(summary: "\(model.selected.count) selecionados · \(Fmt.bytes(model.selectedSize))",
+                ActionFooter(summary: "\(Fmt.count(model.selected.count, "selecionado", "selecionados")) · \(Fmt.bytes(model.selectedSize))",
                              buttonTitle: "Remover", disabled: model.selected.isEmpty || model.working,
                              secondary: ("Destruir", { shredMode = true; confirm = true })) {
                     shredMode = false
                     confirm = true
                 }
                 .confirm(shredMode ? "Destruir de forma segura?" : "Remover ficheiros?", isPresented: $confirm,
-                         message: shredMode ? "Os ficheiros serão sobrescritos e apagados. Não será possível recuperá-los."
-                                            : (AppSettings.shared.filesDeleteMode == .trash ? "Os ficheiros serão movidos para o Lixo." : "Os ficheiros serão apagados definitivamente."),
+                         message: shredMode ? "Os ficheiros são sobrescritos e apagados. Não se recuperam."
+                                            : (AppSettings.shared.filesDeleteMode == .trash ? "Os ficheiros vão para o Lixo." : "Os ficheiros são apagados definitivamente."),
                          button: shredMode ? "Destruir" : "Remover") {
                     Task { await model.removeSelected(shred: shredMode) }
                 }

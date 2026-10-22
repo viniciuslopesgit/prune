@@ -4,7 +4,7 @@ enum ModuleSection: String, CaseIterable {
     case none = ""
     case cleanup = "Limpeza"
     case protection = "Proteção"
-    case speed = "Velocidade"
+    case system = "Sistema"
     case applications = "Aplicações"
     case files = "Ficheiros"
 }
@@ -64,22 +64,9 @@ enum Module: String, CaseIterable, Identifiable, Hashable {
         case .smartScan, .dashboard: .none
         case .systemJunk, .mailAttachments, .trashBins: .cleanup
         case .privacy: .protection
-        case .optimization, .maintenance: .speed
+        case .optimization, .maintenance: .system
         case .uninstaller, .updater, .extensions: .applications
         case .spaceLens, .largeFiles, .duplicates, .shredder: .files
         }
     }
-
-    var colors: [Color] {
-        switch section {
-        case .none: [Color(hex: 0x5B2A86), Color(hex: 0x2B1055)]
-        case .cleanup: [Color(hex: 0x1E8C7E), Color(hex: 0x0B3D4F)]
-        case .protection: [Color(hex: 0xB2365B), Color(hex: 0x4A1236)]
-        case .speed: [Color(hex: 0xD9822B), Color(hex: 0x6B2A12)]
-        case .applications: [Color(hex: 0x2F6FDB), Color(hex: 0x162E6E)]
-        case .files: [Color(hex: 0x3AA0C8), Color(hex: 0x173C63)]
-        }
-    }
-
-    var accent: Color { colors[0] }
 }

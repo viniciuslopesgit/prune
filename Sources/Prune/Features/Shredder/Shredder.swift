@@ -16,10 +16,16 @@ enum Shredder {
 
     static func shredSync(_ url: URL, passes: Int) -> Bool {
         guard SafetyGuard.canDelete(url) else { return false }
-        if url.isDirectory && !url.isPackage || url.isPackage {
-            if let e = FileManager.default.enumerator(at: url, includingPropertiesForKeys: [.isRegularFileKey], options: [], errorHandler: { _, _ in true }) {
+        if isSymlink(url) {
+            // Uma ligação simbólica só é removida: o ficheiro de destino nunca é sobrescrito.
+            return (try? FileManager.default.removeItem(at: url)) != nil
+        }
+        if url.isDirectory {
+            let keys: [URLResourceKey] = [.isRegularFileKey, .isSymbolicLinkKey]
+            if let e = FileManager.default.enumerator(at: url, includingPropertiesForKeys: keys, options: [], errorHandler: { _, _ in true }) {
                 FS.forEach(e) { f in
-                    if !f.isDirectory { _ = overwrite(f, passes: passes) }
+                    let rv = try? f.resourceValues(forKeys: Set(keys))
+                    if rv?.isRegularFile == true, rv?.isSymbolicLink != true { _ = overwrite(f, passes: passes) }
                     return true
                 }
             }
@@ -32,33 +38,44 @@ enum Shredder {
         return (try? FileManager.default.removeItem(at: target)) != nil
     }
 
+    private static func isSymlink(_ url: URL) -> Bool {
+        (try? url.resourceValues(forKeys: [.isSymbolicLinkKey]))?.isSymbolicLink == true
+    }
+
+    /// Sobrescreve o conteúdo: passagens alternadas de 0x00/0xFF e a última com dados aleatórios.
     private static func overwrite(_ url: URL, passes: Int) -> Bool {
         guard let attrs = try? FileManager.default.attributesOfItem(atPath: url.path),
               let size = (attrs[.size] as? NSNumber)?.intValue,
-              let h = try? FileHandle(forUpdating: url) else { return false }
-        defer { try? h.close() }
+              let handle = try? FileHandle(forUpdating: url) else { return false }
+        defer { try? handle.close() }
+        let passes = max(1, passes)
         let chunk = 1_048_576
         var buffer = [UInt8](repeating: 0, count: chunk)
-        for pass in 0..<max(1, passes) {
-            try? h.seek(toOffset: 0)
-            var written = 0
-            while written < size {
-                let n = min(chunk, size - written)
-                if pass == passes - 1 || passes == 1 {
-                    _ = SecRandomCopyBytes(kSecRandomDefault, n, &buffer)
-                } else {
-                    let byte: UInt8 = pass % 2 == 0 ? 0x00 : 0xFF
-                    for i in 0..<n { buffer[i] = byte }
+        do {
+            for pass in 0..<passes {
+                try handle.seek(toOffset: 0)
+                var written = 0
+                while written < size {
+                    let n = min(chunk, size - written)
+                    if pass == passes - 1 {
+                        _ = SecRandomCopyBytes(kSecRandomDefault, n, &buffer)
+                    } else {
+                        buffer.withUnsafeMutableBufferPointer { $0.update(repeating: pass % 2 == 0 ? 0x00 : 0xFF) }
+                    }
+                    // Escreve a partir do buffer reutilizado, sem copiar para um Data novo.
+                    try buffer.withUnsafeBytes { raw in
+                        try autoreleasepool {
+                            try handle.write(contentsOf: Data(bytesNoCopy: UnsafeMutableRawPointer(mutating: raw.baseAddress!), count: n, deallocator: .none))
+                        }
+                    }
+                    written += n
                 }
-                // Escreve diretamente a partir do buffer reutilizado (sem copiar para um Data novo).
-                buffer.withUnsafeMutableBytes { raw in
-                    autoreleasepool { h.write(Data(bytesNoCopy: raw.baseAddress!, count: n, deallocator: .none)) }
-                }
-                written += n
+                try handle.synchronize()
             }
-            try? h.synchronize()
+            try handle.truncate(atOffset: 0)
+            return true
+        } catch {
+            return false
         }
-        try? h.truncate(atOffset: 0)
-        return true
     }
 }

@@ -118,7 +118,7 @@ final class SpaceScanner: @unchecked Sendable {
         let sorted = nodes.sorted { $0.size > $1.size }
         var result = Array(sorted.prefix(maxChildren))
         let rest = sorted.dropFirst(maxChildren)
-        result.append(DiskNode(name: "\(rest.count) itens mais pequenos", isDirectory: false,
+        result.append(DiskNode(name: "\(Fmt.count(rest.count, "item mais pequeno", "itens mais pequenos"))", isDirectory: false,
                                size: rest.reduce(0) { $0 + $1.size }, isAggregate: true))
         return result
     }

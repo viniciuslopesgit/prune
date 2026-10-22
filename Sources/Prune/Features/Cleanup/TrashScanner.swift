@@ -5,7 +5,7 @@ enum TrashScanner {
         p.report("A analisar o Lixo…", force: true)
         var cats = [CleanCategory(
             id: "userTrash", name: "Lixo do utilizador", icon: "trash",
-            info: "Itens que moveu para o Lixo no disco de arranque.",
+            info: "Itens no Lixo do disco de arranque.",
             items: FS.childItems(of: URL.home(".Trash"))
         )]
         let volumes = FS.children(URL(fileURLWithPath: "/Volumes")).filter { $0.resolvingSymlinksInPath().path != "/" }

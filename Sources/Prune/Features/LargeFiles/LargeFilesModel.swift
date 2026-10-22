@@ -154,7 +154,7 @@ final class LargeFilesModel {
         let removed = Set(targets.map(\.url)).subtracting(failed)
         files.removeAll { removed.contains($0.url) }
         selected = []
-        message = failed.isEmpty ? "Libertados \(Fmt.bytes(freed))." : "Libertados \(Fmt.bytes(freed)). \(failed.count) ficheiro(s) não puderam ser removidos."
+        message = "\(Fmt.bytes(freed)) libertados." + (failed.isEmpty ? "" : " \(Fmt.count(failed.count, "ficheiro não foi removido", "ficheiros não foram removidos")).")
         working = false
     }
 }

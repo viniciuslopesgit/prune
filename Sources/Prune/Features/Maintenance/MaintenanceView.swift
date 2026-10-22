@@ -6,7 +6,7 @@ struct MaintenanceView: View {
     var body: some View {
         @Bindable var model = state.maintenance
         VStack(spacing: 0) {
-            ModuleHeader(module: .maintenance, subtitle: "Tarefas que mantêm o macOS rápido e estável")
+            ModuleHeader(module: .maintenance, subtitle: "Tarefas para manter o macOS estável")
             HStack(spacing: 14) {
                 GlassPanel {
                     List {
@@ -51,7 +51,7 @@ struct MaintenanceView: View {
                                 Label("Requer a palavra-passe de administrador", systemImage: "lock").font(.callout).foregroundStyle(.secondary)
                             }
                             if t.recommendedDays > 0 {
-                                Label("Recomendado a cada \(t.recommendedDays) dia(s)", systemImage: "calendar").font(.callout).foregroundStyle(.secondary)
+                                Label("Recomendado a cada \(Fmt.count(t.recommendedDays, "dia", "dias"))", systemImage: "calendar").font(.callout).foregroundStyle(.secondary)
                             }
                             if case .failed(let e) = model.states[t.id] {
                                 Label(e, systemImage: "xmark.octagon").foregroundStyle(Theme.amber)
@@ -64,7 +64,7 @@ struct MaintenanceView: View {
                 }
             }
             .padding(.horizontal, 32).padding(.bottom, 14)
-            ActionFooter(summary: "\(model.selected.count) tarefa(s) selecionada(s)", buttonTitle: model.running ? "A executar…" : "Executar",
+            ActionFooter(summary: Fmt.count(model.selected.count, "tarefa selecionada", "tarefas selecionadas"), buttonTitle: model.running ? "A executar…" : "Executar",
                          disabled: model.selected.isEmpty || model.running,
                          secondary: ("Recomendadas", { model.selected = Set(model.recommended.filter { !$0.requiresAdmin }.map(\.id)) })) {
                 Task { await model.run(model.selected) }

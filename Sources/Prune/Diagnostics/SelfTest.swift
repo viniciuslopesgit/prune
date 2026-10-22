@@ -79,7 +79,26 @@ enum SelfTest {
             let mustBlock = ["/", "/System", home.path, home.path + "/Documents", home.path + "/Library", "/Applications", "/usr/bin/ls"]
             let blocked = mustBlock.allSatisfy { !SafetyGuard.canDelete(URL(fileURLWithPath: $0)) }
             print("  SafetyGuard bloqueia pastas críticas: \(blocked)")
+            let viaSymlink = !SafetyGuard.canDelete(URL(fileURLWithPath: "/var/db/teste"))
+            print("  SafetyGuard resolve ligações (/var/db → /private/var/db): \(viaSymlink)")
+            print("  Destruidor não segue ligações simbólicas: \(shredderKeepsSymlinkTarget())")
             exit(0)
         }
+    }
+
+    /// Destrói uma pasta com uma ligação para um ficheiro de fora e confirma que o ficheiro fica intacto.
+    private static func shredderKeepsSymlinkTarget() -> Bool {
+        let fm = FileManager.default
+        let base = fm.temporaryDirectory.appendingPathComponent("prune-selftest-\(UUID().uuidString)")
+        let target = base.appendingPathComponent("original.txt")
+        let folder = base.appendingPathComponent("a-destruir")
+        defer { try? fm.removeItem(at: base) }
+        do {
+            try fm.createDirectory(at: folder, withIntermediateDirectories: true)
+            try "conteúdo original".write(to: target, atomically: true, encoding: .utf8)
+            try fm.createSymbolicLink(at: folder.appendingPathComponent("ligacao"), withDestinationURL: target)
+        } catch { return false }
+        _ = Shredder.shredSync(folder, passes: 1)
+        return !folder.exists && (try? String(contentsOf: target, encoding: .utf8)) == "conteúdo original"
     }
 }

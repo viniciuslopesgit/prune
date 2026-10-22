@@ -14,7 +14,7 @@ struct DuplicatesView: View {
                 ModuleHeader(module: .duplicates)
                 setup(model)
             } else {
-                ModuleHeader(module: .duplicates, subtitle: model.groups.isEmpty ? "Sem duplicados" : "\(model.groups.count) grupos · \(Fmt.bytes(model.wasted)) em cópias") {
+                ModuleHeader(module: .duplicates, subtitle: model.groups.isEmpty ? "Sem duplicados" : "\(Fmt.count(model.groups.count, "grupo", "grupos")) · \(Fmt.bytes(model.wasted)) em cópias") {
                     Button("Nova análise") { model.scanned = false }.buttonStyle(.bordered)
                 }
                 if let msg = model.message {
@@ -22,18 +22,18 @@ struct DuplicatesView: View {
                         .padding(.horizontal, 32).padding(.bottom, 8)
                 }
                 if model.groups.isEmpty {
-                    EmptyStateView(icon: "checkmark.circle", title: "Não há duplicados", message: "Não foram encontradas cópias nas pastas escolhidas.")
+                    EmptyStateView(icon: "checkmark.circle", title: "Sem duplicados", message: "Nenhuma cópia nas pastas escolhidas.")
                 } else {
                     HStack(spacing: 14) {
                         GlassPanel { groupList(model) }.frame(width: 340)
                         GlassPanel { groupDetail(model) }
                     }
                     .padding(.horizontal, 32).padding(.bottom, 14)
-                    ActionFooter(summary: "Selecionado: \(Fmt.bytes(model.markedSize))", buttonTitle: "Remover",
+                    ActionFooter(summary: "\(Fmt.bytes(model.markedSize)) selecionados", buttonTitle: "Remover",
                                  disabled: model.marked.isEmpty,
                                  secondary: model.mode == .exact ? ("Seleção automática", { model.autoSelect() }) : nil) { confirm = true }
-                        .confirm("Remover \(model.marked.count) cópia(s)?", isPresented: $confirm,
-                                 message: "Os ficheiros selecionados serão removidos.", button: "Remover") {
+                        .confirm("Remover \(Fmt.count(model.marked.count, "cópia", "cópias"))?", isPresented: $confirm,
+                                 message: "Fica sempre pelo menos uma cópia de cada ficheiro.", button: "Remover") {
                             Task { await model.removeMarked() }
                         }
                 }
@@ -50,8 +50,8 @@ struct DuplicatesView: View {
             }
             .pickerStyle(.segmented).labelsHidden().frame(width: 380)
             Text(model.mode == .exact
-                 ? "Encontra ficheiros com conteúdo idêntico, mesmo com nomes diferentes."
-                 : "Encontra fotografias parecidas (sequências, versões editadas, capturas repetidas).")
+                 ? "Ficheiros com conteúdo idêntico, mesmo com nomes diferentes."
+                 : "Fotografias parecidas: sequências, edições e capturas repetidas.")
                 .foregroundStyle(.secondary)
             GlassPanel {
                 VStack(alignment: .leading, spacing: 6) {
@@ -102,7 +102,7 @@ struct DuplicatesView: View {
                     }
                     VStack(alignment: .leading, spacing: 1) {
                         Text(first.url.lastPathComponent).lineLimit(1).truncationMode(.middle)
-                        Text("\(g.files.count) cópias").font(.caption).foregroundStyle(.secondary)
+                        Text(Fmt.count(g.files.count, "cópia", "cópias")).font(.caption).foregroundStyle(.secondary)
                     }
                 }
                 Spacer()

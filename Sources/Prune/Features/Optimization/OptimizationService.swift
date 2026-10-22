@@ -137,6 +137,7 @@ enum OptimizationService {
     }
 
     static func remove(_ item: LaunchItem) async -> Bool {
+        guard SafetyGuard.canDelete(item.url) else { return false }
         if item.domain == .userAgent {
             _ = await Shell.run("/bin/launchctl", ["bootout", "gui/\(Shell.uid)", item.url.path])
             return Cleaner.removeSync(item.url, mode: .trash)

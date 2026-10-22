@@ -49,7 +49,12 @@ final class SpaceLensModel {
     var markedSize: Int64 { marked.reduce(0) { $0 + $1.size } }
 
     func removeMarked() async {
-        let nodes = Array(marked)
+        // Um item dentro de uma pasta também marcada já sai com a pasta.
+        let nodes = marked.filter { node in
+            var p = node.parent
+            while let cur = p { if marked.contains(cur) { return false }; p = cur.parent }
+            return true
+        }
         let r = await Cleaner.remove(urls: nodes.map(\.url), mode: AppSettings.shared.filesDeleteMode)
         for n in nodes where !r.failed.contains(n.url) {
             guard let parent = n.parent else { continue }
@@ -58,7 +63,7 @@ final class SpaceLensModel {
             while let cur = p { cur.size -= n.size; p = cur.parent }
         }
         marked = []
-        message = r.failed.isEmpty ? "Removido: \(Fmt.bytes(r.freed))." : "\(r.failed.count) item(ns) não puderam ser removidos."
+        message = "\(Fmt.bytes(r.freed)) libertados." + (r.failed.isEmpty ? "" : " \(Fmt.count(r.failed.count, "item não foi removido", "itens não foram removidos")).")
         // Força atualização da vista.
         let c = current
         current = nil
