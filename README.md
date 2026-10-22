@@ -44,16 +44,22 @@ Requer macOS 14 ou mais recente e as Command Line Tools do Xcode (`xcode-select 
 ./scripts/make_dmg.sh        # cria build/Prune-<versão>.dmg
 ```
 
-Estatísticas: crie `analytics.env` (ignorado pelo git) com `GA_MEASUREMENT_ID` e `GA_API_SECRET`. Sem este ficheiro, a app não envia nada.
+### Testes e deploy
 
-Diagnóstico:
+Nada é registado nem instalado sem passar nos testes.
 
 ```bash
-build/Prune.app/Contents/MacOS/Prune --selftest      # todas as análises, só em leitura
-build/Prune.app/Contents/MacOS/Prune --bench --twice # memória de cada análise
+./scripts/setup_hooks.sh               # uma vez: liga os hooks do git
+./scripts/test.sh                      # testes de unidade (Tests/PruneTests)
+./scripts/check.sh                     # verificação rápida
+./scripts/check.sh --full              # verificação completa
+./scripts/bump_version.sh patch        # versão nova (patch, minor ou major) e secção no CHANGELOG
+./scripts/ship.sh "Mensagem do commit" # verificação completa → commit → push dev → Release
 ```
 
-Estrutura de `Sources/Prune`: `App` (arranque e janela), `Core` (ficheiros, permissões, definições, limpeza), `UI` (tema e componentes), `Features` (uma pasta por funcionalidade) e `Diagnostics`.
+- **Verificação rápida** (antes de cada commit, pelo hook `pre-commit`): sintaxe dos scripts, nenhuma chave de `analytics.env` nas alterações, ficheiros novos em `Sources/` acompanhados de testes, compilação sem avisos, testes de unidade e cobertura mínima nos ficheiros que apagam ou escolhem ficheiros.
+- **Verificação completa** (antes de cada push, pelo hook `pre-push`, e no `ship.sh`): tudo o anterior, secção da versão preenchida no CHANGELOG, app universal e assinada, e o autoteste da app compilada.
+- `ship.sh` publica a Release `vX.Y.Z` com o DMG e as notas tiradas do CHANGELOG. Aceita `--install` (instala em /Applications) e `--no-release`.
 
 ### Versões
 
