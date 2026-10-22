@@ -58,10 +58,6 @@ cp build/AppIcon.icns "$APP/Contents/Resources/AppIcon.icns"
 # Assinatura. Com o certificado local (scripts/setup_signing.sh), a identidade da app é estável
 # e o macOS mantém as permissões entre versões. Sem ele, assina ad-hoc (permissões perdem-se).
 IDENTITY=${SIGN_IDENTITY:-"Prune Local Signing"}
-# Certificado criado quando a app se chamava MaCClear: continua a servir até criar o novo.
-if ! security find-identity -p codesigning 2>/dev/null | grep -q "$IDENTITY" && [ -z "$SIGN_IDENTITY" ]; then
-    security find-identity -p codesigning 2>/dev/null | grep -q "MaCClear Local Signing" && IDENTITY="MaCClear Local Signing"
-fi
 if security find-identity -p codesigning 2>/dev/null | grep -q "$IDENTITY"; then
     codesign --force --deep --sign "$IDENTITY" "$APP"
     echo "✓ $APP criado (assinado com \"$IDENTITY\")"

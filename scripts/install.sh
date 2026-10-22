@@ -13,17 +13,6 @@ cd "$(dirname "$0")/.."
 
 SRC=build/Prune.app
 DEST=/Applications/Prune.app
-LEGACY=/Applications/MaCClear.app
-
-# A app chamava-se MaCClear e tinha outro identificador. A versão antiga é fechada e vai para o Lixo
-# (recuperável). As definições passam sozinhas para o Prune no primeiro arranque; o Acesso Total ao
-# Disco tem de ser concedido outra vez.
-if [ -d "$LEGACY" ]; then
-    pkill -TERM -f "$LEGACY/Contents/MacOS/" || true
-    sleep 1
-    osascript -e "tell application \"Finder\" to delete POSIX file \"$LEGACY\"" >/dev/null
-    echo "✓ A versão antiga (MaCClear.app) foi para o Lixo"
-fi
 
 # Fecha a app se estiver aberta.
 if pgrep -f "$DEST/Contents/MacOS/" >/dev/null; then

@@ -14,8 +14,6 @@ open build/Prune.app
 
 Para o ter sempre à mão, arraste `build/Prune.app` para a pasta **Aplicações**.
 
-A app chamava-se MaCClear (identificador `app.maclear.MaCClear`); agora é `app.prune.Prune`. No primeiro arranque, o Prune copia as definições antigas. O macOS trata-o como uma app nova, por isso o Acesso Total ao Disco tem de ser concedido outra vez. O `install.sh` manda a `MaCClear.app` antiga para o Lixo.
-
 ### Atualizar a app instalada
 
 ```bash

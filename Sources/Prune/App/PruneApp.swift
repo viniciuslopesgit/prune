@@ -7,7 +7,6 @@ struct PruneApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var delegate
 
     init() {
-        LegacyMigration.run()
         SelfTest.fdaCheckIfRequested()
         SelfTest.runIfRequested()
         MemoryBench.runIfRequested()

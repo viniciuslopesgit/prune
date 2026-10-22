@@ -49,7 +49,6 @@ final class AppSettings {
     }
 
     private init() {
-        LegacyMigration.run()
         junkDeleteMode = DeleteMode(rawValue: d.string(forKey: "junkDeleteMode") ?? "") ?? .permanent
         filesDeleteMode = DeleteMode(rawValue: d.string(forKey: "filesDeleteMode") ?? "") ?? .trash
         ignoredPaths = d.stringArray(forKey: "ignoredPaths") ?? []
