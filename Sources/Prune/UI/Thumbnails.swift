@@ -56,7 +56,13 @@ struct ThumbnailView: View {
         .task(id: url) {
             if let hit = Thumbnails.cached(url, maxPixel: maxPixel) { image = hit; return }
             let url = url, maxPixel = maxPixel
-            image = await Task.detached(priority: .utility) { Thumbnails.load(url, maxPixel: maxPixel) }.value
+            image = await Task.detached(priority: .utility) { LoadedImage(image: Thumbnails.load(url, maxPixel: maxPixel)) }.value.image
         }
     }
+}
+
+/// Leva a miniatura da thread de fundo para a principal. O `NSImage` só é `Sendable` nos SDKs mais
+/// recentes; aqui é seguro porque a imagem é criada uma vez e depois só é lida.
+private struct LoadedImage: @unchecked Sendable {
+    let image: NSImage?
 }

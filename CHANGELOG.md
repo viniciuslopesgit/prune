@@ -2,6 +2,13 @@
 
 Alterações relevantes de cada versão. Formato [Keep a Changelog](https://keepachangelog.com/pt-PT/1.1.0/), versões [SemVer](https://semver.org/lang/pt-PT/).
 
+## [1.3.1] - 2026-10-22
+
+Correção encontrada pelos novos testes no GitHub.
+
+### Corrigido
+- A app voltou a compilar com o Xcode 16 (Swift 6.0), usado no macOS 14: as miniaturas de imagens davam erro de compilação.
+
 ## [1.3.0] - 2026-10-22
 
 Uma versão só passa a estável com evidência: testes em várias versões do macOS, sem erros reportados e verificada de novo antes de chegar ao main. A app não muda.
@@ -107,6 +114,7 @@ Primeira versão pública.
 
 - Primeira versão: Análise Inteligente, Painel, limpeza, privacidade, otimização, manutenção, desinstalador, atualizador, extensões, Lente de Espaço, ficheiros grandes, duplicados e destruidor.
 
+[1.3.1]: https://github.com/viniciuslopesgit/prune/releases/tag/v1.3.1
 [1.3.0]: https://github.com/viniciuslopesgit/prune/releases/tag/v1.3.0
 [1.2.9]: https://github.com/viniciuslopesgit/prune/releases/tag/v1.2.9
 [1.2.8]: https://github.com/viniciuslopesgit/prune/releases/tag/v1.2.8
