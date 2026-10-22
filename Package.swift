@@ -14,6 +14,12 @@ let package = Package(
                 .linkedFramework("Vision"),
                 .linkedFramework("ServiceManagement"),
             ]
-        )
+        ),
+        // Testes de unidade (scripts/test.sh). Testam o executável diretamente com @testable import.
+        .testTarget(
+            name: "PruneTests",
+            dependencies: ["Prune"],
+            path: "Tests/PruneTests"
+        ),
     ]
 )

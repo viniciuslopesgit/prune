@@ -44,6 +44,22 @@ Requer macOS 14 ou mais recente e as Command Line Tools do Xcode (`xcode-select 
 ./scripts/make_dmg.sh        # cria build/Prune-<versão>.dmg
 ```
 
+### Testes e deploy
+
+Nada é registado nem instalado sem passar nos testes.
+
+```bash
+./scripts/setup_hooks.sh               # uma vez: liga os hooks do git
+./scripts/test.sh                      # testes de unidade (Tests/PruneTests)
+./scripts/check.sh                     # verificação rápida
+./scripts/check.sh --full              # verificação completa
+./scripts/ship.sh "Mensagem do commit" # verificação completa → commit → instalar em /Applications
+```
+
+- **Verificação rápida** (antes de cada commit, pelo hook `pre-commit`): sintaxe dos scripts, nenhuma chave de `analytics.env` nas alterações, ficheiros novos em `Sources/` acompanhados de testes, compilação sem avisos, testes de unidade e cobertura mínima nos ficheiros que apagam ou escolhem ficheiros.
+- **Verificação completa** (antes de cada push, pelo hook `pre-push`, e no `ship.sh`): tudo o anterior, versão do `Info.plist` no CHANGELOG, app universal e assinada, e o autoteste da app compilada.
+- `ship.sh` aceita `--dmg` (cria o instalador), `--push` (envia o ramo) e `--no-install`.
+
 Estatísticas: crie `analytics.env` (ignorado pelo git) com `GA_MEASUREMENT_ID` e `GA_API_SECRET`. Sem este ficheiro, a app não envia nada.
 
 Diagnóstico:
