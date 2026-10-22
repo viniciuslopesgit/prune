@@ -1,0 +1,41 @@
+COMO INSTALAR E ABRIR O Prune
+================================
+
+1. Arraste o Prune para a pasta Aplicações (nesta janela).
+2. Abra o Prune a partir da pasta Aplicações ou do Launchpad.
+
+
+SE O macOS DISSER QUE NÃO PODE ABRIR A APP
+------------------------------------------
+
+O Prune é gratuito e não está registado na Apple (isso exige uma conta
+paga de programador). Por isso, na primeira vez, o macOS pode mostrar:
+"Não foi possível verificar o Prune" ou "A Apple não pôde verificar…".
+
+É só preciso autorizar uma vez:
+
+  macOS 15 (Sequoia) ou mais recente
+    1. Tente abrir o Prune e clique em "OK" / "Concluído" no aviso.
+    2. Abra Definições do Sistema ▸ Privacidade e segurança.
+    3. Desça até "Segurança" e clique em "Abrir mesmo assim" junto ao Prune.
+    4. Confirme com a sua palavra-passe e clique em "Abrir".
+
+  macOS 14 (Sonoma)
+    1. Na pasta Aplicações, clique no Prune com o botão direito
+       (ou Control + clique) e escolha "Abrir".
+    2. No aviso, clique em "Abrir".
+
+  Alternativa pelo Terminal (qualquer versão)
+    xattr -dr com.apple.quarantine /Applications/Prune.app
+
+Depois disso, a app abre normalmente.
+
+
+DEPOIS DE ABRIR (RECOMENDADO)
+-----------------------------
+
+Para analisar o Safari, o Mail e pastas protegidas, dê "Acesso total ao disco":
+Definições do Sistema ▸ Privacidade e segurança ▸ Acesso total ao disco ▸
+ative o Prune (ou use o botão "+" para o adicionar).
+
+Requisitos: macOS 14 ou mais recente · Mac com Apple silicon ou Intel.

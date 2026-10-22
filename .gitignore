@@ -1,0 +1,5 @@
+.DS_Store
+.build/
+build/
+# Chaves do Google Analytics (ver analytics.env.example)
+analytics.env

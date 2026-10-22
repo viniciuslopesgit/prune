@@ -1,0 +1,153 @@
+import SwiftUI
+
+/// Vista partilhada pelos módulos de limpeza por categorias.
+struct CleanupModuleView: View {
+    let model: CleanupModel
+    let module: Module
+    let headline: String
+    let message: String
+    var features: [(String, String)] = []
+    var cleanTitle = "Limpar"
+
+    @State private var confirming = false
+
+    var body: some View {
+        VStack(spacing: 0) {
+            switch model.phase {
+            case .idle:
+                ModuleHeader(module: module)
+                HeroView(module: module, headline: headline, message: message, features: features) {
+                    Task { await model.scan() }
+                }
+            case .scanning:
+                ScanningView(module: module, title: "A analisar…", detail: model.progressText)
+            case .cleaning:
+                ScanningView(module: module, title: "A limpar…", detail: model.progressText)
+            case .results:
+                ModuleHeader(module: module, subtitle: model.categories.isEmpty ? nil : "Encontrado: \(Fmt.bytes(model.totalSize))") {
+                    Button { Task { await model.scan() } } label: { Label("Analisar de novo", systemImage: "arrow.clockwise") }
+                        .buttonStyle(.bordered)
+                }
+                if model.categories.isEmpty {
+                    EmptyStateView(icon: "sparkles", title: "Está tudo limpo", message: "Não foi encontrado nada para remover.")
+                    Button("Voltar") { model.reset() }.buttonStyle(.bordered).padding(.bottom, 30)
+                } else {
+                    results
+                }
+            case .done:
+                DoneView(
+                    module: module, title: "Concluído",
+                    message: "Foram libertados \(Fmt.bytes(model.report.freed)) (\(model.report.removed) itens).",
+                    failedCount: model.report.failed.count,
+                    onRetryAdmin: { Task { await model.retryFailedAsAdmin() } },
+                    onBack: { model.phase = model.categories.contains { !$0.items.isEmpty } ? .results : .idle }
+                )
+            }
+        }
+    }
+
+    private var results: some View {
+        VStack(spacing: 0) {
+            let blockers = model.runningBlockers
+            if !blockers.isEmpty {
+                StatusBanner(
+                    text: "Feche \(blockers.compactMap(\.localizedName).joined(separator: ", ")) para limpar os dados com segurança.",
+                    icon: "exclamationmark.triangle", actionTitle: "Fechar apps"
+                ) { blockers.forEach { $0.terminate() } }
+                .padding(.horizontal, 32).padding(.bottom, 10)
+            }
+            HStack(spacing: 14) {
+                GlassPanel {
+                    List {
+                        ForEach(model.categories) { cat in
+                            categoryRow(cat)
+                        }
+                    }
+                    .scrollContentBackground(.hidden)
+                }
+                .frame(width: 320)
+
+                GlassPanel {
+                    if let cat = model.selectedCategory {
+                        itemsList(cat)
+                    } else {
+                        EmptyStateView(icon: "list.bullet", title: "Escolha uma categoria")
+                    }
+                }
+            }
+            .padding(.horizontal, 32)
+            .padding(.bottom, 14)
+
+            ActionFooter(
+                summary: "Selecionado: \(Fmt.bytes(model.selectedSize))",
+                buttonTitle: cleanTitle,
+                disabled: model.selectedCount == 0,
+                secondary: ("Selecionar tudo", { model.setAll(true) })
+            ) { confirming = true }
+        }
+        .confirm("\(cleanTitle) \(Fmt.bytes(model.selectedSize))?", isPresented: $confirming,
+                 message: "Serão removidos \(model.selectedCount) itens.", button: cleanTitle) {
+            Task { await model.clean() }
+        }
+    }
+
+    private func categoryRow(_ cat: CleanCategory) -> some View {
+        HStack(spacing: 10) {
+            CheckBox(state: cat.allSelected ? true : (cat.noneSelected ? false : nil)) { model.toggleCategory(cat.id) }
+            Image(systemName: cat.icon).frame(width: 22)
+            VStack(alignment: .leading, spacing: 1) {
+                Text(cat.name).lineLimit(1)
+                Text("\(cat.items.count) itens").font(.caption).foregroundStyle(.secondary)
+            }
+            Spacer()
+            SizeLabel(bytes: cat.totalSize).font(.callout)
+        }
+        .padding(.vertical, 4)
+        .padding(.horizontal, 6)
+        .background(model.selectedCategoryID == cat.id ? Theme.selection : .clear, in: RoundedRectangle(cornerRadius: 8))
+        .contentShape(Rectangle())
+        .onTapGesture { model.selectedCategoryID = cat.id }
+        .listRowBackground(Color.clear)
+        .listRowSeparator(.hidden)
+    }
+
+    private func itemsList(_ cat: CleanCategory) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            VStack(alignment: .leading, spacing: 6) {
+                Text(cat.name).font(.title3.bold())
+                Text(cat.info).font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                if let w = cat.warning {
+                    Label(w, systemImage: "exclamationmark.triangle").font(.caption).foregroundStyle(Theme.amber)
+                }
+            }
+            .padding(16)
+            Divider().opacity(0.3)
+            List {
+                ForEach(cat.items) { item in
+                    HStack(spacing: 10) {
+                        CheckBox(state: item.selected) { model.toggleItem(category: cat.id, item: item.id) }
+                        FileIcon(url: item.url, size: 24)
+                        VStack(alignment: .leading, spacing: 1) {
+                            Text(item.name).lineLimit(1).truncationMode(.middle)
+                            Text(item.detail ?? item.url.deletingLastPathComponent().displayPath)
+                                .font(.caption).foregroundStyle(.secondary).lineLimit(1).truncationMode(.middle)
+                        }
+                        Spacer()
+                        SizeLabel(bytes: item.size).font(.callout)
+                        RevealButton(url: item.url)
+                    }
+                    .padding(.vertical, 2)
+                    .listRowBackground(Color.clear)
+                    .contextMenu {
+                        Button("Mostrar no Finder") { FS.reveal(item.url) }
+                        Button("Ignorar sempre este item") {
+                            AppSettings.shared.ignoredPaths.append(item.url.path)
+                            if item.selected { model.toggleItem(category: cat.id, item: item.id) }
+                        }
+                    }
+                }
+            }
+            .scrollContentBackground(.hidden)
+        }
+    }
+}
