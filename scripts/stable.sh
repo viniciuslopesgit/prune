@@ -60,7 +60,9 @@ main_tree() {
     GIT_INDEX_FILE=$idx git read-tree "refs/tags/$tag"
     python3 -I scripts/stable.py excluded "refs/tags/$tag" >"$TMP/excluded-$1"
     if [ -s "$TMP/excluded-$1" ]; then
-        GIT_INDEX_FILE=$idx git rm -r -q --cached --pathspec-from-file="$TMP/excluded-$1" >/dev/null
+        # -f: the temporary index comes from the tag, so it may differ from both HEAD and the working folder;
+        # --cached only touches that index, never the files.
+        GIT_INDEX_FILE=$idx git rm -r -q -f --cached --pathspec-from-file="$TMP/excluded-$1" >/dev/null
     fi
     GIT_INDEX_FILE=$idx git write-tree
 }
@@ -91,9 +93,10 @@ verify_main_commit() {
     echo "✓ O conteúdo do main compila, está assinado e passa o autoteste."
 }
 
-# Takes the version to main through a Pull Request. $2 describes the reason. With --dry-run, stops before pushing.
+# Takes the version to main through a Pull Request. $2 describes the reason. $3 = stable: only then does the
+# Release become "Latest" (cleaning main keeps a version that may not meet the criteria). With --dry-run, stops before pushing.
 promote() {
-    local version=$1 why=$2 tag=v$1
+    local version=$1 why=$2 kind=${3:-stable} tag=v$1
     git fetch -q origin main
     local tree=$(main_tree "$version")
     if [ "$tree" = "$(git rev-parse 'origin/main^{tree}')" ]; then
@@ -121,15 +124,19 @@ promote() {
 - The tag passed \`./scripts/check.sh --full\` in a clean copy; main's content builds, is signed and passes the self-test.
 
 $(python3 -I scripts/stable.py | sed 's/^/    /')"
-    local url=$(gh pr create --base main --head "$branch" --title "Stable version: Prune $version" --body "$body")
+    local url=$(gh pr create --base main --head "$branch" --title "$([ "$kind" = stable ] && echo "Stable version: Prune " || echo "Clean main: Prune ")$version" --body "$body")
     echo "✓ Pull Request: $url"
     gh pr merge "$url" --merge --delete-branch
     git fetch -q origin main
     if [ "$(git rev-parse 'origin/main^{tree}')" = "$tree" ]; then
         echo "✓ main now has Prune $version, with only the essential files."
-        # The Release stops being a beta and becomes "Latest" (the one the README says to download).
-        gh release edit "$tag" --prerelease=false --latest >/dev/null
-        echo "✓ Release $tag marked as stable (Latest)."
+        if [ "$kind" = stable ]; then
+            # The Release stops being a beta and becomes "Latest" (the one the README says to download).
+            gh release edit "$tag" --prerelease=false --latest >/dev/null
+            echo "✓ Release $tag marked as stable (Latest)."
+        else
+            echo "• Release $tag left as it is: it does not meet the stability criteria yet."
+        fi
     else
         echo "⚠️  main was updated, but its content is not the expected one: review with git diff $commit origin/main."
         return 1
@@ -158,7 +165,7 @@ if [ -n "$CANDIDATE" ]; then
     promote "$CANDIDATE" "Promotes **Prune $CANDIDATE** to stable version."
 elif [ -n "$MAIN" ] && git cat-file -e "refs/tags/v${MAIN}:.mainignore" 2>/dev/null; then
     # No new version: confirms that main has only the essential files of the version already there.
-    promote "$MAIN" "Cleans main: keeps **Prune $MAIN**, with only the essential files to build it."
+    promote "$MAIN" "Cleans main: keeps **Prune $MAIN**, with only the essential files to build it." cleanup
 elif [ -n "$MAIN" ]; then
     echo "• Nothing to promote. $MAIN on main predates the main with only essential files:"
     echo "  main will be cleaned when the next stable version is promoted."

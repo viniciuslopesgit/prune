@@ -137,12 +137,24 @@ if ! ./scripts/test.sh --enable-code-coverage >$LOG 2>&1; then
     fail "Some tests are failing (full log in $LOG)."
 fi
 ok "$(grep -oE 'Test run with [0-9]+ tests in [0-9]+ suites' $LOG | sed 's/Test run with/passed:/')"
+# Skipped tests are not failures, but they are not evidence either: always show them, with the reason.
+SKIPPED=$(grep -E 'Test .* skipped' $LOG | sed -E 's/^[^T]*Test /Test /' || true)
+if [ -n "$SKIPPED" ]; then
+    print -P "%F{yellow}  ⚠ skipped on this machine:%f"
+    print -r -- "$SKIPPED" | sed 's/^/      /'
+fi
 
 step "Minimum coverage"
 BIN=$(swift build --show-bin-path)
 REPORT=$(xcrun llvm-cov report "$BIN/PrunePackageTests.xctest/Contents/MacOS/PrunePackageTests" \
     -instr-profile "$BIN/codecov/default.profdata" -ignore-filename-regex='Tests/|\.build/')
 LOW=0
+# Without an inference context (some virtual machines) the similar-photos test is skipped, and with it
+# the clustering code: only then, and only for that file, the minimum is lower. It is always reported.
+if print -r -- "$SKIPPED" | grep -q "Vision unavailable on this machine"; then
+    MIN_COVERAGE[Features/Duplicates/DuplicateFinder.swift]=80
+    print -P "%F{yellow}  ⚠ Vision unavailable: minimum for DuplicateFinder.swift lowered to 80%% on this machine%f"
+fi
 for file min in ${(kv)MIN_COVERAGE}; do
     pct=$(print -r -- "$REPORT" | awk -v f="$file" '$1 == f { gsub("%", "", $10); print $10 }')
     if [ -z "$pct" ]; then

@@ -2,6 +2,14 @@
 
 Notable changes in each version. Format [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions [SemVer](https://semver.org/).
 
+## [1.4.1] - 2026-10-23
+
+The automatic tests on GitHub now pass on macOS 14 too. The app does not change.
+
+### Fixed
+- The similar photos test is skipped, with the reason shown, on machines where macOS cannot run the image analysis (such as GitHub's macOS 14 test machine). Any other analysis error still fails it.
+- Cleaning up the main branch no longer marks a version as the latest stable one when it does not meet the stability criteria.
+
 ## [1.4.0] - 2026-10-22
 
 Prune now speaks your language: the interface follows the language of your Mac, in English or Portuguese. The whole project (code, documentation and history) is now written in English.
@@ -140,6 +148,7 @@ First public version.
 
 - First version: Smart Scan, Dashboard, cleanup, privacy, optimization, maintenance, uninstaller, updater, extensions, Space Lens, large files, duplicates and shredder.
 
+[1.4.1]: https://github.com/viniciuslopesgit/prune/releases/tag/v1.4.1
 [1.4.0]: https://github.com/viniciuslopesgit/prune/releases/tag/v1.4.0
 [1.3.3]: https://github.com/viniciuslopesgit/prune/releases/tag/v1.3.3
 [1.3.2]: https://github.com/viniciuslopesgit/prune/releases/tag/v1.3.2

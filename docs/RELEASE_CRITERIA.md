@@ -132,6 +132,7 @@ On a Mac or a test account that is not the main one:
 - [ ] Interface in English and in Portuguese (System Settings ▸ General ▸ Language & Region ▸ Applications ▸ Prune): no untranslated or cut-off texts.
 - [ ] Uninstall Prune with another app's uninstaller and through the Finder: no agents or processes are left.
 - [ ] On Intel (major only): open, run Smart Scan and a cache cleanup.
+- [ ] Similar photos on a physical Mac with macOS 14: a folder with two copies of the same photo and one different photo gives one group (CI skips this test on macOS 14, see R16).
 
 ## 7. Criteria for the first "certified GA" version
 

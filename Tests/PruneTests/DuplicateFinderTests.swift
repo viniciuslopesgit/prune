@@ -2,7 +2,28 @@ import Foundation
 import ImageIO
 import Testing
 import UniformTypeIdentifiers
+import Vision
 @testable import Prune
+
+/// Why Vision cannot run on this machine, or nil if it can.
+/// Feature prints need an inference context (GPU / Neural Engine). Some virtual machines, such as
+/// GitHub's macOS 14 runner, cannot create one ("Could not create inference context"). Only that
+/// specific failure skips the test: any other Vision error still fails it.
+let visionUnavailableReason: String? = {
+    let side = 64
+    let ctx = CGContext(data: nil, width: side, height: side, bitsPerComponent: 8, bytesPerRow: 0,
+                        space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue)!
+    ctx.setFillColor(CGColor(red: 0.2, green: 0.5, blue: 0.2, alpha: 1))
+    ctx.fill(CGRect(x: 0, y: 0, width: side / 2, height: side))
+    let req = VNGenerateImageFeaturePrintRequest()
+    do {
+        try VNImageRequestHandler(cgImage: ctx.makeImage()!, options: [:]).perform([req])
+        return nil
+    } catch {
+        let text = error.localizedDescription
+        return text.localizedCaseInsensitiveContains("inference context") ? text : nil
+    }
+}()
 
 @Suite("Duplicates")
 struct DuplicateFinderTests {
@@ -159,7 +180,9 @@ struct DuplicateFinderTests {
         #expect(CGImageDestinationFinalize(dest))
     }
 
-    @Test("Similar photos: groups the look-alikes and leaves the different ones out")
+    @Test("Similar photos: groups the look-alikes and leaves the different ones out",
+          .disabled(if: visionUnavailableReason != nil,
+                    Comment(rawValue: "Vision unavailable on this machine: \(visionUnavailableReason ?? "")")))
     func similarPhotos() throws {
         let tmp = try TempDir()
         try png(tmp, "stripes.png", checker: false)
