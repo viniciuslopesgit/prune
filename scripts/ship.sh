@@ -75,7 +75,11 @@ if [ $RELEASE = 1 ]; then
     echo "✓ Release Prune $VERSION publicada: $(gh release view "$TAG" --json url --jq .url)"
 fi
 
-# 5. Opcional: instala a app testada em /Applications, sem recompilar.
+# 5. Que versão deve estar no main (só informação; promover é ./scripts/stable.sh --apply).
+echo "• Versão estável para o main:"
+python3 -I scripts/stable.py | sed 's/^/    /' || echo "    (não foi possível consultar o GitHub)"
+
+# 6. Opcional: instala a app testada em /Applications, sem recompilar.
 if [ $INSTALL = 1 ]; then
     SKIP_BUILD=1 ./scripts/install.sh
 fi

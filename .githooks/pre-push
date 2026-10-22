@@ -1,15 +1,25 @@
 #!/bin/zsh
 # Antes de cada push: verificação completa (scripts/check.sh --full) do commit enviado.
 # Só passa se o que foi testado for exatamente o que vai ser enviado.
+# O main (e os ramos stable/*) só recebem a versão verificada pelo scripts/stable.sh --apply.
 cd "$(git rev-parse --show-toplevel)" || exit 1
 ZERO=0000000000000000000000000000000000000000
+stamp() { [ -f ".build/$1" ] && cat ".build/$1"; }
 while read -r LOCAL_REF LOCAL_SHA REMOTE_REF REMOTE_SHA; do
     [ "$LOCAL_SHA" = "$ZERO" ] && continue   # apagar um ramo remoto
     TREE=$(git rev-parse "$LOCAL_SHA^{tree}")
-    [ -f .build/check-passed ] && [ "$(cat .build/check-passed)" = "$TREE" ] && continue
+    case $REMOTE_REF in
+        refs/heads/main|refs/heads/stable/*)
+            if [ "$(stamp stable-verified)" != "$TREE" ]; then
+                print "✗ $REMOTE_REF só recebe a versão estável verificada: use ./scripts/stable.sh --apply."
+                exit 1
+            fi
+            continue ;;
+    esac
+    [ "$(stamp check-passed)" = "$TREE" ] && continue
     print "pre-push: $LOCAL_REF ainda não passou a verificação completa. A verificar…"
     ./scripts/check.sh --full || exit 1
-    if [ "$(cat .build/check-passed)" != "$TREE" ]; then
+    if [ "$(stamp check-passed)" != "$TREE" ]; then
         print "✗ A pasta tem alterações que não estão em $LOCAL_REF: o que foi testado não é o que vai ser enviado."
         print "  Faça commit ou git stash das alterações e volte a fazer push."
         exit 1

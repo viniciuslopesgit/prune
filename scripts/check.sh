@@ -71,6 +71,11 @@ for f in scripts/*.sh .githooks/*(N); do
 done
 ok "scripts e hooks"
 
+step "Testes dos scripts"
+python3 -I -m unittest discover -s scripts/tests >.build/check-scripts.log 2>&1 \
+    || { tail -30 .build/check-scripts.log; fail "Os testes dos scripts falharam."; }
+ok "$(grep -oE '^Ran [0-9]+ tests' .build/check-scripts.log | sed 's/Ran/passaram/; s/tests/testes/') (scripts/tests)"
+
 step "Segredos"
 if git ls-files --error-unmatch analytics.env >/dev/null 2>&1 || git diff --cached --name-only | grep -qx analytics.env; then
     fail "analytics.env não pode ir para o repositório."
