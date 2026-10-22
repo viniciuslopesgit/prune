@@ -67,6 +67,7 @@ mkdir -p .build
 step "Sintaxe dos scripts"
 for f in scripts/*.sh .githooks/*(N); do
     zsh -n "$f" || fail "Erro de sintaxe em $f"
+    [ -x "$f" ] || fail "$f não é executável (chmod +x $f)."
 done
 ok "scripts e hooks"
 
