@@ -4,6 +4,7 @@ struct ContentView: View {
     @Environment(AppState.self) private var state
     @State private var access: Permissions.AccessState = Permissions.hasFullDiskAccess ? .granted : .denied
     @State private var showFDA = false
+    @State private var showConsent = false
 
     var body: some View {
         @Bindable var state = state
@@ -23,9 +24,6 @@ struct ContentView: View {
             .listStyle(.sidebar)
             .navigationSplitViewColumnWidth(min: 210, ideal: 230, max: 260)
             .safeAreaInset(edge: .bottom) {
-                if access == .granted && Analytics.isAvailable && !AppSettings.shared.analyticsAsked {
-                    analyticsPrompt
-                }
                 if access != .granted {
                     Button {
                         showFDA = true
@@ -63,7 +61,18 @@ struct ContentView: View {
         .sheet(isPresented: $showFDA, onDismiss: { Task { access = await Permissions.accessState() } }) {
             FullDiskAccessView(initialState: access)
         }
-        .task { await checkAccessAtLaunch() }
+        // No primeiro arranque pergunta pelas estatísticas; o assistente de acesso ao disco vem a seguir
+        // (só pode haver uma folha de cada vez).
+        .sheet(isPresented: $showConsent, onDismiss: { Task { await checkAccessAtLaunch() } }) {
+            AnalyticsConsentView()
+        }
+        .task {
+            if Analytics.isAvailable && !AppSettings.shared.analyticsAsked {
+                showConsent = true
+            } else {
+                await checkAccessAtLaunch()
+            }
+        }
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
             Task { access = await Permissions.accessState() }
         }
@@ -85,29 +94,6 @@ struct ContentView: View {
         case .needsRelaunch: showFDA = true
         case .denied: showFDA = !AppSettings.shared.fdaOnboardingDismissed
         }
-    }
-
-    private var analyticsPrompt: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("Ajudar a melhorar o Prune?").font(.caption.bold())
-            Text("Partilhe estatísticas anónimas: que secções usa e quanto espaço liberta. Nunca nomes de ficheiros.")
-                .font(.caption2).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
-            HStack {
-                Button("Partilhar") { answerAnalytics(true) }.buttonStyle(.borderedProminent).tint(Theme.leaf)
-                Button("Agora não") { answerAnalytics(false) }.buttonStyle(.bordered)
-            }
-            .controlSize(.small)
-        }
-        .padding(10)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Theme.leaf.opacity(0.12), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-        .padding(10)
-    }
-
-    private func answerAnalytics(_ yes: Bool) {
-        AppSettings.shared.analyticsEnabled = yes
-        AppSettings.shared.analyticsAsked = true
-        Analytics.track("app_open")
     }
 
     private func row(_ m: Module) -> some View {

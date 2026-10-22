@@ -2,12 +2,12 @@
 import PackageDescription
 
 let package = Package(
-    name: "MaCClear",
+    name: "Prune",
     platforms: [.macOS(.v14)],
     targets: [
         .executableTarget(
-            name: "MaCClear",
-            path: "Sources/MaCClear",
+            name: "Prune",
+            path: "Sources/Prune",
             linkerSettings: [
                 .linkedFramework("IOKit"),
                 .linkedFramework("Security"),

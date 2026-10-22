@@ -113,7 +113,7 @@ final class AppleScriptRunner: NSObject, @unchecked Sendable {
             ready.signal()
             while true { RunLoop.current.run(mode: .default, before: .distantFuture) }
         }
-        thread.name = "MaCClear.AppleScript"
+        thread.name = "Prune.AppleScript"
         thread.qualityOfService = .userInitiated
         thread.start()
         ready.wait()

@@ -1,7 +1,7 @@
 import Foundation
 import Observation
 
-/// Análise Inteligente: limpeza + proteção + velocidade num só clique.
+/// Análise Inteligente: limpeza + estado das proteções num só clique.
 @MainActor
 @Observable
 final class SmartScanModel {
@@ -12,15 +12,12 @@ final class SmartScanModel {
     var progressText = ""
     var junk: [CleanCategory] = []
     var security = SecurityStatus()
-    var tasks: [MaintenanceTask] = []
     var cleanReport = CleanReport()
-    var tasksRun = 0
     var runCleanup = true
-    var runSpeed = true
 
     var junkSize: Int64 { junk.reduce(0) { $0 + $1.selectedSize } }
 
-    func scan(maintenance: MaintenanceModel) async {
+    func scan() async {
         phase = .scanning
         let reporter = ProgressReporter { [weak self] in self?.progressText = $0 }
 
@@ -34,21 +31,15 @@ final class SmartScanModel {
         progressText = "A verificar as proteções do macOS…"
         security = await SystemProtection.status()
 
-        step = "Velocidade"
-        progressText = "A verificar tarefas de manutenção…"
-        tasks = maintenance.recommendedForSmartScan
-        await Task.pause(0.4)
         runCleanup = !self.junk.isEmpty
-        runSpeed = !tasks.isEmpty && AppSettings.shared.smartScanRunsMaintenance
         phase = .results
         Analytics.track("scan_complete", ["module": "smartScan", "found_mb": Analytics.mb(junkSize),
-                                          "protections_off": security.disabledCount, "tasks": tasks.count])
+                                          "protections_off": security.disabledCount])
     }
 
-    func run(maintenance: MaintenanceModel) async {
+    func run() async {
         phase = .running
         cleanReport = CleanReport()
-        tasksRun = 0
         if runCleanup {
             step = "A limpar…"
             for cat in junk {
@@ -59,14 +50,8 @@ final class SmartScanModel {
                 cleanReport.merge(r)
             }
         }
-        if runSpeed {
-            step = "A otimizar…"
-            let ids = Set(tasks.map(\.id))
-            await maintenance.run(ids)
-            tasksRun = ids.filter { maintenance.states[$0] == .done }.count
-        }
         phase = .done
         Analytics.track("clean_complete", ["module": "smartScan", "freed_mb": Analytics.mb(cleanReport.freed),
-                                           "items_removed": cleanReport.removed, "tasks": tasksRun])
+                                           "items_removed": cleanReport.removed])
     }
 }

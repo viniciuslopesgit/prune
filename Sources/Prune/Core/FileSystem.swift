@@ -5,7 +5,7 @@ import UniformTypeIdentifiers
 let home = FileManager.default.homeDirectoryForCurrentUser
 
 extension URL {
-    static func home(_ path: String) -> URL { MaCClear.home.appendingPathComponent(path) }
+    static func home(_ path: String) -> URL { Prune.home.appendingPathComponent(path) }
 
     var isDirectory: Bool {
         (try? resourceValues(forKeys: [.isDirectoryKey]))?.isDirectory ?? false
@@ -18,7 +18,7 @@ extension URL {
     var exists: Bool { FileManager.default.fileExists(atPath: path) }
 
     var displayPath: String {
-        let h = MaCClear.home.path
+        let h = Prune.home.path
         return path.hasPrefix(h) ? "~" + path.dropFirst(h.count) : path
     }
 

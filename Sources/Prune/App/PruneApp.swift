@@ -1,12 +1,13 @@
 import SwiftUI
 
 @main
-struct MaCClearApp: App {
+struct PruneApp: App {
     @State private var state = AppState.shared
     @AppStorage("showMenuBar") private var showMenuBar = true
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var delegate
 
     init() {
+        LegacyMigration.run()
         SelfTest.fdaCheckIfRequested()
         SelfTest.runIfRequested()
         MemoryBench.runIfRequested()
@@ -62,8 +63,8 @@ final class WindowOpener {
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationWillFinishLaunching(_ notification: Notification) {
-        // Segue o aspeto do sistema (claro/escuro). MACCLEAR_APPEARANCE=light|dark força um deles (capturas).
-        switch ProcessInfo.processInfo.environment["MACCLEAR_APPEARANCE"] {
+        // Segue o aspeto do sistema (claro/escuro). PRUNE_APPEARANCE=light|dark força um deles (capturas).
+        switch ProcessInfo.processInfo.environment["PRUNE_APPEARANCE"] {
         case "light": NSApp.appearance = NSAppearance(named: .aqua)
         case "dark": NSApp.appearance = NSAppearance(named: .darkAqua)
         default: break

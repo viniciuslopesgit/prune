@@ -66,7 +66,7 @@ enum Permissions {
     /// Verifica a permissão num processo novo. O macOS guarda a decisão de acesso durante a vida
     /// do processo: se a app arrancou antes de a permissão estar ativa (ou mesmo a seguir a uma
     /// atualização), continua a ver "negado" até ser reaberta. Um processo filho é avaliado de novo
-    /// (com a identidade do MaCClear), por isso mostra o estado real.
+    /// (com a identidade do Prune), por isso mostra o estado real.
     static func hasFullDiskAccessFresh() async -> Bool {
         let files = fullDiskAccessProbes.filter { !$0.isDirectory }.map(\.path)
         let dirs = fullDiskAccessProbes.filter(\.isDirectory).map(\.path)
@@ -99,9 +99,9 @@ enum Permissions {
         NSApp.terminate(nil)
     }
 
-    /// Regista o estado da permissão em ~/Library/Logs/MaCClear/permissoes.log (diagnóstico).
+    /// Regista o estado da permissão em ~/Library/Logs/Prune/permissoes.log (diagnóstico).
     static func log(_ message: String) {
-        let dir = home.appendingPathComponent("Library/Logs/MaCClear")
+        let dir = home.appendingPathComponent("Library/Logs/Prune")
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         let file = dir.appendingPathComponent("permissoes.log")
         let f = ISO8601DateFormatter()

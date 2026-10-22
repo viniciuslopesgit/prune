@@ -91,18 +91,19 @@ enum Snapshot {
         guard let i = CommandLine.arguments.firstIndex(of: "--snapshot"), i + 1 < CommandLine.arguments.count else { return }
         let dir = URL(fileURLWithPath: CommandLine.arguments[i + 1])
         let only = i + 2 < CommandLine.arguments.count ? CommandLine.arguments[i + 2] : nil
-        if only == "fda" {
+        if only == "fda" || only == "consent" {
             Task { @MainActor in
-                let host = NSHostingView(rootView: FullDiskAccessView().background(Color(hex: 0x2A2A2E)).preferredColorScheme(.dark))
+                let root = only == "fda" ? AnyView(FullDiskAccessView()) : AnyView(AnalyticsConsentView())
+                let host = NSHostingView(rootView: root.background(Theme.background))
                 host.frame = NSRect(origin: .zero, size: host.fittingSize)
                 let win = NSWindow(contentRect: host.frame, styleMask: [.titled], backing: .buffered, defer: false)
                 win.contentView = host
-                win.appearance = NSAppearance(named: .darkAqua)
+                win.appearance = NSApp.appearance
                 win.orderFrontRegardless()
                 try? await Task.sleep(nanoseconds: 1_500_000_000)
                 if let rep = host.bitmapImageRepForCachingDisplay(in: host.bounds) {
                     host.cacheDisplay(in: host.bounds, to: rep)
-                    try? rep.representation(using: .png, properties: [:])?.write(to: dir.appendingPathComponent("fda.png"))
+                    try? rep.representation(using: .png, properties: [:])?.write(to: dir.appendingPathComponent("\(only!).png"))
                 }
                 exit(0)
             }

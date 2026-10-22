@@ -63,17 +63,17 @@ struct FullDiskAccessView: View {
                     Button("Agora não") { dismiss() }
                     Button(checking ? "A verificar…" : "Verificar") { Task { await refresh() } }
                         .buttonStyle(.borderedProminent)
+                        .disabled(checking)
                 }
             }
         }
         .padding(26)
         .frame(width: 560)
-        .task {
-            // Deteta a permissão assim que o utilizador a concede.
-            while state == .denied && !Task.isCancelled {
-                try? await Task.sleep(nanoseconds: 1_500_000_000)
-                await refresh()
-            }
+        // Deteta a permissão quando o utilizador volta das Definições do Sistema, sem mexer no botão
+        // (antes verificava a cada 1,5 s e o botão alternava sozinho para "A verificar…").
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+            guard state != .granted else { return }
+            Task { state = await Permissions.accessState() }
         }
     }
 
@@ -101,6 +101,7 @@ struct FullDiskAccessView: View {
         }
     }
 
+    /// Verificação pedida pelo utilizador (botão "Verificar").
     private func refresh() async {
         checking = true
         state = await Permissions.accessState()

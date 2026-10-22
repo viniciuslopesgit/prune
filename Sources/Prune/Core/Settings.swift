@@ -30,13 +30,6 @@ final class AppSettings {
     var shredPasses: Int {
         didSet { d.set(shredPasses, forKey: "shredPasses") }
     }
-    var smartScanRunsMaintenance: Bool {
-        didSet { d.set(smartScanRunsMaintenance, forKey: "smartScanRunsMaintenance") }
-    }
-    /// Incluir na Análise Inteligente tarefas que pedem a palavra-passe de administrador.
-    var smartScanAdminTasks: Bool {
-        didSet { d.set(smartScanAdminTasks, forKey: "smartScanAdminTasks") }
-    }
     /// O utilizador escolheu não ver o assistente de Acesso Total ao Disco.
     var fdaOnboardingDismissed: Bool {
         didSet { d.set(fdaOnboardingDismissed, forKey: "fdaOnboardingDismissed") }
@@ -56,13 +49,12 @@ final class AppSettings {
     }
 
     private init() {
+        LegacyMigration.run()
         junkDeleteMode = DeleteMode(rawValue: d.string(forKey: "junkDeleteMode") ?? "") ?? .permanent
         filesDeleteMode = DeleteMode(rawValue: d.string(forKey: "filesDeleteMode") ?? "") ?? .trash
         ignoredPaths = d.stringArray(forKey: "ignoredPaths") ?? []
         largeFileMinMB = d.object(forKey: "largeFileMinMB") as? Int ?? 50
         shredPasses = d.object(forKey: "shredPasses") as? Int ?? 1
-        smartScanRunsMaintenance = d.object(forKey: "smartScanRunsMaintenance") as? Bool ?? true
-        smartScanAdminTasks = d.object(forKey: "smartScanAdminTasks") as? Bool ?? false
         fdaOnboardingDismissed = d.bool(forKey: "fdaOnboardingDismissed")
         analyticsEnabled = d.bool(forKey: "analyticsEnabled")
         analyticsAsked = d.bool(forKey: "analyticsAsked")

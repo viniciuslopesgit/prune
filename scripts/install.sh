@@ -13,15 +13,16 @@ cd "$(dirname "$0")/.."
 
 SRC=build/Prune.app
 DEST=/Applications/Prune.app
-OLD=/Applications/MaCClear.app
+LEGACY=/Applications/MaCClear.app
 
-# A app chamava-se MaCClear. Fecha a versão antiga e muda-lhe o nome no lugar: o identificador é o
-# mesmo, por isso o macOS mantém as permissões (ex.: Acesso Total ao Disco).
-if [ -d "$OLD" ] && [ ! -d "$DEST" ]; then
-    pkill -TERM -f "$OLD/Contents/MacOS/MaCClear" || true
+# A app chamava-se MaCClear e tinha outro identificador. A versão antiga é fechada e vai para o Lixo
+# (recuperável). As definições passam sozinhas para o Prune no primeiro arranque; o Acesso Total ao
+# Disco tem de ser concedido outra vez.
+if [ -d "$LEGACY" ]; then
+    pkill -TERM -f "$LEGACY/Contents/MacOS/" || true
     sleep 1
-    mv "$OLD" "$DEST"
-    echo "✓ MaCClear.app passou a Prune.app"
+    osascript -e "tell application \"Finder\" to delete POSIX file \"$LEGACY\"" >/dev/null
+    echo "✓ A versão antiga (MaCClear.app) foi para o Lixo"
 fi
 
 # Fecha a app se estiver aberta.

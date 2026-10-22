@@ -139,13 +139,8 @@ struct OptimizationView: View {
                     }
                     Spacer()
                     Text(String(format: "%.1f%%", p.cpu)).monospacedDigit().frame(width: 70, alignment: .trailing)
+                    // Só métricas: o macOS gere a memória sozinho, por isso o Prune não fecha apps para a "libertar".
                     Text(Fmt.bytes(p.memory)).monospacedDigit().foregroundStyle(.secondary).frame(width: 90, alignment: .trailing)
-                    if p.user == NSUserName() {
-                        Button("Sair") { Task { await model.quit(p, force: false) } }.buttonStyle(.bordered).controlSize(.small)
-                        Button("Forçar") { Task { await model.quit(p, force: true) } }.buttonStyle(.bordered).controlSize(.small)
-                    } else {
-                        Text("Sistema").font(.caption).foregroundStyle(.tertiary).frame(width: 110)
-                    }
                 }
                 .listRowBackground(Color.clear)
             }

@@ -14,7 +14,7 @@ open build/Prune.app
 
 Para o ter sempre à mão, arraste `build/Prune.app` para a pasta **Aplicações**.
 
-A app chamava-se MaCClear. O identificador não mudou, por isso o `install.sh` renomeia `/Applications/MaCClear.app` para `Prune.app` no lugar e as permissões mantêm-se. Internamente (pasta `Sources/MaCClear`, alvo Swift, registos em `~/Library/Logs/MaCClear`) o nome antigo continua.
+A app chamava-se MaCClear (identificador `app.maclear.MaCClear`); agora é `app.prune.Prune`. No primeiro arranque, o Prune copia as definições antigas. O macOS trata-o como uma app nova, por isso o Acesso Total ao Disco tem de ser concedido outra vez. O `install.sh` manda a `MaCClear.app` antiga para o Lixo.
 
 ### Atualizar a app instalada
 
@@ -38,19 +38,19 @@ Gera `build/Prune-<versão>.dmg`: uma janela com o Prune, um atalho para Aplica�
 
 1. **Assinatura estável (uma vez):** `./scripts/setup_signing.sh` cria um certificado local no porta-chaves. A partir daí, o `build_app.sh` assina com ele e o macOS reconhece a app como a mesma entre versões, mantendo as permissões. Sem isto (assinatura ad-hoc), cada compilação é uma "app nova" e o macOS volta a pedir tudo.
 2. **Acesso Total ao Disco:** o assistente aparece ao abrir a app. Com esta permissão o macOS deixa de pedir autorização pasta a pasta (Documentos, Secretária, Transferências, dados de outras apps, Mail, Safari).
-3. **Palavra-passe de administrador:** só é pedida em tarefas que precisam mesmo dela (limpar DNS, espaço purgável, apagar ficheiros do sistema…). O macOS pede-a em cada execução (não a memoriza), e a Análise Inteligente não as inclui a não ser que ative essa opção nas Definições.
+3. **Palavra-passe de administrador:** só é pedida em tarefas que precisam mesmo dela (limpar DNS, espaço purgável, apagar ficheiros do sistema…). O macOS pede-a em cada execução (não a memoriza).
 
 ## Funcionalidades
 
 | Secção | Módulo | O que faz |
 |---|---|---|
-| — | **Análise Inteligente** | Limpeza + estado das proteções + velocidade num clique |
+| — | **Análise Inteligente** | Limpeza + estado das proteções num clique |
 | — | **Painel** | Disco, memória, CPU, rede, bateria (saúde e ciclos) e proteções do macOS: SIP, Gatekeeper, Firewall, FileVault, atualizações de segurança e XProtect, com atalho para ativar as que estiverem desligadas |
 | Limpeza | **Lixo do Sistema** | Caches, registos, relatórios de falhas, temporários, lixo do Xcode, caches de npm/pip/Homebrew/Gradle…, ficheiros de iPhone, preferências danificadas, agentes quebrados, transferências incompletas |
 | | **Anexos do Mail** | Anexos abertos e cópias locais de anexos |
 | | **Lixo** | Esvazia o Lixo do disco de arranque e dos discos externos |
 | Proteção | **Privacidade** | Histórico, cookies e cache de Safari, Chrome, Edge, Brave, Opera, Vivaldi, Arc, Firefox; itens recentes (palavras-passe e marcadores nunca são tocados) |
-| Velocidade | **Otimização** | Itens de início de sessão, agentes de arranque (ativar/desativar/remover), grandes consumidores (sair/forçar) |
+| Velocidade | **Otimização** | Itens de início de sessão, agentes de arranque (ativar/desativar/remover), grandes consumidores (CPU e memória por processo, só para consulta: o macOS gere a RAM sozinho) |
 | | **Manutenção** | Espaço purgável, cache DNS, reindexar Spotlight, Launch Services, Quick Look, tipos de letra, acelerar o Mail, verificar disco, permissões, reiniciar Dock/Finder |
 | Aplicações | **Desinstalador** | Remove apps com todos os ficheiros de suporte, repõe apps, encontra restos de apps já removidas |
 | | **Atualizador** | Atualizações via Sparkle (site do programador) e Homebrew; atalho para a App Store |
