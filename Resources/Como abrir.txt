@@ -8,8 +8,7 @@ COMO INSTALAR E ABRIR O Prune
 SE O macOS DISSER QUE NÃO PODE ABRIR A APP
 ------------------------------------------
 
-O Prune é gratuito e não está registado na Apple (isso exige uma conta
-paga de programador). Por isso, na primeira vez, o macOS pode mostrar:
+O Prune é gratuito e não está registado na Apple. Por isso, na primeira vez, o macOS pode mostrar:
 "Não foi possível verificar o Prune" ou "A Apple não pôde verificar…".
 
 É só preciso autorizar uma vez:
