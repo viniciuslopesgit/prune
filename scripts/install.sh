@@ -1,11 +1,11 @@
 #!/bin/zsh
-# Compila e instala/atualiza o Prune em /Applications.
+# Builds and installs/updates Prune in /Applications.
 #
-# Atualiza a app "no lugar" (substitui o conteúdo do pacote existente) em vez de a mandar para o
-# Lixo: quando uma app vai para o Lixo, o macOS remove as permissões dela (ex.: Acesso Total ao
-# Disco). Com a assinatura estável (setup_signing.sh) e esta atualização no lugar, as permissões
-# mantêm-se entre versões.
-# SKIP_BUILD=1 instala o build/Prune.app existente.
+# Updates the app "in place" (replaces the contents of the existing bundle) instead of sending it to the
+# Trash: when an app goes to the Trash, macOS removes its permissions (e.g. Full Disk Access).
+# With the stable signature (setup_signing.sh) and this in-place update, permissions are kept
+# between versions.
+# SKIP_BUILD=1 installs the existing build/Prune.app.
 set -e
 cd "$(dirname "$0")/.."
 
@@ -14,24 +14,24 @@ cd "$(dirname "$0")/.."
 SRC=build/Prune.app
 DEST=/Applications/Prune.app
 
-# Fecha a app se estiver aberta.
+# Quits the app if it is open.
 if pgrep -f "$DEST/Contents/MacOS/" >/dev/null; then
     pkill -TERM -f "$DEST/Contents/MacOS/" || true
     for i in {1..10}; do pgrep -f "$DEST/Contents/MacOS/" >/dev/null || break; sleep 0.5; done
 fi
 
 if [ -d "$DEST" ]; then
-    # Substitui o conteúdo mantendo o mesmo pacote (sem passar pelo Lixo).
+    # Replaces the contents while keeping the same bundle (without going through the Trash).
     rsync -a --delete "$SRC/" "$DEST/"
-    echo "✓ Prune atualizado em $DEST"
+    echo "✓ Prune updated in $DEST"
 else
     ditto "$SRC" "$DEST"
-    echo "✓ Prune instalado em $DEST"
+    echo "✓ Prune installed in $DEST"
 fi
 
 codesign --verify --deep --strict "$DEST"
-# Dá tempo ao macOS para registar a versão nova antes de a abrir; se a app arrancar no mesmo
-# instante da substituição, pode ficar sem ver o Acesso Total ao Disco até ser reaberta.
+# Gives macOS time to register the new version before opening it; if the app launches at the same
+# moment as the replacement, it may not see Full Disk Access until it is reopened.
 /System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister -f "$DEST" 2>/dev/null || true
 sleep 2
 open "$DEST"

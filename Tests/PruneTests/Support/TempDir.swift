@@ -1,8 +1,8 @@
 import Foundation
 @testable import Prune
 
-/// Pasta temporária isolada para um teste, apagada no fim (`deinit`).
-/// Os testes nunca tocam em ficheiros fora destas pastas.
+/// Isolated temporary folder for a test, deleted at the end (`deinit`).
+/// Tests never touch files outside these folders.
 final class TempDir {
     let url: URL
 
@@ -52,11 +52,11 @@ final class TempDir {
 func read(_ url: URL) -> String? { try? String(contentsOf: url, encoding: .utf8) }
 
 func exists(_ url: URL) -> Bool {
-    // `fileExists` segue ligações; aqui interessa saber se a própria entrada existe.
+    // `fileExists` follows links; here what matters is whether the entry itself exists.
     (try? FileManager.default.attributesOfItem(atPath: url.path)) != nil
 }
 
-/// Dados pseudoaleatórios determinísticos (sempre os mesmos para a mesma semente).
+/// Deterministic pseudo-random data (always the same for the same seed).
 func noise(_ count: Int, seed: UInt64) -> Data {
     var state = seed &+ 0x9E37_79B9_7F4A_7C15
     var bytes = [UInt8](repeating: 0, count: count)

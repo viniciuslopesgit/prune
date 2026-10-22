@@ -3,9 +3,21 @@ import Observation
 import UniformTypeIdentifiers
 
 enum FileKind: String, CaseIterable, Identifiable {
-    case all = "Todos", documents = "Documentos", videos = "Vídeos", audio = "Áudio", images = "Imagens",
-         archives = "Arquivos", diskImages = "Imagens de disco", other = "Outros"
+    case all, documents, videos, audio, images, archives, diskImages, other
     var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .all: String(localized: "All")
+        case .documents: String(localized: "Documents")
+        case .videos: String(localized: "Videos")
+        case .audio: String(localized: "Audio")
+        case .images: String(localized: "Images")
+        case .archives: String(localized: "Archives")
+        case .diskImages: String(localized: "Disk images")
+        case .other: String(localized: "Other")
+        }
+    }
 
     var icon: String {
         switch self {
@@ -33,8 +45,17 @@ enum FileKind: String, CaseIterable, Identifiable {
 }
 
 enum FileAge: String, CaseIterable, Identifiable {
-    case any = "Qualquer data", month = "+1 mês", halfYear = "+6 meses", year = "+1 ano"
+    case any, month, halfYear, year
     var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .any: String(localized: "Any date")
+        case .month: String(localized: "1+ month")
+        case .halfYear: String(localized: "6+ months")
+        case .year: String(localized: "1+ year")
+        }
+    }
     var cutoff: Date? {
         switch self {
         case .any: nil
@@ -96,7 +117,7 @@ final class LargeFilesModel {
         selected = []
         let reporter = ProgressReporter { [weak self] in self?.progressText = $0 }
         let roots = self.roots, includeLibrary = self.includeLibrary
-        // Analisa a partir de 10 MB para permitir mudar o filtro sem nova análise.
+        // Scans from 10 MB up so the filter can change without a new scan.
         files = await Task.detached(priority: .userInitiated) {
             Self.find(in: roots, minSize: 10_000_000, includeLibrary: includeLibrary, progress: reporter)
         }.value
@@ -116,14 +137,14 @@ final class LargeFilesModel {
             let keySet = Set(keys)
             FS.forEach(e) { url in
                 n += 1
-                if n % 1000 == 0 { progress.report("\(n.formatted()) ficheiros · \(url.deletingLastPathComponent().displayPath)") }
+                if n % 1000 == 0 { progress.report("\(Fmt.files(n)) · \(url.deletingLastPathComponent().displayPath)") }
                 if !includeLibrary, url.path == home.path + "/Library" { e.skipDescendants(); return true }
                 if url.path.hasPrefix(home.path + "/Library/Mobile Documents") || url.path.hasPrefix(home.path + "/.Trash") { e.skipDescendants(); return true }
                 guard let rv = try? url.resourceValues(forKeys: keySet) else { return true }
                 if rv.isDirectory == true && rv.isPackage != true { return true }
                 let size: Int64
                 if rv.isPackage == true {
-                    // Pacotes (apps, bibliotecas de fotos…) só são considerados se forem arquivos de projeto, não apps.
+                    // Packages (apps, photo libraries…) are only considered if they are project bundles, not apps.
                     if url.pathExtension == "app" || url.pathExtension == "photoslibrary" { return true }
                     size = FS.size(of: url)
                 } else {
@@ -154,7 +175,7 @@ final class LargeFilesModel {
         let removed = Set(targets.map(\.url)).subtracting(failed)
         files.removeAll { removed.contains($0.url) }
         selected = []
-        message = "\(Fmt.bytes(freed)) libertados." + (failed.isEmpty ? "" : " \(Fmt.count(failed.count, "ficheiro não foi removido", "ficheiros não foram removidos")).")
+        message = Fmt.freedMessage(freed, failed: failed.count)
         working = false
     }
 }

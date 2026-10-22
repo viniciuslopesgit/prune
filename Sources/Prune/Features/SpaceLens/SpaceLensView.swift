@@ -8,13 +8,13 @@ struct SpaceLensView: View {
         let model = state.spaceLens
         VStack(spacing: 0) {
             if model.scanning {
-                ScanningView(module: .spaceLens, title: "A construir o mapa de \(model.target.lastPathComponent)…",
+                ScanningView(module: .spaceLens, title: String(localized: "Building the map of \(model.target.lastPathComponent)…"),
                              detail: model.progressText) { model.cancel() }
             } else if let current = model.current {
                 ModuleHeader(module: .spaceLens, subtitle: "\(current.name) · \(Fmt.bytes(current.size))") {
-                    Button { Task { await model.scan(model.target) } } label: { Label("Analisar de novo", systemImage: "arrow.clockwise") }
+                    Button { Task { await model.scan(model.target) } } label: { Label("Scan again", systemImage: "arrow.clockwise") }
                         .buttonStyle(.bordered)
-                    Button("Outra pasta…") { pickFolder(model) }.buttonStyle(.bordered)
+                    Button("Other folder…") { pickFolder(model) }.buttonStyle(.bordered)
                 }
                 breadcrumb(model, current)
                 if let msg = model.message {
@@ -37,30 +37,30 @@ struct SpaceLensView: View {
                     }
                 }
                 .padding(.horizontal, 32).padding(.bottom, 14)
-                ActionFooter(summary: "\(Fmt.bytes(model.markedSize)) selecionados", buttonTitle: "Remover",
+                ActionFooter(summary: String(localized: "\(Fmt.bytes(model.markedSize)) selected"), buttonTitle: String(localized: "Remove"),
                              disabled: model.marked.isEmpty) { confirming = true }
-                    .confirm("Remover \(Fmt.count(model.marked.count, "item", "itens"))?", isPresented: $confirming,
-                             message: AppSettings.shared.filesDeleteMode == .trash ? "Vão para o Lixo." : "São apagados definitivamente.",
-                             button: "Remover") { Task { await model.removeMarked() } }
+                    .confirm(String(localized: "Remove \(Fmt.items(model.marked.count))?"), isPresented: $confirming,
+                             message: AppSettings.shared.filesDeleteMode == .trash ? String(localized: "They go to the Trash.") : String(localized: "They are deleted permanently."),
+                             button: String(localized: "Remove")) { Task { await model.removeMarked() } }
             } else {
                 ModuleHeader(module: .spaceLens)
                 VStack(spacing: 24) {
                     ModuleArtwork(module: .spaceLens).frame(width: 220, height: 220)
-                    Text("Veja o que ocupa espaço").font(Theme.display(30))
-                    Text("Um mapa das suas pastas, do maior para o mais pequeno. Clique para explorar.")
+                    Text("See what takes up space").font(Theme.display(30))
+                    Text("A map of your folders, from largest to smallest. Click to explore.")
                         .font(.title3).foregroundStyle(.secondary)
                     HStack(spacing: 12) {
-                        Button { Task { await model.scan(home) } } label: { Label("Pasta pessoal", systemImage: "house") }
+                        Button { Task { await model.scan(home) } } label: { Label("Home folder", systemImage: "house") }
                         ForEach(model.volumes, id: \.self) { v in
                             Button { Task { await model.scan(v) } } label: {
-                                Label(v.path == "/" ? "Disco de arranque" : v.lastPathComponent, systemImage: "internaldrive")
+                                Label(v.path == "/" ? String(localized: "Startup disk") : v.lastPathComponent, systemImage: "internaldrive")
                             }
                         }
-                        Button("Escolher pasta…") { pickFolder(model) }
+                        Button("Choose folder…") { pickFolder(model) }
                     }
                     .buttonStyle(.bordered).controlSize(.large)
                     if !Permissions.hasFullDiskAccess {
-                        Text("Sem Acesso Total ao Disco, algumas pastas protegidas ficam de fora.").font(.caption).foregroundStyle(.secondary)
+                        Text("Without Full Disk Access, some protected folders are left out.").font(.caption).foregroundStyle(.secondary)
                     }
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -72,7 +72,7 @@ struct SpaceLensView: View {
         let panel = NSOpenPanel()
         panel.canChooseDirectories = true
         panel.canChooseFiles = false
-        panel.prompt = "Analisar"
+        panel.prompt = String(localized: "Scan")
         if panel.runModal() == .OK, let url = panel.url {
             Task { await model.scan(url) }
         }
@@ -119,7 +119,7 @@ struct SpaceLensView: View {
             .contentShape(Rectangle())
             .onTapGesture { if n.isDirectory, !n.children.isEmpty { model.current = n } }
             .onHover { if $0 { model.hovered = n } }
-            .contextMenu { if !n.isAggregate { Button("Mostrar no Finder") { FS.reveal(n.url) } } }
+            .contextMenu { if !n.isAggregate { Button("Show in Finder") { FS.reveal(n.url) } } }
             .listRowBackground(Color.clear)
         }
         .scrollContentBackground(.hidden)

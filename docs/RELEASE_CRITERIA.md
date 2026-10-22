@@ -1,150 +1,152 @@
-# Critérios de lançamento e estabilidade
+# Release and stability criteria
 
-Uma versão do Prune só é **estável** quando há evidência verificável disso. Compilar, passar nos testes ou funcionar no Mac de quem a fez não chega: o Prune apaga ficheiros, e um erro pode custar dados a quem o usa.
+A Prune version is only **stable** when there is verifiable evidence of it. Building, passing the tests or working on the author's Mac is not enough: Prune deletes files, and a bug can cost its users data.
 
-Este documento define os estados de uma versão, o que é preciso para passar de um ao seguinte, como se mede e quem decide. As regras automáticas estão em [`scripts/stable.py`](../scripts/stable.py) (com testes em `scripts/tests`) e a verificação em [`scripts/check.sh`](../scripts/check.sh). Os riscos conhecidos estão no [registo de riscos](RISK_REGISTER.md).
+This document defines the states of a version, what it takes to move from one to the next, how it is measured and who decides. The automatic rules are in [`scripts/stable.py`](../scripts/stable.py) (with tests in `scripts/tests`) and the checks in [`scripts/check.sh`](../scripts/check.sh). Known risks are in the [risk register](RISK_REGISTER.md).
 
-## 1. Quatro coisas diferentes
+## 1. Four different things
 
-| Afirmação | O que prova | O que **não** prova |
+| Claim | What it proves | What it does **not** prove |
 |---|---|---|
-| Os testes passam | O comportamento testado está como esperado nas máquinas onde correram | Que não há erros; o que não está testado (ex.: as regras de cada análise) |
-| Funcionalmente correto | Cada funcionalidade faz o que promete, incluindo casos-limite e erros | Que funciona noutros macOS, com outras permissões ou a longo prazo |
-| Operacionalmente fiável | Funciona em várias máquinas e versões, recupera de falhas, sem fugas de memória | Que é seguro para quem não sabe o que está a apagar |
-| Seguro para o público | Nada é apagado sem consentimento, nada crítico pode ser apagado, falhas não deixam o sistema em mau estado | Ausência total de defeitos |
+| The tests pass | The tested behaviour is as expected on the machines where they ran | That there are no bugs; what is not tested (e.g. each scan's rules) |
+| Functionally correct | Each feature does what it promises, including edge cases and errors | That it works on other macOS versions, with other permissions or in the long run |
+| Operationally reliable | Works on several machines and versions, recovers from failures, no memory leaks | That it is safe for people who do not know what they are deleting |
+| Safe for the public | Nothing is deleted without consent, nothing critical can be deleted, failures do not leave the system in a bad state | Total absence of defects |
 
-## 2. Estados de uma versão
+## 2. States of a version
 
-| Estado | Onde está | Como se chega lá | Quem decide |
+| State | Where it is | How it gets there | Who decides |
 |---|---|---|---|
-| **Alfa** | Commits no `dev` sem tag; builds locais | Verificação rápida no pre-commit | Quem faz o commit |
-| **Beta** | Release no GitHub marcada como pré-lançamento, com DMG e `SHA256SUMS` | `scripts/ship.sh`: verificação completa local → commit → push `dev` → tag `vX.Y.Z` | Automático |
-| **Candidata (RC)** | A beta que o `stable.sh` aponta como candidata | Todos os critérios automáticos da secção 4 cumpridos | Automático |
-| **Estável** | Commit "Prune X.Y.Z (versão estável)" no `main`; Release marcada como **Latest** | `scripts/stable.sh --apply`: nova verificação completa numa cópia limpa da tag, compilação e autoteste do conteúdo do `main`, Pull Request com merge | Automático para patch e minor; **aprovação humana** para major |
+| **Alpha** | Untagged commits on `dev`; local builds | Quick check in pre-commit | Whoever commits |
+| **Beta** | GitHub Release marked as pre-release, with DMG and `SHA256SUMS` | `scripts/ship.sh`: local full check → commit → push `dev` → `vX.Y.Z` tag | Automatic |
+| **Candidate (RC)** | The beta that `stable.sh` points to as candidate | Every automatic criterion in section 3.3 met | Automatic |
+| **Stable** | "Prune X.Y.Z (stable version)" commit on `main`; Release marked **Latest** | `scripts/stable.sh --apply`: new full check in a clean copy of the tag, build and self-test of `main`'s content, Pull Request with merge | Automatic for patch and minor; **human approval** for major |
 
-O link "Descarregar a última versão" do README aponta para a **Latest**, que é sempre a última estável. As betas só aparecem a quem as procura.
+The README's "Download the latest version" link points to **Latest**, which is always the latest stable. Betas only show to those who look for them.
 
-### Tipos de versão (SemVer)
+### Version types (SemVer)
 
-| Tipo | Quando | Exige |
+| Type | When | Requires |
 |---|---|---|
-| Patch `X.Y.Z+1` | Correções e alterações internas, sem funcionalidade nova | Critérios automáticos |
-| Minor `X.Y+1.0` | Funcionalidade nova compatível | Critérios automáticos + testes da funcionalidade nova no mesmo commit |
-| Major `X+1.0.0` | Mudança incompatível (definições, comportamento por omissão ao apagar, requisitos do sistema) | Critérios automáticos + `STABLE_APPROVE=X.Y.Z` + decisão registada no Pull Request |
+| Patch `X.Y.Z+1` | Fixes and internal changes, no new feature | Automatic criteria |
+| Minor `X.Y+1.0` | Compatible new feature | Automatic criteria + tests of the new feature in the same commit |
+| Major `X+1.0.0` | Incompatible change (settings, default deletion behaviour, system requirements) | Automatic criteria + `STABLE_APPROVE=X.Y.Z` + decision recorded in the Pull Request |
 
-## 3. Portões de qualidade
+## 3. Quality gates
 
-**B** = bloqueia, **A** = só aviso. Coluna "Evidência": o que fica guardado para justificar a decisão.
+**B** = blocks, **W** = warning only. "Evidence" column: what is kept to justify the decision.
 
-### 3.1 A cada commit (`check.sh`, hook pre-commit)
+### 3.1 On every commit (`check.sh`, pre-commit hook)
 
-| # | Verificação | Tipo | Evidência |
+| # | Check | Type | Evidence |
 |---|---|---|---|
-| Q1 | Sintaxe e permissão de execução de todos os scripts e hooks | B | Saída do check |
-| Q2 | Testes dos scripts de publicação (`scripts/tests`) | B | Saída do check |
-| Q3 | Nenhuma chave de `analytics.env` nas alterações; nenhum ficheiro ignorado registado | B | Saída do check |
-| Q4 | Ficheiro novo em `Sources/` exige testes novos ou alterados | B | Saída do check |
-| Q5 | Compilação sem avisos (`-warnings-as-errors`) | B | `.build/check-build-debug.log` |
-| Q6 | Testes de unidade, 100% a passar, em série | B | `.build/check-tests.log` |
-| Q7 | Cobertura mínima de linhas nos ficheiros que apagam ou escolhem o que se apaga (`MIN_COVERAGE`) | B | Relatório `llvm-cov` |
+| Q1 | Syntax and execute permission of every script and hook | B | Check output |
+| Q2 | Tests of the publishing scripts (`scripts/tests`) | B | Check output |
+| Q3 | No `analytics.env` key in the changes; no ignored file tracked | B | Check output |
+| Q4 | A new file in `Sources/` requires new or changed tests | B | Check output |
+| Q5 | Warning-free build (`-warnings-as-errors`) | B | `.build/check-build-debug.log` |
+| Q6 | Unit tests, 100% passing, serially | B | `.build/check-tests.log` |
+| Q7 | Minimum line coverage of the files that delete or choose what is deleted (`MIN_COVERAGE`) | B | `llvm-cov` report |
+| Q8 | Every interface text has a translation and every translation is used, with the same placeholders (`scripts/check_localization.py`) | B | Check output |
 
-### 3.2 Antes de cada beta (`check.sh --full`, `ship.sh`, hook pre-push)
+### 3.2 Before each beta (`check.sh --full`, `ship.sh`, pre-push hook)
 
-| # | Verificação | Tipo | Evidência |
+| # | Check | Type | Evidence |
 |---|---|---|---|
-| R1 | Tudo da secção 3.1 | B | — |
-| R2 | Versão `X.Y.Z` no `Info.plist`, com secção preenchida no CHANGELOG | B | CHANGELOG |
-| R3 | App universal (arm64 + x86_64), assinada, versão certa | B | `lipo`, `codesign --verify` |
-| R4 | Autoteste da app compilada: todas as análises correm só em leitura e 6 verificações dão o resultado esperado | B | `.build/check-selftest.log` |
-| R5 | O que é testado é exatamente o que é enviado (comparação de árvores git) | B | `.build/check-passed` |
-| R6 | DMG e `SHA256SUMS` anexados à Release | B | Release no GitHub |
+| R1 | Everything in section 3.1 | B | — |
+| R2 | `X.Y.Z` version in `Info.plist`, with a filled-in CHANGELOG section | B | CHANGELOG |
+| R3 | Universal app (arm64 + x86_64), signed, right version | B | `lipo`, `codesign --verify` |
+| R4 | Self-test of the built app: every scan runs read-only and 6 checks give the expected result | B | `.build/check-selftest.log` |
+| R5 | What is tested is exactly what is pushed (git tree comparison) | B | `.build/check-passed` |
+| R6 | DMG and `SHA256SUMS` attached to the Release | B | GitHub Release |
 
-### 3.3 Antes de estável (`stable.py`, `stable.sh`)
+### 3.3 Before stable (`stable.py`, `stable.sh`)
 
-| # | Critério | Tipo | Porquê este limite |
+| # | Criterion | Type | Why this limit |
 |---|---|---|---|
-| S1 | Release publicada, com DMG e `SHA256SUMS` | B | Quem descarrega tem de poder verificar o ficheiro |
-| S2 | Tag no histórico do `dev`, com `.mainignore` | B | O `main` só compila a partir da 1.2.9 |
-| S3 | **CI verde no commit da tag** em macOS 14 e 15 | B | É a única evidência de compatibilidade fora da máquina de quem publica |
-| S4 | Nenhuma issue aberta com a etiqueta `bug` que mencione a versão | B | Para uma app que apaga ficheiros, um erro reportado e não resolvido bloqueia. Quem quiser um erro menor sem bloquear não lhe dá a etiqueta `bug` e explica porquê na issue |
-| S5 | Nenhuma versão publicada depois traz `### Corrigido` | B | Se houve correção, a versão anterior tinha um defeito conhecido |
-| S6 | Publicada há pelo menos 24 h (`STABLE_SOAK_HOURS`) | B | É um tempo de espera, **não prova de fiabilidade**: com poucos utilizadores, 24 h sem queixas não quer dizer nada. Serve para o maintainer usar a beta e para o CI correr |
-| S7 | Major só com `STABLE_APPROVE=X.Y.Z` | B | Mudanças incompatíveis precisam de decisão humana |
-| S8 | Nova verificação completa numa cópia limpa da tag | B | Exclui caches e alterações locais |
-| S9 | O conteúdo do `main` (sem ficheiros de desenvolvimento) compila, fica assinado e passa o autoteste | B | O `main` tem de ser compilável por quem o clona |
+| S1 | Published Release, with DMG and `SHA256SUMS` | B | Whoever downloads must be able to verify the file |
+| S2 | Tag in `dev`'s history, with `.mainignore` | B | `main` only builds from 1.2.9 on |
+| S3 | **Green CI on the tag's commit** on macOS 14 and 15 | B | It is the only evidence of compatibility outside the publisher's machine |
+| S4 | No open issue labelled `bug` mentioning the version | B | For an app that deletes files, a reported and unresolved bug blocks. To keep a minor bug from blocking, do not give it the `bug` label and explain why in the issue |
+| S5 | No version published later brings `### Fixed` | B | If there was a fix, the earlier version had a known defect |
+| S6 | Published at least 24 h ago (`STABLE_SOAK_HOURS`) | B | It is a waiting time, **not proof of reliability**: with few users, 24 h without complaints means nothing. It lets the maintainer use the beta and CI run |
+| S7 | Major only with `STABLE_APPROVE=X.Y.Z` | B | Incompatible changes need a human decision |
+| S8 | New full check in a clean copy of the tag | B | Rules out caches and local changes |
+| S9 | `main`'s content (without development files) builds, is signed and passes the self-test | B | `main` must build for whoever clones it |
 
-### 3.4 O que ainda não é medido
+### 3.4 What is not measured yet
 
-Estes indicadores não são verificados hoje. Cada um tem entrada no [registo de riscos](RISK_REGISTER.md).
+These indicators are not checked today. Each one has an entry in the [risk register](RISK_REGISTER.md).
 
-| Indicador | Estado | Proposta |
+| Indicator | State | Proposal |
 |---|---|---|
-| Regras de cada análise (o que é lixo) | **Sem testes** | Testes com pastas temporárias que imitam `~/Library` (risco R1) |
-| Execução em Intel | Só compilado | Teste manual em Intel em cada major (A) |
-| Memória e tempo de cada análise | `--bench` existe, sem limites | Aviso se o pico de memória de uma análise subir mais de 50% face à versão anterior (A) |
-| Taxa de falhas | Não medida (não há relatórios de falhas, por privacidade) | Só as issues; um relatório de falhas opcional seria uma decisão de privacidade à parte |
-| Testes de instalação, atualização e desinstalação | Manuais | Lista de verificação na secção 6 |
+| Each scan's rules (what is junk) | **No tests** | Tests with temporary folders that mimic `~/Library` (risk R1) |
+| Running on Intel | Built only | Manual test on Intel for each major (W) |
+| Memory and time of each scan | `--bench` exists, no limits | Warning if a scan's peak memory rises more than 50% over the previous version (W) |
+| Crash rate | Not measured (no crash reports, for privacy) | Issues only; an optional crash reporter would be a separate privacy decision |
+| Install, update and uninstall tests | Manual | Checklist in section 6 |
 
-## 4. Segurança das operações que apagam
+## 4. Safety of operations that delete
 
-Estas regras valem para todo o código que remove, move, sobrescreve ou corre como administrador.
+These rules apply to all code that removes, moves, overwrites or runs as administrator.
 
-1. **Pré-visualização primeiro.** Cada análise mostra a lista do que vai ser removido antes de remover. Nada é apagado sem uma ação explícita do utilizador.
-2. **Confirmação.** Remoções de ficheiros do utilizador, apps, itens de arranque e tarefas com privilégios pedem confirmação, com o número de itens e o tamanho.
-3. **Lista de proteção.** Tudo passa pelo `SafetyGuard.canDelete`: as pastas do sistema e as pastas pessoais nunca podem ser apagadas, os caminhos são normalizados e a pasta-mãe é resolvida (`/var`, `/tmp`, `/etc`).
-4. **Ligações simbólicas.** Apagar uma ligação nunca toca no destino; o Destruidor nunca sobrescreve através de uma ligação.
-5. **Reversível por omissão.** Ficheiros pessoais e apps vão para o Lixo. Só caches e registos são apagados diretamente.
-6. **Privilégio mínimo.** Pede a palavra-passe de administrador só quando a operação falha sem ela, uma vez por lote, e só para caminhos que passaram o `SafetyGuard`.
-7. **Testes só em pastas descartáveis.** Os testes usam `TempDir` e nunca tocam em `~`, no Lixo verdadeiro ou em `/Applications`. Nenhuma operação destrutiva se testa diretamente no Mac de quem desenvolve.
-8. **Uma limpeza que corre bem não prova que é segura.** Os testes verificam também o que **não** pode mudar: o ficheiro de destino de uma ligação continua igual; os dados destruídos desaparecem mesmo, através de uma ligação física; as pastas protegidas continuam lá.
+1. **Preview first.** Each scan shows the list of what will be removed before removing it. Nothing is deleted without an explicit user action.
+2. **Confirmation.** Removing user files, apps, login items and privileged tasks asks for confirmation, with the number of items and the size.
+3. **Protection list.** Everything goes through `SafetyGuard.canDelete`: system folders and personal folders can never be deleted, paths are normalized and the parent folder is resolved (`/var`, `/tmp`, `/etc`).
+4. **Symbolic links.** Deleting a link never touches its target; the Shredder never overwrites through a link.
+5. **Reversible by default.** Personal files and apps go to the Trash. Only caches and logs are deleted directly.
+6. **Least privilege.** Asks for the administrator password only when the operation fails without it, once per batch, and only for paths that passed `SafetyGuard`.
+7. **Tests only in disposable folders.** Tests use `TempDir` and never touch `~`, the real Trash or `/Applications`. No destructive operation is tested directly on the developer's Mac.
+8. **A cleanup that goes well does not prove it is safe.** Tests also check what must **not** change: a link's target file stays the same; shredded data really disappears, through a hard link; protected folders are still there.
 
-## 5. Governação
+## 5. Governance
 
-| Situação | Quem ou o quê | Registo |
+| Situation | Who or what | Record |
 |---|---|---|
-| Beta | `ship.sh`, depois de a verificação completa passar | Commit, tag, Release |
-| Estável patch/minor | `stable.sh --apply` (corre no fim de cada `ship.sh` e todos os dias às 23:30) | Pull Request para o `main`, com a tabela de critérios e a evidência |
-| Estável major | Maintainer, com `STABLE_APPROVE=X.Y.Z ./scripts/stable.sh --apply` | O mesmo Pull Request, com a justificação da aprovação |
-| Exceção a um critério (ex.: correção de segurança urgente sem as 24 h) | Maintainer: `STABLE_SOAK_HOURS=0 ./scripts/stable.sh --apply` | Motivo escrito no Pull Request e uma linha no CHANGELOG |
-| Risco aceite | Maintainer | Entrada no [registo de riscos](RISK_REGISTER.md), com data e motivo |
+| Beta | `ship.sh`, after the full check passes | Commit, tag, Release |
+| Stable patch/minor | `stable.sh --apply` (runs at the end of every `ship.sh` and every day at 23:30) | Pull Request to `main`, with the criteria table and the evidence |
+| Stable major | Maintainer, with `STABLE_APPROVE=X.Y.Z ./scripts/stable.sh --apply` | The same Pull Request, with the justification of the approval |
+| Exception to a criterion (e.g. urgent security fix without the 24 h) | Maintainer: `STABLE_SOAK_HOURS=0 ./scripts/stable.sh --apply` | Reason written in the Pull Request and a line in the CHANGELOG |
+| Accepted risk | Maintainer | Entry in the [risk register](RISK_REGISTER.md), with date and reason |
 
-**Nunca há exceção** para Q5–Q7, R3–R5, S3, S8 ou S9. São estas verificações que impedem que uma versão que apaga mal chegue a alguém.
+**There is never an exception** for Q5–Q7, R3–R5, S3, S8 or S9. These are the checks that stop a version that deletes wrongly from reaching anyone.
 
-### Regressões e retirada de uma versão
+### Regressions and withdrawing a version
 
-1. Abrir uma issue com a etiqueta `bug` a mencionar `vX.Y.Z`. A versão deixa logo de poder ser promovida (S4).
-2. Se a versão já é estável e o erro pode causar perda de dados: editar a Release para pré-lançamento com a nota "⚠️ Retirada: ver #N" e, no `main`, fazer `git revert` do commit da versão por Pull Request. Como o `main` tem um commit por versão, isso repõe a estável anterior.
-3. Publicar a correção (`### Corrigido`). As versões anteriores ficam automaticamente rejeitadas (S5) e a correção segue o caminho normal.
+1. Open an issue labelled `bug` mentioning `vX.Y.Z`. The version immediately can no longer be promoted (S4).
+2. If the version is already stable and the bug can cause data loss: edit the Release to pre-release with the note "⚠️ Withdrawn: see #N" and, on `main`, `git revert` the version's commit through a Pull Request. Since `main` has one commit per version, this restores the previous stable.
+3. Publish the fix (`### Fixed`). Earlier versions are automatically rejected (S5) and the fix follows the normal path.
 
-### Vulnerabilidades
+### Vulnerabilities
 
-Ver [SECURITY.md](../SECURITY.md).
+See [SECURITY.md](../SECURITY.md).
 
-## 6. Lista de verificação manual (cada minor e major)
+## 6. Manual checklist (each minor and major)
 
-Num Mac ou numa conta de teste que não seja a principal:
+On a Mac or a test account that is not the main one:
 
-- [ ] Instalação limpa a partir do DMG; `shasum -a 256 -c SHA256SUMS` confirma o DMG.
-- [ ] Atualização por cima da versão anterior: as definições mantêm-se e o Acesso Total ao Disco continua concedido.
-- [ ] Sem Acesso Total ao Disco: as análises não falham e explicam o que falta.
-- [ ] Cancelar o pedido de palavra-passe de administrador: nada é apagado e a interface explica porquê.
-- [ ] Desinstalar o Prune com o próprio Desinstalador de outra app e pelo Finder: não ficam agentes nem processos.
-- [ ] Em Intel (só em cada major): abrir, correr a Análise Inteligente e uma limpeza de caches.
+- [ ] Clean install from the DMG; `shasum -a 256 -c SHA256SUMS` confirms the DMG.
+- [ ] Update over the previous version: settings are kept and Full Disk Access stays granted.
+- [ ] Without Full Disk Access: scans do not fail and explain what is missing.
+- [ ] Cancel the administrator password prompt: nothing is deleted and the interface explains why.
+- [ ] Interface in English and in Portuguese (System Settings ▸ General ▸ Language & Region ▸ Applications ▸ Prune): no untranslated or cut-off texts.
+- [ ] Uninstall Prune with another app's uninstaller and through the Finder: no agents or processes are left.
+- [ ] On Intel (major only): open, run Smart Scan and a cache cleanup.
 
-## 7. Critérios da primeira versão "GA certificada"
+## 7. Criteria for the first "certified GA" version
 
-A numeração do Prune já passou o 1.0.0 (há tags `v1.x` publicadas, que não se reutilizam). Por isso, a primeira versão que cumprir **todos** estes critérios deve sair como **2.0.0**, com aprovação explícita. Até lá, "estável" quer dizer: cumpre os critérios automáticos e não tem defeitos conhecidos.
+Prune's numbering is already past 1.0.0 (there are published `v1.x` tags, which are not reused). So the first version that meets **all** of these criteria should come out as **2.0.0**, with explicit approval. Until then, "stable" means: it meets the automatic criteria and has no known defects.
 
-| # | Critério | Obrigatório para 2.0.0 | Como se verifica |
+| # | Criterion | Required for 2.0.0 | How it is checked |
 |---|---|---|---|
-| G1 | Todos os portões automáticos (secção 3) cumpridos | Sim | Pull Request de promoção |
-| G2 | Regras de cada análise com testes e cobertura ≥ 80% nos scanners (R1) | Sim | `MIN_COVERAGE` inclui os scanners |
-| G3 | Remoção como administrador sem corrida entre verificar e apagar (R2) | Sim | Teste que troca a pasta-mãe por uma ligação |
-| G4 | Confirmação em todas as ações destrutivas e com privilégios (R4) | Sim | Revisão das views; lista na secção 4 |
-| G5 | Distribuição sem pedir para desativar a quarentena: Developer ID e notarização, **ou** risco aceite registado com alternativa documentada (ex.: compilar a partir do código) (R3) | Sim | `spctl -a -vv` aceita a app, ou entrada no registo de riscos |
-| G6 | Proteção do ramo `main` no GitHub: só por Pull Request, sem force-push (R10) | Sim | Definições do repositório |
-| G7 | Relatório privado de vulnerabilidades ligado no GitHub | Sim | Definições do repositório |
-| G8 | Lista manual da secção 6 feita e anexada ao Pull Request | Sim | Pull Request |
-| G9 | Programa-piloto: a beta usada por pelo menos 5 pessoas, em pelo menos 2 versões do macOS, durante 7 dias, sem erros `bug` abertos | Sim | Issue de piloto com as respostas |
-| G10 | Limites de memória por análise (secção 3.4) | Não (aviso) | `--bench` |
-| G11 | Registo local do que foi apagado | Não, mas recomendado | — |
+| G1 | Every automatic gate (section 3) met | Yes | Promotion Pull Request |
+| G2 | Each scan's rules with tests and ≥ 80% coverage in the scanners (R1) | Yes | `MIN_COVERAGE` includes the scanners |
+| G3 | Removal as administrator without a race between checking and deleting (R2) | Yes | Test that swaps the parent folder for a link |
+| G4 | Confirmation on every destructive and privileged action (R4) | Yes | Review of the views; list in section 4 |
+| G5 | Distribution without asking to disable quarantine: Developer ID and notarization, **or** an accepted risk recorded with a documented alternative (e.g. building from source) (R3) | Yes | `spctl -a -vv` accepts the app, or an entry in the risk register |
+| G6 | `main` branch protection on GitHub: Pull Request only, no force-push (R10) | Yes | Repository settings |
+| G7 | Private vulnerability reporting turned on in GitHub | Yes | Repository settings |
+| G8 | Manual list in section 6 done and attached to the Pull Request | Yes | Pull Request |
+| G9 | Pilot programme: the beta used by at least 5 people, on at least 2 macOS versions, for 7 days, with no open `bug` issues | Yes | Pilot issue with the answers |
+| G10 | Memory limits per scan (section 3.4) | No (warning) | `--bench` |
+| G11 | Local log of what was deleted | No, but recommended | — |

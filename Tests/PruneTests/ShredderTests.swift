@@ -2,23 +2,23 @@ import Foundation
 import Testing
 @testable import Prune
 
-@Suite("Destruidor")
+@Suite("Shredder")
 struct ShredderTests {
-    @Test("Destrói um ficheiro e os dados deixam de existir no disco", arguments: [0, 1, 4096, 1_048_576, 2_621_441])
+    @Test("Shreds a file and its data no longer exists on disk", arguments: [0, 1, 4096, 1_048_576, 2_621_441])
     func shredsFileAndItsData(size: Int) throws {
         let tmp = try TempDir()
-        let f = try tmp.file("segredo.bin", noise(size, seed: 1))
-        // Uma ligação física partilha os dados: se o ficheiro só fosse desligado, o conteúdo ficava aqui.
-        let hard = tmp.path("ligacao-fisica")
+        let f = try tmp.file("secret.bin", noise(size, seed: 1))
+        // A hard link shares the data: if the file were only unlinked, the contents would stay here.
+        let hard = tmp.path("hard-link")
         try FileManager.default.linkItem(at: f, to: hard)
 
         #expect(Shredder.shredSync(f, passes: 1))
         #expect(!exists(f))
         let left = try Data(contentsOf: hard)
-        #expect(left.isEmpty, "o conteúdo original continua no disco")
+        #expect(left.isEmpty, "the original contents are still on disk")
     }
 
-    @Test("Várias passagens", arguments: [0, 1, 3, 7])
+    @Test("Several passes", arguments: [0, 1, 3, 7])
     func multiplePasses(passes: Int) throws {
         let tmp = try TempDir()
         let f = try tmp.file("a.bin", bytes: 300_000, fill: 0xAB)
@@ -26,21 +26,21 @@ struct ShredderTests {
         #expect(!exists(f))
     }
 
-    @Test("Não deixa o nome original na pasta")
+    @Test("Does not leave the original name in the folder")
     func renamesBeforeDeleting() throws {
         let tmp = try TempDir()
-        let f = try tmp.file("nome-revelador.txt", "x")
+        let f = try tmp.file("revealing-name.txt", "x")
         #expect(Shredder.shredSync(f, passes: 1))
         #expect(FS.children(tmp.url).isEmpty)
     }
 
-    @Test("Destrói pastas com subpastas")
+    @Test("Shreds folders with subfolders")
     func shredsFolders() throws {
         let tmp = try TempDir()
-        let folder = try tmp.dir("pasta")
-        let a = try tmp.file("pasta/a.txt", "a")
-        try tmp.file("pasta/sub/b.txt", "b")
-        let hard = tmp.path("copia-a")
+        let folder = try tmp.dir("folder")
+        let a = try tmp.file("folder/a.txt", "a")
+        try tmp.file("folder/sub/b.txt", "b")
+        let hard = tmp.path("copy-a")
         try FileManager.default.linkItem(at: a, to: hard)
 
         #expect(Shredder.shredSync(folder, passes: 1))
@@ -48,64 +48,64 @@ struct ShredderTests {
         #expect(try Data(contentsOf: hard).isEmpty)
     }
 
-    @Test("Uma ligação simbólica dentro da pasta nunca sobrescreve o ficheiro de fora")
+    @Test("A symbolic link inside the folder never overwrites the file outside")
     func symlinkInsideFolderKeepsTarget() throws {
         let tmp = try TempDir()
-        let target = try tmp.file("original.txt", "conteúdo original")
-        try tmp.dir("a-destruir")
-        try tmp.symlink("a-destruir/ligacao", to: target)
+        let target = try tmp.file("original.txt", "original content")
+        try tmp.dir("to-shred")
+        try tmp.symlink("to-shred/link", to: target)
 
-        _ = Shredder.shredSync(tmp.path("a-destruir"), passes: 3)
-        #expect(!exists(tmp.path("a-destruir")))
-        #expect(read(target) == "conteúdo original")
+        _ = Shredder.shredSync(tmp.path("to-shred"), passes: 3)
+        #expect(!exists(tmp.path("to-shred")))
+        #expect(read(target) == "original content")
     }
 
-    @Test("Destruir uma ligação simbólica só remove a ligação")
+    @Test("Shredding a symbolic link only removes the link")
     func shreddingSymlinkRemovesOnlyLink() throws {
         let tmp = try TempDir()
-        let target = try tmp.file("original.txt", "intacto")
-        let link = try tmp.symlink("ligacao", to: target)
+        let target = try tmp.file("original.txt", "intact")
+        let link = try tmp.symlink("link", to: target)
 
         #expect(Shredder.shredSync(link, passes: 1))
         #expect(!exists(link))
-        #expect(read(target) == "intacto")
+        #expect(read(target) == "intact")
     }
 
-    @Test("Uma ligação para uma pasta não destrói o conteúdo da pasta")
+    @Test("A link to a folder does not shred the folder's contents")
     func symlinkToFolderKeepsFolder() throws {
         let tmp = try TempDir()
-        try tmp.file("real/dentro.txt", "fica")
-        let link = try tmp.symlink("ligacao", to: tmp.path("real"))
+        try tmp.file("real/inside.txt", "stays")
+        let link = try tmp.symlink("link", to: tmp.path("real"))
 
         #expect(Shredder.shredSync(link, passes: 1))
-        #expect(read(tmp.path("real/dentro.txt")) == "fica")
+        #expect(read(tmp.path("real/inside.txt")) == "stays")
     }
 
-    @Test("Recusa caminhos protegidos")
+    @Test("Refuses protected paths")
     func refusesProtectedPaths() {
         #expect(!Shredder.shredSync(URL(fileURLWithPath: "/System"), passes: 1))
         #expect(!Shredder.shredSync(home, passes: 1))
         #expect(!Shredder.shredSync(.home("Documents"), passes: 1))
     }
 
-    @Test("Ficheiro inexistente devolve falha, sem fechar a app")
+    @Test("A missing file returns failure, without crashing the app")
     func missingFileFails() throws {
         let tmp = try TempDir()
-        #expect(!Shredder.shredSync(tmp.path("nao-existe"), passes: 1))
+        #expect(!Shredder.shredSync(tmp.path("does-not-exist"), passes: 1))
     }
 
-    @Test("Ficheiro só de leitura devolve falha e fica intacto")
+    @Test("A read-only file returns failure and stays intact")
     func readOnlyFileFails() throws {
         let tmp = try TempDir()
-        let f = try tmp.file("bloqueado.txt", "protegido")
+        let f = try tmp.file("locked.txt", "protected")
         try FileManager.default.setAttributes([.posixPermissions: 0o444], ofItemAtPath: f.path)
         defer { try? FileManager.default.setAttributes([.posixPermissions: 0o644], ofItemAtPath: f.path) }
 
         #expect(!Shredder.shredSync(f, passes: 1))
-        #expect(read(f) == "protegido")
+        #expect(read(f) == "protected")
     }
 
-    @Test("Versão assíncrona")
+    @Test("Async version")
     func asyncShred() async throws {
         let tmp = try TempDir()
         let f = try tmp.file("a.txt", "x")

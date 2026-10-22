@@ -1,13 +1,13 @@
 import SwiftUI
 
-/// Vista partilhada pelos módulos de limpeza por categorias.
+/// View shared by the category-based cleanup modules.
 struct CleanupModuleView: View {
     let model: CleanupModel
     let module: Module
     let headline: String
     let message: String
     var features: [(String, String)] = []
-    var cleanTitle = "Limpar"
+    var cleanTitle = String(localized: "Clean")
 
     @State private var confirming = false
 
@@ -20,24 +20,24 @@ struct CleanupModuleView: View {
                     Task { await model.scan() }
                 }
             case .scanning:
-                ScanningView(module: module, title: "A analisar…", detail: model.progressText)
+                ScanningView(module: module, title: String(localized: "Scanning…"), detail: model.progressText)
             case .cleaning:
-                ScanningView(module: module, title: "A limpar…", detail: model.progressText)
+                ScanningView(module: module, title: String(localized: "Cleaning…"), detail: model.progressText)
             case .results:
-                ModuleHeader(module: module, subtitle: model.categories.isEmpty ? nil : "\(Fmt.bytes(model.totalSize)) encontrados") {
-                    Button { Task { await model.scan() } } label: { Label("Analisar de novo", systemImage: "arrow.clockwise") }
+                ModuleHeader(module: module, subtitle: model.categories.isEmpty ? nil : String(localized: "\(Fmt.bytes(model.totalSize)) found")) {
+                    Button { Task { await model.scan() } } label: { Label("Scan again", systemImage: "arrow.clockwise") }
                         .buttonStyle(.bordered)
                 }
                 if model.categories.isEmpty {
-                    EmptyStateView(icon: "sparkles", title: "Tudo limpo", message: "Nada para remover.")
-                    Button("Voltar") { model.reset() }.buttonStyle(.bordered).padding(.bottom, 30)
+                    EmptyStateView(icon: "sparkles", title: String(localized: "All clean"), message: String(localized: "Nothing to remove."))
+                    Button("Back") { model.reset() }.buttonStyle(.bordered).padding(.bottom, 30)
                 } else {
                     results
                 }
             case .done:
                 DoneView(
-                    module: module, title: "Concluído",
-                    message: "\(Fmt.bytes(model.report.freed)) libertados · \(Fmt.count(model.report.removed, "item", "itens")).",
+                    module: module, title: String(localized: "Done"),
+                    message: String(localized: "\(Fmt.bytes(model.report.freed)) freed · \(Fmt.items(model.report.removed))."),
                     failedCount: model.report.failed.count,
                     onRetryAdmin: { Task { await model.retryFailedAsAdmin() } },
                     onBack: { model.phase = model.categories.contains { !$0.items.isEmpty } ? .results : .idle }
@@ -51,8 +51,8 @@ struct CleanupModuleView: View {
             let blockers = model.runningBlockers
             if !blockers.isEmpty {
                 StatusBanner(
-                    text: "Feche \(blockers.compactMap(\.localizedName).joined(separator: ", ")) para limpar com segurança.",
-                    icon: "exclamationmark.triangle", actionTitle: "Fechar apps"
+                    text: String(localized: "Close \(blockers.compactMap(\.localizedName).joined(separator: ", ")) to clean safely."),
+                    icon: "exclamationmark.triangle", actionTitle: String(localized: "Close apps")
                 ) { blockers.forEach { $0.terminate() } }
                 .padding(.horizontal, 32).padding(.bottom, 10)
             }
@@ -71,7 +71,7 @@ struct CleanupModuleView: View {
                     if let cat = model.selectedCategory {
                         itemsList(cat)
                     } else {
-                        EmptyStateView(icon: "list.bullet", title: "Escolha uma categoria")
+                        EmptyStateView(icon: "list.bullet", title: String(localized: "Choose a category"))
                     }
                 }
             }
@@ -79,14 +79,14 @@ struct CleanupModuleView: View {
             .padding(.bottom, 14)
 
             ActionFooter(
-                summary: "\(Fmt.bytes(model.selectedSize)) selecionados",
+                summary: String(localized: "\(Fmt.bytes(model.selectedSize)) selected"),
                 buttonTitle: cleanTitle,
                 disabled: model.selectedCount == 0,
-                secondary: ("Selecionar tudo", { model.setAll(true) })
+                secondary: (String(localized: "Select all"), { model.setAll(true) })
             ) { confirming = true }
         }
         .confirm("\(cleanTitle) \(Fmt.bytes(model.selectedSize))?", isPresented: $confirming,
-                 message: "\(Fmt.count(model.selectedCount, "item será removido", "itens serão removidos")).", button: cleanTitle) {
+                 message: Fmt.count(model.selectedCount, String(localized: "item will be removed"), String(localized: "items will be removed")) + ".", button: cleanTitle) {
             Task { await model.clean() }
         }
     }
@@ -97,7 +97,7 @@ struct CleanupModuleView: View {
             Image(systemName: cat.icon).frame(width: 22)
             VStack(alignment: .leading, spacing: 1) {
                 Text(cat.name).lineLimit(1)
-                Text(Fmt.count(cat.items.count, "item", "itens")).font(.caption).foregroundStyle(.secondary)
+                Text(Fmt.items(cat.items.count)).font(.caption).foregroundStyle(.secondary)
             }
             Spacer()
             SizeLabel(bytes: cat.totalSize).font(.callout)
@@ -139,8 +139,8 @@ struct CleanupModuleView: View {
                     .padding(.vertical, 2)
                     .listRowBackground(Color.clear)
                     .contextMenu {
-                        Button("Mostrar no Finder") { FS.reveal(item.url) }
-                        Button("Ignorar sempre") {
+                        Button("Show in Finder") { FS.reveal(item.url) }
+                        Button("Always ignore") {
                             AppSettings.shared.ignoredPaths.append(item.url.path)
                             if item.selected { model.toggleItem(category: cat.id, item: item.id) }
                         }

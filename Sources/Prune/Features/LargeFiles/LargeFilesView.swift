@@ -9,20 +9,20 @@ struct LargeFilesView: View {
         @Bindable var model = state.largeFiles
         VStack(spacing: 0) {
             if model.scanning {
-                ScanningView(module: .largeFiles, title: "A procurar ficheiros grandes…", detail: model.progressText)
+                ScanningView(module: .largeFiles, title: String(localized: "Looking for large files…"), detail: model.progressText)
             } else if !model.scanned {
                 ModuleHeader(module: .largeFiles)
                 HeroView(
-                    module: .largeFiles, headline: "Encontre ficheiros grandes e esquecidos",
-                    message: "Vídeos, imagens de disco e arquivos que já não abre há muito tempo.",
-                    features: [("arrow.up.right.and.arrow.down.left", "Por tamanho"), ("calendar", "Pela última abertura"),
-                               ("square.grid.2x2", "Por tipo de ficheiro")],
-                    footnote: "Analisa a sua pasta pessoal\(model.includeLibrary ? ", incluindo a Biblioteca" : "")."
+                    module: .largeFiles, headline: String(localized: "Find large, forgotten files"),
+                    message: String(localized: "Videos, disk images and archives you have not opened in a long time."),
+                    features: [("arrow.up.right.and.arrow.down.left", String(localized: "By size")), ("calendar", String(localized: "By last opened")),
+                               ("square.grid.2x2", String(localized: "By file type"))],
+                    footnote: model.includeLibrary ? String(localized: "Scans your home folder, including the Library.") : String(localized: "Scans your home folder.")
                 ) { Task { await model.scan() } }
-                Toggle("Incluir a pasta Biblioteca", isOn: $model.includeLibrary).padding(.bottom, 150)
+                Toggle("Include the Library folder", isOn: $model.includeLibrary).padding(.bottom, 150)
             } else {
-                ModuleHeader(module: .largeFiles, subtitle: "\(Fmt.count(model.filtered.count, "ficheiro", "ficheiros")) · \(Fmt.bytes(model.filtered.reduce(0) { $0 + $1.size }))") {
-                    Button { Task { await model.scan() } } label: { Label("Analisar de novo", systemImage: "arrow.clockwise") }.buttonStyle(.bordered)
+                ModuleHeader(module: .largeFiles, subtitle: "\(Fmt.files(model.filtered.count)) · \(Fmt.bytes(model.filtered.reduce(0) { $0 + $1.size }))") {
+                    Button { Task { await model.scan() } } label: { Label("Scan again", systemImage: "arrow.clockwise") }.buttonStyle(.bordered)
                 }
                 filters(model)
                 if let msg = model.message {
@@ -34,7 +34,7 @@ struct LargeFilesView: View {
                         List(FileKind.allCases) { k in
                             HStack {
                                 Image(systemName: k.icon).frame(width: 22)
-                                Text(k.rawValue)
+                                Text(k.title)
                                 Spacer()
                                 Text("\(model.count(k))").foregroundStyle(.secondary).monospacedDigit()
                             }
@@ -59,27 +59,27 @@ struct LargeFilesView: View {
                                     Text(f.url.deletingLastPathComponent().displayPath).font(.caption).foregroundStyle(.secondary).lineLimit(1).truncationMode(.middle)
                                 }
                                 Spacer()
-                                Text("Aberto \(Fmt.relative(f.accessed ?? f.modified))").font(.caption).foregroundStyle(.secondary).frame(width: 150, alignment: .trailing)
+                                Text("Opened \(Fmt.relative(f.accessed ?? f.modified))").font(.caption).foregroundStyle(.secondary).frame(width: 150, alignment: .trailing)
                                 SizeLabel(bytes: f.size).frame(width: 80, alignment: .trailing)
                                 RevealButton(url: f.url)
                             }
                             .listRowBackground(Color.clear)
                         }
                         .scrollContentBackground(.hidden)
-                        .overlay { if model.filtered.isEmpty { EmptyStateView(icon: "doc", title: "Nenhum ficheiro com estes filtros") } }
+                        .overlay { if model.filtered.isEmpty { EmptyStateView(icon: "doc", title: String(localized: "No files match these filters")) } }
                     }
                 }
                 .padding(.horizontal, 32).padding(.bottom, 14)
-                ActionFooter(summary: "\(Fmt.count(model.selected.count, "selecionado", "selecionados")) · \(Fmt.bytes(model.selectedSize))",
-                             buttonTitle: "Remover", disabled: model.selected.isEmpty || model.working,
-                             secondary: ("Destruir", { shredMode = true; confirm = true })) {
+                ActionFooter(summary: "\(Fmt.count(model.selected.count, String(localized: "file selected"), String(localized: "files selected"))) · \(Fmt.bytes(model.selectedSize))",
+                             buttonTitle: String(localized: "Remove"), disabled: model.selected.isEmpty || model.working,
+                             secondary: (String(localized: "Shred"), { shredMode = true; confirm = true })) {
                     shredMode = false
                     confirm = true
                 }
-                .confirm(shredMode ? "Destruir de forma segura?" : "Remover ficheiros?", isPresented: $confirm,
-                         message: shredMode ? "Os ficheiros são sobrescritos e apagados. Não se recuperam."
-                                            : (AppSettings.shared.filesDeleteMode == .trash ? "Os ficheiros vão para o Lixo." : "Os ficheiros são apagados definitivamente."),
-                         button: shredMode ? "Destruir" : "Remover") {
+                .confirm(shredMode ? String(localized: "Shred securely?") : String(localized: "Remove files?"), isPresented: $confirm,
+                         message: shredMode ? String(localized: "The files are overwritten and deleted. They cannot be recovered.")
+                                            : (AppSettings.shared.filesDeleteMode == .trash ? String(localized: "The files go to the Trash.") : String(localized: "The files are deleted permanently.")),
+                         button: shredMode ? String(localized: "Shred") : String(localized: "Remove")) {
                     Task { await model.removeSelected(shred: shredMode) }
                 }
             }
@@ -89,12 +89,12 @@ struct LargeFilesView: View {
     private func filters(_ model: LargeFilesModel) -> some View {
         @Bindable var model = model
         return HStack(spacing: 16) {
-            Picker("Tamanho mínimo", selection: $model.minMB) {
+            Picker("Minimum size", selection: $model.minMB) {
                 ForEach([10, 50, 100, 500, 1000, 5000], id: \.self) { Text($0 >= 1000 ? "\($0 / 1000) GB" : "\($0) MB").tag($0) }
             }
             .frame(width: 220)
-            Picker("Aberto há", selection: $model.age) {
-                ForEach(FileAge.allCases) { Text($0.rawValue).tag($0) }
+            Picker("Last opened", selection: $model.age) {
+                ForEach(FileAge.allCases) { Text($0.title).tag($0) }
             }
             .frame(width: 240)
             Spacer()

@@ -1,22 +1,22 @@
-"""Escolhe a versão estável que deve estar no main.
+"""Picks the stable version that should be on main.
 
-Uma versão publicada é estável quando, por esta ordem (critérios completos em docs/RELEASE_CRITERIA.md):
-  1. é uma Release publicada (não rascunho) com o DMG e o SHA256SUMS; publicada como pré-lançamento é
-     uma beta, e é isso que se espera até ser promovida;
-  2. a tag está no histórico do dev e já tem o .mainignore (as anteriores não compilam sem os testes);
-  3. o CI do GitHub passou no commit da tag (todas as verificações concluídas com sucesso);
-  4. não tem issues abertas com a etiqueta "bug" que a mencionem (vX.Y.Z ou X.Y.Z);
-  5. nenhuma versão publicada depois dela traz correções (### Corrigido no CHANGELOG): se trouxer,
-     a versão tinha erros conhecidos e a estável passa a ser a da correção;
-  6. já está publicada há pelo menos SOAK horas (período mínimo de espera, não prova de fiabilidade);
-  7. uma versão major nova (X muda) só é promovida com aprovação explícita (STABLE_APPROVE=X.Y.Z).
-A candidata é a versão mais recente que cumpre tudo; só é promovida se for mais nova do que a do main.
-Depois, o scripts/stable.sh volta a correr a verificação completa no commit da tag antes de a promover.
+A published version is stable when, in this order (full criteria in docs/RELEASE_CRITERIA.md):
+  1. it is a published Release (not a draft) with the DMG and SHA256SUMS; published as a pre-release it
+     is a beta, which is what is expected until it is promoted;
+  2. the tag is in dev's history and already has .mainignore (earlier ones do not build without the tests);
+  3. GitHub CI passed on the tag's commit (every check completed successfully);
+  4. it has no open issues labelled "bug" that mention it (vX.Y.Z or X.Y.Z);
+  5. no version published after it brings fixes (### Fixed in the CHANGELOG): if one does,
+     the version had known bugs and the stable one becomes the fix;
+  6. it has been published for at least SOAK hours (a minimum waiting period, not proof of reliability);
+  7. a new major version (X changes) is only promoted with explicit approval (STABLE_APPROVE=X.Y.Z).
+The candidate is the most recent version that meets everything; it is only promoted if it is newer than main's.
+Then scripts/stable.sh runs the full check again on the tag's commit before promoting it.
 
-No main só ficam os ficheiros essenciais: o conteúdo da tag sem o que está em .mainignore.
+main only keeps the essential files: the tag's content without what is in .mainignore.
 
-Uso: python3 scripts/stable.py [--json]   (dados do GitHub via gh e do git)
-     python3 scripts/stable.py excluded <ref>   caminhos de <ref> que não vão para o main
+Usage: python3 scripts/stable.py [--json]   (data from GitHub via gh, and from git)
+       python3 scripts/stable.py excluded <ref>   paths of <ref> that do not go to main
 """
 
 import fnmatch
@@ -51,13 +51,13 @@ class Verdict:
 
 
 def parse_version(v):
-    """'v1.2.10' → (1, 2, 10). Devolve None para tags que não são X.Y.Z."""
+    """'v1.2.10' → (1, 2, 10). Returns None for tags that are not X.Y.Z."""
     m = re.fullmatch(r"v?(\d+)\.(\d+)\.(\d+)", v.strip())
     return tuple(int(x) for x in m.groups()) if m else None
 
 
 def changelog_sections(text):
-    """{versão: texto da secção} a partir do CHANGELOG."""
+    """{version: section text} from the CHANGELOG."""
     sections = {}
     for m in re.finditer(r"^## \[(\d+\.\d+\.\d+)\][^\n]*\n(.*?)(?=^## \[|^\[\d|\Z)", text, re.M | re.S):
         sections[m.group(1)] = m.group(2)
@@ -65,7 +65,8 @@ def changelog_sections(text):
 
 
 def has_fixes(section):
-    return re.search(r"^### Corrigido\s*$\n(?:\s*\n)*- \S", section or "", re.M) is not None
+    # "Corrigido" is the heading of the sections written before the project moved to English (up to 1.3.3).
+    return re.search(r"^### (?:Fixed|Corrigido)\s*$\n(?:\s*\n)*- \S", section or "", re.M) is not None
 
 
 def mentions(issue_text, version):
@@ -73,17 +74,17 @@ def mentions(issue_text, version):
 
 
 def main_status(main_version, verdicts):
-    """Aviso quando o main tem uma versão que não cumpre as regras (None se estiver tudo bem)."""
+    """Warning when main has a version that does not meet the rules (None if everything is fine)."""
     v = next((v for v in verdicts if v.version == main_version), None)
     if main_version is None or (v and v.ok):
         return None
-    reason = v.reason if v else "não tem Release publicada"
+    reason = v.reason if v else "has no published Release"
     stable = next((x.version for x in verdicts if x.ok and parse_version(x.version) < parse_version(main_version)), None)
-    return f"o main tem a {main_version}, que ainda não é estável ({reason}); última estável: {stable or 'nenhuma'}"
+    return f"main has {main_version}, which is not stable yet ({reason}); latest stable: {stable or 'none'}"
 
 
 def evaluate(releases, changelog, main_version, now, soak_hours=DEFAULT_SOAK_HOURS, bug_issues=(), approved=()):
-    """Devolve (candidata ou None, [Verdict] da mais recente para a mais antiga)."""
+    """Returns (candidate or None, [Verdict] from newest to oldest)."""
     sections = changelog_sections(changelog)
     main_key = parse_version(main_version) if main_version else None
     published = sorted(
@@ -95,43 +96,43 @@ def evaluate(releases, changelog, main_version, now, soak_hours=DEFAULT_SOAK_HOU
     for r in sorted(releases, key=lambda r: parse_version(r.version) or (-1,), reverse=True):
         key = parse_version(r.version)
         if key is None:
-            verdicts.append(Verdict(r.version, False, "não é uma versão X.Y.Z"))
+            verdicts.append(Verdict(r.version, False, "not an X.Y.Z version"))
             continue
         if r.draft:
-            verdicts.append(Verdict(r.version, False, "rascunho (não publicada)"))
+            verdicts.append(Verdict(r.version, False, "draft (not published)"))
             continue
         if f"Prune-{r.version}.dmg" not in r.assets:
-            verdicts.append(Verdict(r.version, False, f"a Release não tem o Prune-{r.version}.dmg"))
+            verdicts.append(Verdict(r.version, False, f"the Release does not have Prune-{r.version}.dmg"))
             continue
         if r.main_ready and "SHA256SUMS" not in r.assets:
-            verdicts.append(Verdict(r.version, False, "a Release não tem o SHA256SUMS"))
+            verdicts.append(Verdict(r.version, False, "the Release does not have SHA256SUMS"))
             continue
         if not r.on_dev:
-            verdicts.append(Verdict(r.version, False, "a tag não está no histórico do dev"))
+            verdicts.append(Verdict(r.version, False, "the tag is not in dev's history"))
             continue
         if not r.main_ready:
-            verdicts.append(Verdict(r.version, False, "anterior ao main só com ficheiros essenciais (sem .mainignore)"))
+            verdicts.append(Verdict(r.version, False, "predates main with only essential files (no .mainignore)"))
             continue
         if not r.ci_ok:
-            verdicts.append(Verdict(r.version, False, "sem CI verde no commit da tag"))
+            verdicts.append(Verdict(r.version, False, "no green CI on the tag's commit"))
             continue
         bugs = [title for title, text in bug_issues if mentions(text, r.version)]
         if bugs:
-            verdicts.append(Verdict(r.version, False, f"issue de bug aberta: {bugs[0]}"))
+            verdicts.append(Verdict(r.version, False, f"open bug issue: {bugs[0]}"))
             continue
         fixed_by = [n.version for n in published if parse_version(n.version) > key and has_fixes(sections.get(n.version))]
         if fixed_by:
-            verdicts.append(Verdict(r.version, False, f"tem erros corrigidos depois, na {fixed_by[-1]}"))
+            verdicts.append(Verdict(r.version, False, f"has bugs fixed later, in {fixed_by[-1]}"))
             continue
         age = now - r.published
         if age < timedelta(hours=soak_hours):
             until = (r.published + timedelta(hours=soak_hours)).astimezone().strftime("%d/%m %H:%M")
-            verdicts.append(Verdict(r.version, False, f"em observação até {until} ({soak_hours:g} h)"))
+            verdicts.append(Verdict(r.version, False, f"soaking until {until} ({soak_hours:g} h)"))
             continue
         if main_key and key[0] > main_key[0] and r.version not in approved:
-            verdicts.append(Verdict(r.version, False, f"versão major: precisa de aprovação (STABLE_APPROVE={r.version})"))
+            verdicts.append(Verdict(r.version, False, f"major version: needs approval (STABLE_APPROVE={r.version})"))
             continue
-        verdicts.append(Verdict(r.version, True, "estável"))
+        verdicts.append(Verdict(r.version, True, "stable"))
 
     candidate = next((v.version for v in verdicts if v.ok), None)
     if candidate and main_key and parse_version(candidate) <= main_key:
@@ -140,7 +141,7 @@ def evaluate(releases, changelog, main_version, now, soak_hours=DEFAULT_SOAK_HOU
 
 
 def load_patterns(text):
-    """Linhas do .mainignore, sem comentários nem linhas vazias."""
+    """.mainignore lines, without comments or empty lines."""
     return [line.strip() for line in text.splitlines() if line.strip() and not line.lstrip().startswith("#")]
 
 
@@ -159,21 +160,21 @@ def excluded_paths(paths, patterns):
 
 
 def plist_version(data):
-    """CFBundleShortVersionString de um Info.plist (bytes), ou None."""
+    """CFBundleShortVersionString of an Info.plist (bytes), or None."""
     try:
         return plistlib.loads(data).get("CFBundleShortVersionString")
     except Exception:
         return None
 
 
-# ---- Recolha de dados (git e gh) -------------------------------------------------------------
+# ---- Data gathering (git and gh) -------------------------------------------------------------
 
 def run(*args):
     return subprocess.run(args, check=True, capture_output=True, text=True).stdout
 
 
 def ci_conclusions_ok(conclusions):
-    """Todas as verificações concluídas com sucesso (e pelo menos uma)."""
+    """Every check completed successfully (and at least one)."""
     return bool(conclusions) and all(c in ("success", "skipped", "neutral") for c in conclusions)
 
 
@@ -207,8 +208,8 @@ def gather():
                             "--json", "title,body"))
     bug_issues = [(i["title"], i["title"] + "\n" + (i["body"] or "")) for i in issues]
     changelog = run("git", "show", "origin/dev:CHANGELOG.md")
-    # O main não partilha o histórico das tags (cada versão estável é um commit próprio): a versão
-    # vem do Info.plist do main.
+    # main does not share the tags' history (each stable version is a commit of its own): the version
+    # comes from main's Info.plist.
     plist = subprocess.run(["git", "show", "origin/main:Resources/Info.plist"], capture_output=True).stdout
     return releases, changelog, plist_version(plist), bug_issues
 
@@ -216,7 +217,7 @@ def gather():
 def main():
     import os
     if len(sys.argv) == 3 and sys.argv[1] == "excluded":
-        # A lista em vigor é a do dev (STABLE_MAINIGNORE=ficheiro para ensaiar uma lista local).
+        # The list in force is dev's (STABLE_MAINIGNORE=file to rehearse a local list).
         local = os.environ.get("STABLE_MAINIGNORE")
         patterns = load_patterns(open(local, encoding="utf-8").read() if local else run("git", "show", "origin/dev:.mainignore"))
         paths = run("git", "ls-tree", "-r", "--name-only", sys.argv[2]).splitlines()
@@ -231,19 +232,19 @@ def main():
         print(json.dumps({"main": main_version, "candidate": candidate, "main_warning": warning,
                           "verdicts": [v.__dict__ for v in verdicts]}, ensure_ascii=False))
         return
-    print(f"main: {main_version or '(sem versão)'}")
+    print(f"main: {main_version or '(no version)'}")
     for v in verdicts:
         mark = "✓" if v.ok else "·"
         here = "  ← main" if v.version == main_version else ""
         print(f"  {mark} {v.version:<8} {v.reason}{here}")
     if warning:
-        print(f"⚠️  Atenção: {warning}.")
+        print(f"⚠️  Warning: {warning}.")
     if candidate:
-        print(f"Candidata a estável: {candidate} (mais nova do que o main)")
+        print(f"Stable candidate: {candidate} (newer than main)")
     elif not warning:
-        print("Nenhuma versão para promover: o main já tem a estável mais recente.")
+        print("No version to promote: main already has the latest stable version.")
     else:
-        print("Nenhuma versão para promover agora.")
+        print("No version to promote right now.")
 
 
 if __name__ == "__main__":

@@ -5,10 +5,15 @@ import Observation
 @Observable
 final class OptimizationModel {
     enum Tab: String, CaseIterable, Identifiable {
-        case loginItems = "Itens de início de sessão"
-        case agents = "Agentes de arranque"
-        case heavy = "Grandes consumidores"
+        case loginItems, agents, heavy
         var id: String { rawValue }
+        var title: String {
+            switch self {
+            case .loginItems: String(localized: "Login items")
+            case .agents: String(localized: "Launch agents")
+            case .heavy: String(localized: "Heavy consumers")
+            }
+        }
         var icon: String {
             switch self {
             case .loginItems: "person.badge.key"
@@ -36,7 +41,7 @@ final class OptimizationModel {
         processes = await pr
         loading = false
         loaded = true
-        // Pode esperar pela autorização de Automação (System Events), por isso vem por último.
+        // May wait for the Automation authorization (System Events), so it comes last.
         loadingLoginItems = true
         loginItems = await OptimizationService.loginItems()
         loadingLoginItems = false
@@ -53,18 +58,18 @@ final class OptimizationModel {
 
     func toggle(_ item: LaunchItem) async {
         let ok = await OptimizationService.setEnabled(item, enabled: item.disabled)
-        if !ok { message = "Não foi possível alterar \(item.label)." }
+        if !ok { message = String(localized: "Could not change \(item.label).") }
         launchItems = await OptimizationService.launchItems()
     }
 
     func remove(_ item: LaunchItem) async {
-        if !(await OptimizationService.remove(item)) { message = "Não foi possível remover \(item.label)." }
+        if !(await OptimizationService.remove(item)) { message = String(localized: "Could not remove \(item.label).") }
         launchItems = await OptimizationService.launchItems()
     }
 
     func remove(_ item: LoginItem) async {
         if !(await OptimizationService.removeLoginItem(item)) {
-            message = "Não foi possível remover \(item.name). Autorize o Prune em Automação ▸ System Events."
+            message = String(localized: "Could not remove \(item.name). Allow Prune in Automation ▸ System Events.")
         }
         loginItems = await OptimizationService.loginItems()
     }

@@ -1,0 +1,2 @@
+/* Mostrado pelo macOS quando o Prune pede para controlar o System Events. */
+"NSAppleEventsUsageDescription" = "O Prune usa o System Events para listar e remover itens de início de sessão.";

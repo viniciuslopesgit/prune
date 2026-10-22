@@ -30,7 +30,7 @@ enum FS {
         .isDirectoryKey, .isSymbolicLinkKey, .totalFileAllocatedSizeKey, .fileAllocatedSizeKey,
     ]
 
-    /// Tamanho real em disco de um ficheiro ou pasta (recursivo).
+    /// Real on-disk size of a file or folder (recursive).
     static func size(of url: URL) -> Int64 {
         guard let rv = try? url.resourceValues(forKeys: sizeKeys) else { return 0 }
         if rv.isSymbolicLink == true { return 0 }
@@ -51,9 +51,9 @@ enum FS {
         return total
     }
 
-    /// Percorre um enumerador esvaziando a autorelease pool a cada lote.
-    /// Sem isto, em threads de fundo, cada URL visitado fica em memória até ao fim da análise.
-    /// O corpo devolve `false` para parar.
+    /// Walks an enumerator, draining the autorelease pool after each batch.
+    /// Without this, on background threads, every visited URL stays in memory until the scan ends.
+    /// The body returns `false` to stop.
     static func forEach(_ e: FileManager.DirectoryEnumerator, batch: Int = 256, _ body: (URL) -> Bool) {
         var finished = false
         while !finished {
@@ -65,7 +65,7 @@ enum FS {
         }
     }
 
-    /// Calcula vários tamanhos em paralelo.
+    /// Computes several sizes in parallel.
     static func sizes(of urls: [URL]) -> [Int64] {
         var result = [Int64](repeating: 0, count: urls.count)
         let lock = NSLock()
@@ -83,7 +83,7 @@ enum FS {
         )) ?? []
     }
 
-    /// Itens filhos de uma pasta, com tamanho, prontos para limpeza.
+    /// A folder's child items, with size, ready for cleaning.
     static func childItems(
         of dir: URL,
         selected: Bool = true,
@@ -108,7 +108,7 @@ enum FS {
             .sorted { $0.size > $1.size }
     }
 
-    /// Item único (pasta inteira) se existir.
+    /// Single item (whole folder) if it exists.
     static func item(_ url: URL, selected: Bool = true, name: String? = nil, detail: String? = nil) -> CleanItem? {
         guard url.exists, SafetyGuard.canDelete(url) else { return nil }
         let s = size(of: url)
@@ -122,7 +122,7 @@ enum FS {
         return c
     }()
 
-    /// Ícone do Finder, em cache (evita criar um NSImage novo a cada redesenho).
+    /// Finder icon, cached (avoids creating a new NSImage on every redraw).
     static func icon(for url: URL) -> NSImage {
         let key = url.path as NSString
         if let cached = iconCache.object(forKey: key) { return cached }
@@ -138,8 +138,8 @@ enum FS {
     }
 }
 
-/// Lê o Info.plist diretamente. `Bundle(url:)` guarda cada bundle numa cache global
-/// que nunca é libertada — com centenas de apps isso são dezenas de MB.
+/// Reads Info.plist directly. `Bundle(url:)` keeps every bundle in a global cache
+/// that is never freed — with hundreds of apps that is tens of MB.
 enum BundleInfo {
     static func plist(_ app: URL) -> [String: Any]? {
         NSDictionary(contentsOf: app.appendingPathComponent("Contents/Info.plist")) as? [String: Any]

@@ -2,41 +2,41 @@ import Foundation
 import Testing
 @testable import Prune
 
-@Suite("Lente de Espaço")
+@Suite("Space Lens")
 struct SpaceScannerTests {
     func scan(_ url: URL) -> DiskNode { SpaceScanner(progress: .silent).scan(url) }
 
-    @Test("Tamanho de cada pasta = soma dos filhos; filhos do maior para o menor")
+    @Test("Each folder's size = sum of its children; children from largest to smallest")
     func treeSizes() throws {
         let tmp = try TempDir()
-        try tmp.file("grande/a", bytes: 2_000_000, fill: 1)
-        try tmp.file("grande/b", bytes: 1_000_000, fill: 1)
-        try tmp.file("pequeno", bytes: 10_000, fill: 1)
-        try tmp.dir("vazia")
+        try tmp.file("big/a", bytes: 2_000_000, fill: 1)
+        try tmp.file("big/b", bytes: 1_000_000, fill: 1)
+        try tmp.file("small", bytes: 10_000, fill: 1)
+        try tmp.dir("empty")
 
         let root = scan(tmp.url)
         #expect(root.url == tmp.url)
         #expect(root.size == root.children.reduce(0) { $0 + $1.size })
-        #expect(root.children.map(\.name) == ["grande", "pequeno", "vazia"])
-        let grande = root.children[0]
-        #expect(grande.isDirectory)
-        #expect(grande.size == FS.size(of: tmp.path("grande")))
-        #expect(grande.children.map(\.name) == ["a", "b"])
-        #expect(grande.children[0].url.path == tmp.path("grande/a").path)
-        #expect(grande.children[0].path.map(\.name) == [tmp.url.lastPathComponent, "grande", "a"])
+        #expect(root.children.map(\.name) == ["big", "small", "empty"])
+        let big = root.children[0]
+        #expect(big.isDirectory)
+        #expect(big.size == FS.size(of: tmp.path("big")))
+        #expect(big.children.map(\.name) == ["a", "b"])
+        #expect(big.children[0].url.path == tmp.path("big/a").path)
+        #expect(big.children[0].path.map(\.name) == [tmp.url.lastPathComponent, "big", "a"])
     }
 
-    @Test("Ignora ligações simbólicas (não conta nada duas vezes)")
+    @Test("Skips symbolic links (nothing is counted twice)")
     func skipsSymlinks() throws {
         let tmp = try TempDir()
         try tmp.file("real", bytes: 100_000, fill: 1)
-        try tmp.symlink("ligacao", to: tmp.path("real"))
-        try tmp.symlink("ciclo", to: tmp.url)
+        try tmp.symlink("link", to: tmp.path("real"))
+        try tmp.symlink("cycle", to: tmp.url)
         let root = scan(tmp.url)
         #expect(root.children.map(\.name) == ["real"])
     }
 
-    @Test("Pastas pequenas ficam sem detalhe")
+    @Test("Small folders are kept without detail")
     func smallFoldersHaveNoChildren() throws {
         let tmp = try TempDir()
         try tmp.file("p/a", bytes: 1000, fill: 1)
@@ -45,7 +45,7 @@ struct SpaceScannerTests {
         #expect(p.children.isEmpty)
     }
 
-    @Test("Mais de 50 itens: os mais pequenos são agregados num só nó")
+    @Test("More than 50 items: the smallest are aggregated into a single node")
     func aggregatesSmallItems() throws {
         let tmp = try TempDir()
         for i in 0..<60 { try tmp.file("f\(i)", bytes: (i + 1) * 4096, fill: 1) }
@@ -53,8 +53,8 @@ struct SpaceScannerTests {
         #expect(root.children.count == SpaceScanner.maxChildren + 1)
         let agg = try #require(root.children.last)
         #expect(agg.isAggregate)
-        #expect(agg.name == "10 itens mais pequenos")
-        #expect(agg.url == tmp.url, "o nó agregado não aponta para nenhum ficheiro")
+        #expect(agg.name == "10 smaller items")
+        #expect(agg.url == tmp.url, "the aggregate node does not point to any file")
         #expect(root.size == root.children.reduce(0) { $0 + $1.size })
         #expect(!root.children.dropLast().contains { $0.isAggregate })
     }
@@ -66,7 +66,7 @@ struct TreemapTests {
         [6, 6, 4, 3, 2, 2, 1], [1], [5, 5], [100, 1, 1, 1], (1...80).map(Double.init), [3, 0, 2],
     ]
 
-    @Test("Ocupa a área toda, sem sair do retângulo e proporcional ao tamanho", arguments: cases)
+    @Test("Fills the whole area, stays inside the rectangle and is proportional to size", arguments: cases)
     func fillsRect(sizes: [Double]) {
         let frame = CGRect(x: 10, y: 20, width: 600, height: 400)
         let rects = Treemap.layout(sizes: sizes, in: frame)
@@ -81,7 +81,7 @@ struct TreemapTests {
         }
     }
 
-    @Test("Os retângulos não se sobrepõem")
+    @Test("The rectangles do not overlap")
     func noOverlap() {
         let rects = Treemap.layout(sizes: [9, 7, 5, 4, 3, 2, 2, 1, 1], in: CGRect(x: 0, y: 0, width: 300, height: 500))
         for i in rects.indices {
@@ -92,7 +92,7 @@ struct TreemapTests {
         }
     }
 
-    @Test("Casos degenerados devolvem retângulos vazios")
+    @Test("Degenerate cases return empty rectangles")
     func degenerate() {
         #expect(Treemap.layout(sizes: [], in: CGRect(x: 0, y: 0, width: 10, height: 10)).isEmpty)
         #expect(Treemap.layout(sizes: [0, 0], in: CGRect(x: 0, y: 0, width: 10, height: 10)) == [.zero, .zero])

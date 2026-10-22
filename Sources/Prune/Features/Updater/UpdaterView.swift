@@ -7,25 +7,25 @@ struct UpdaterView: View {
         @Bindable var model = state.updater
         VStack(spacing: 0) {
             if model.checking {
-                ScanningView(module: .updater, title: "A procurar atualizações…", detail: model.progressText)
+                ScanningView(module: .updater, title: String(localized: "Looking for updates…"), detail: model.progressText)
             } else if !model.checked {
                 ModuleHeader(module: .updater)
                 HeroView(
-                    module: .updater, headline: "Mantenha as apps atualizadas",
-                    message: "Apps descarregadas da Internet e pacotes do Homebrew, num só lugar.",
-                    features: [("globe", "Apps descarregadas da Internet"), ("mug", model.hasBrew ? "Apps e ferramentas do Homebrew" : "Homebrew (não instalado)"),
-                               ("bag", "Atalho para a App Store")],
-                    buttonTitle: "Verificar"
+                    module: .updater, headline: String(localized: "Keep your apps up to date"),
+                    message: String(localized: "Apps downloaded from the Internet and Homebrew packages, in one place."),
+                    features: [("globe", String(localized: "Apps downloaded from the Internet")), ("mug", model.hasBrew ? String(localized: "Homebrew apps and tools") : String(localized: "Homebrew (not installed)")),
+                               ("bag", String(localized: "Shortcut to the App Store"))],
+                    buttonTitle: String(localized: "Check")
                 ) { Task { await model.check() } }
             } else {
-                ModuleHeader(module: .updater, subtitle: model.updates.isEmpty ? "Tudo atualizado" : "\(Fmt.count(model.updates.count, "atualização disponível", "atualizações disponíveis"))") {
+                ModuleHeader(module: .updater, subtitle: model.updates.isEmpty ? String(localized: "Everything up to date") : Fmt.count(model.updates.count, String(localized: "update available"), String(localized: "updates available"))) {
                     Button("App Store") { model.openAppStoreUpdates() }.buttonStyle(.bordered)
                     Button { Task { await model.check() } } label: { Image(systemName: "arrow.clockwise") }.buttonStyle(.bordered)
                 }
                 GlassPanel {
                     if model.updates.isEmpty {
-                        EmptyStateView(icon: "checkmark.seal", title: "Todas as apps estão atualizadas",
-                                       message: "As apps da App Store atualizam-se na App Store.")
+                        EmptyStateView(icon: "checkmark.seal", title: String(localized: "All apps are up to date"),
+                                       message: String(localized: "App Store apps are updated in the App Store."))
                     } else {
                         List {
                             ForEach($model.updates) { $u in
@@ -37,9 +37,9 @@ struct UpdaterView: View {
                                         Text("\(u.current) → \(u.latest)").font(.callout.monospacedDigit()).foregroundStyle(.secondary)
                                     }
                                     Spacer()
-                                    Pill(text: u.source.rawValue)
+                                    Pill(text: u.source.title)
                                     if let notes = u.notesURL {
-                                        Link("Novidades", destination: notes).font(.caption)
+                                        Link("What's new", destination: notes).font(.caption)
                                     }
                                 }
                                 .padding(.vertical, 3)
@@ -57,8 +57,8 @@ struct UpdaterView: View {
                     }
                     .frame(height: 70).padding(.horizontal, 32)
                 }
-                ActionFooter(summary: Fmt.count(model.updates.filter(\.selected).count, "selecionada", "selecionadas"),
-                             buttonTitle: model.installing ? "A atualizar…" : "Atualizar",
+                ActionFooter(summary: Fmt.count(model.updates.filter(\.selected).count, String(localized: "update selected"), String(localized: "updates selected")),
+                             buttonTitle: model.installing ? String(localized: "Updating…") : String(localized: "Update"),
                              disabled: model.installing || !model.updates.contains(where: \.selected)) {
                     Task { await model.updateSelected() }
                 }

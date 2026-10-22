@@ -5,7 +5,7 @@ import ServiceManagement
 enum DeleteMode: String, CaseIterable, Identifiable {
     case trash, permanent
     var id: String { rawValue }
-    var title: String { self == .trash ? "Mover para o Lixo" : "Apagar definitivamente" }
+    var title: String { self == .trash ? String(localized: "Move to Trash") : String(localized: "Delete permanently") }
 }
 
 @Observable
@@ -13,11 +13,11 @@ final class AppSettings {
     static let shared = AppSettings()
     private let d = UserDefaults.standard
 
-    /// Caches, logs e lixo regenerável.
+    /// Caches, logs and regenerable junk.
     var junkDeleteMode: DeleteMode {
         didSet { d.set(junkDeleteMode.rawValue, forKey: "junkDeleteMode") }
     }
-    /// Ficheiros do utilizador (grandes, duplicados, apps).
+    /// User files (large files, duplicates, apps).
     var filesDeleteMode: DeleteMode {
         didSet { d.set(filesDeleteMode.rawValue, forKey: "filesDeleteMode") }
     }
@@ -30,20 +30,20 @@ final class AppSettings {
     var shredPasses: Int {
         didSet { d.set(shredPasses, forKey: "shredPasses") }
     }
-    /// O utilizador escolheu não ver o assistente de Acesso Total ao Disco.
+    /// The user chose not to see the Full Disk Access assistant.
     var fdaOnboardingDismissed: Bool {
         didSet { d.set(fdaOnboardingDismissed, forKey: "fdaOnboardingDismissed") }
     }
 
-    /// Estatísticas de utilização anónimas (Google Analytics). Desligado até o utilizador aceitar.
+    /// Anonymous usage statistics (Google Analytics). Off until the user accepts.
     var analyticsEnabled: Bool {
         didSet {
             d.set(analyticsEnabled, forKey: "analyticsEnabled")
-            // Ao recusar, esquece o identificador aleatório desta instalação.
+            // When declining, forgets this installation's random identifier.
             if !analyticsEnabled { d.removeObject(forKey: Analytics.clientIDKey) }
         }
     }
-    /// O utilizador já respondeu ao pedido de estatísticas (sim ou não).
+    /// The user has already answered the statistics prompt (yes or no).
     var analyticsAsked: Bool {
         didSet { d.set(analyticsAsked, forKey: "analyticsAsked") }
     }

@@ -1,6 +1,6 @@
-# Ficheiros de desenvolvimento que não vão para o main.
-# O main tem só o necessário para compilar e distribuir a versão estável (scripts/stable.sh).
-# Uma linha por caminho; terminado em / é uma pasta inteira. Aceita * e ?.
+# Development files that do not go to main.
+# main only has what is needed to build and distribute the stable version (scripts/stable.sh).
+# One path per line; ending in / means a whole folder. Accepts * and ?.
 .mainignore
 .claude/
 .githooks/
@@ -9,6 +9,7 @@ Tests/
 docs/
 scripts/tests/
 scripts/check.sh
+scripts/check_localization.py
 scripts/test.sh
 scripts/ship.sh
 scripts/bump_version.sh

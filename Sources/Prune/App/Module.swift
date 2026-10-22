@@ -2,11 +2,18 @@ import SwiftUI
 
 enum ModuleSection: String, CaseIterable {
     case none = ""
-    case cleanup = "Limpeza"
-    case protection = "Proteção"
-    case system = "Sistema"
-    case applications = "Aplicações"
-    case files = "Ficheiros"
+    case cleanup, protection, system, applications, files
+
+    var title: String {
+        switch self {
+        case .none: ""
+        case .cleanup: String(localized: "Cleanup")
+        case .protection: String(localized: "Protection")
+        case .system: String(localized: "System")
+        case .applications: String(localized: "Applications")
+        case .files: String(localized: "Files")
+        }
+    }
 }
 
 enum Module: String, CaseIterable, Identifiable, Hashable {
@@ -21,21 +28,21 @@ enum Module: String, CaseIterable, Identifiable, Hashable {
 
     var title: String {
         switch self {
-        case .smartScan: "Análise Inteligente"
-        case .dashboard: "Painel"
-        case .systemJunk: "Lixo do Sistema"
-        case .mailAttachments: "Anexos do Mail"
-        case .trashBins: "Lixo"
-        case .privacy: "Privacidade"
-        case .optimization: "Otimização"
-        case .maintenance: "Manutenção"
-        case .uninstaller: "Desinstalador"
-        case .updater: "Atualizador"
-        case .extensions: "Extensões"
-        case .spaceLens: "Lente de Espaço"
-        case .largeFiles: "Grandes e Antigos"
-        case .duplicates: "Duplicados"
-        case .shredder: "Destruidor"
+        case .smartScan: String(localized: "Smart Scan")
+        case .dashboard: String(localized: "Dashboard")
+        case .systemJunk: String(localized: "System Junk")
+        case .mailAttachments: String(localized: "Mail Attachments")
+        case .trashBins: String(localized: "Trash Bins")
+        case .privacy: String(localized: "Privacy")
+        case .optimization: String(localized: "Optimization")
+        case .maintenance: String(localized: "Maintenance")
+        case .uninstaller: String(localized: "Uninstaller")
+        case .updater: String(localized: "Updater")
+        case .extensions: String(localized: "Extensions")
+        case .spaceLens: String(localized: "Space Lens")
+        case .largeFiles: String(localized: "Large & Old Files")
+        case .duplicates: String(localized: "Duplicates")
+        case .shredder: String(localized: "Shredder")
         }
     }
 

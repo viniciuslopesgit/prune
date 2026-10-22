@@ -1,6 +1,6 @@
 #!/bin/zsh
-# Escreve as notas da Release de uma versão a partir da secção dela no CHANGELOG:
-# resumo, instruções de instalação, as listas da versão e a ligação para o histórico.
+# Writes a version's Release notes from its section in the CHANGELOG:
+# summary, installation instructions, the version's lists and the link to the history.
 #   ./scripts/release_notes.sh 1.2.6 [--beta]
 set -e
 cd "$(dirname "$0")/.."
@@ -11,29 +11,29 @@ v, beta = sys.argv[1], sys.argv[2] == "--beta"
 s = open("CHANGELOG.md", encoding="utf-8").read()
 m = re.search(rf"^## \[{re.escape(v)}\][^\n]*\n(.*?)(?=^## \[|^\[\d)", s, re.M | re.S)
 if not m:
-    sys.exit(f"O CHANGELOG não tem a secção ## [{v}].")
+    sys.exit(f"The CHANGELOG has no ## [{v}] section.")
 body = m.group(1).strip()
 cut = body.find("### ")
 summary, lists = (body[:cut], body[cut:]) if cut >= 0 else (body, "")
 if beta:
-    print("> **Beta.** Passa a estável quando cumprir os [critérios de estabilidade](https://github.com/viniciuslopesgit/prune/blob/dev/docs/RELEASE_CRITERIA.md). "
-          "Para uso diário, prefira a [última versão estável](https://github.com/viniciuslopesgit/prune/releases/latest).")
+    print("> **Beta.** Becomes stable once it meets the [stability criteria](https://github.com/viniciuslopesgit/prune/blob/dev/docs/RELEASE_CRITERIA.md). "
+          "For everyday use, prefer the [latest stable version](https://github.com/viniciuslopesgit/prune/releases/latest).")
     print()
 print(summary.strip())
 print(f"""
-## Instalar
+## Install
 
-1. Descarregue **Prune-{v}.dmg** (em *Assets*) e arraste o Prune para **Aplicações**.
-2. Na primeira abertura, autorize em *Definições do Sistema ▸ Privacidade e segurança ▸ Abrir mesmo assim*, ou no Terminal:
+1. Download **Prune-{v}.dmg** (under *Assets*) and drag Prune to **Applications**.
+2. On first launch, allow it in *System Settings ▸ Privacy & Security ▸ Open Anyway*, or in Terminal:
    `xattr -dr com.apple.quarantine /Applications/Prune.app`
-3. Siga o assistente de Acesso Total ao Disco.
+3. Follow the Full Disk Access assistant.
 
-Verificar o ficheiro: `shasum -a 256 -c SHA256SUMS` na pasta onde descarregou os dois ficheiros.
+Verify the file: `shasum -a 256 -c SHA256SUMS` in the folder where you downloaded both files.
 
-macOS 14 ou mais recente · Apple silicon e Intel.
+macOS 14 or later · Apple silicon and Intel. The interface follows the system language (English or Portuguese).
 """)
 if lists:
     print(re.sub(r"^### ", "## ", lists.strip(), flags=re.M))
     print()
-print("Histórico completo no [CHANGELOG](https://github.com/viniciuslopesgit/prune/blob/dev/CHANGELOG.md).")
+print("Full history in the [CHANGELOG](https://github.com/viniciuslopesgit/prune/blob/dev/CHANGELOG.md).")
 PY

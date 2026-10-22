@@ -1,59 +1,63 @@
 # Prune
 
-Limpe, organize e proteja o seu Mac. Gratuito e de código aberto.
+Clean, organize and protect your Mac. Free and open source.
 
-**[Descarregar a última versão](https://github.com/viniciuslopesgit/prune/releases/latest)** · macOS 14 ou mais recente · Apple silicon e Intel
+**[Download the latest version](https://github.com/viniciuslopesgit/prune/releases/latest)** · macOS 14 or later · Apple silicon and Intel · English and Portuguese (follows the system language)
 
-## Instalar
+## Install
 
-1. Abra o `Prune-<versão>.dmg` e arraste o Prune para **Aplicações**.
-2. Na primeira abertura, o macOS bloqueia a app, porque o Prune não está registado na Apple. Autorize uma vez em *Definições do Sistema ▸ Privacidade e segurança ▸ Abrir mesmo assim*, ou no Terminal:
+1. Open `Prune-<version>.dmg` and drag Prune to **Applications**.
+2. On first launch, macOS blocks the app because Prune is not registered with Apple. Allow it once in *System Settings ▸ Privacy & Security ▸ Open Anyway*, or in Terminal:
    ```bash
    xattr -dr com.apple.quarantine /Applications/Prune.app
    ```
-3. Siga o assistente para dar **Acesso Total ao Disco**.
+3. Follow the assistant to grant **Full Disk Access**.
 
-Para atualizar, descarregue a versão nova e substitua a app em Aplicações. Novidades no [CHANGELOG](CHANGELOG.md).
+To update, download the new version and replace the app in Applications. What's new is in the [CHANGELOG](CHANGELOG.md).
 
-## Funcionalidades
+## Features
 
-- **Análise Inteligente:** lixo para limpar e estado das proteções do macOS, num clique.
-- **Painel:** disco, memória, CPU, rede, bateria e proteções do macOS (SIP, Gatekeeper, Firewall, FileVault, XProtect).
-- **Limpeza:** caches, registos, temporários, Xcode e gestores de pacotes, ficheiros de iPhone, anexos do Mail e Lixo.
-- **Privacidade:** histórico, cookies e caches de Safari, Chrome, Edge, Brave, Opera, Vivaldi, Arc e Firefox. Palavras-passe e marcadores ficam intactos.
-- **Sistema:** itens de arranque, processos e tarefas de manutenção (DNS, Spotlight, Launch Services, disco).
-- **Aplicações:** desinstalação completa, restos de apps removidas, atualizações (Sparkle e Homebrew) e extensões.
-- **Ficheiros:** mapa do disco, ficheiros grandes e antigos, duplicados, fotografias semelhantes e destruição segura.
-- **Barra de menus:** CPU, memória, disco, rede e bateria em tempo real.
+- **Smart Scan:** junk to clean and the state of macOS protections, in one click.
+- **Dashboard:** disk, memory, CPU, network, battery and macOS protections (SIP, Gatekeeper, Firewall, FileVault, XProtect).
+- **Cleanup:** caches, logs, temporary files, Xcode and package managers, iPhone files, Mail attachments and Trash.
+- **Privacy:** history, cookies and caches of Safari, Chrome, Edge, Brave, Opera, Vivaldi, Arc and Firefox. Passwords and bookmarks stay intact.
+- **System:** login items, processes and maintenance tasks (DNS, Spotlight, Launch Services, disk).
+- **Applications:** complete uninstallation, leftovers of removed apps, updates (Sparkle and Homebrew) and extensions.
+- **Files:** disk map, large and old files, duplicates, similar photos and secure shredding.
+- **Menu bar:** CPU, memory, disk, network and battery in real time.
 
-## Segurança e privacidade
+The interface is shown in English or Portuguese, depending on the language of your Mac.
 
-- Nada é apagado sem confirmação. Pode rever cada item antes de limpar.
-- Pastas do sistema e pastas pessoais estão protegidas, independentemente do que selecionar.
-- Ficheiros pessoais e apps vão para o Lixo. Caches e registos são apagados diretamente. Pode mudar isto nas Definições.
-- As estatísticas de utilização são anónimas e só são enviadas com o seu consentimento. Nunca incluem nomes de ficheiros, pastas ou apps.
+## Security and privacy
 
-## Desenvolvimento
+- Nothing is deleted without confirmation. You can review each item before cleaning.
+- System folders and personal folders are protected, whatever you select.
+- Personal files and apps go to the Trash. Caches and logs are deleted directly. You can change this in Settings.
+- Usage statistics are anonymous and only sent with your consent. They never include names of files, folders or apps.
 
-Requer macOS 14 ou mais recente e as Command Line Tools do Xcode (`xcode-select --install`).
+## Development
+
+Requires macOS 14 or later and the Xcode Command Line Tools (`xcode-select --install`).
 
 ```bash
-./scripts/setup_signing.sh   # uma vez: certificado local, para o macOS manter as permissões
-./scripts/build_app.sh       # cria build/Prune.app (universal)
-./scripts/install.sh         # compila e atualiza /Applications/Prune.app
-./scripts/make_dmg.sh        # cria build/Prune-<versão>.dmg
+./scripts/setup_signing.sh   # once: local certificate, so macOS keeps the permissions
+./scripts/build_app.sh       # creates build/Prune.app (universal)
+./scripts/install.sh         # builds and updates /Applications/Prune.app
+./scripts/make_dmg.sh        # creates build/Prune-<version>.dmg
 ```
 
-### Testes e publicação
+The code and its texts are in English. Translations live in `Resources/<language>.lproj/Localizable.strings`, keyed by the English text; `scripts/check_localization.py` checks that every text is translated.
 
-O trabalho em curso, os testes automáticos e a publicação de versões estão no ramo [`dev`](https://github.com/viniciuslopesgit/prune/tree/dev) (ver [docs/desenvolvimento.md](https://github.com/viniciuslopesgit/prune/blob/dev/docs/desenvolvimento.md)). O `main` tem só o necessário para compilar a versão estável.
+### Tests and publishing
 
-Quando uma versão passa a estável: [critérios de lançamento](https://github.com/viniciuslopesgit/prune/blob/dev/docs/RELEASE_CRITERIA.md). Como contribuir: [CONTRIBUTING.md](CONTRIBUTING.md). Vulnerabilidades: [SECURITY.md](SECURITY.md).
+Work in progress, the automated tests and version publishing are on the [`dev`](https://github.com/viniciuslopesgit/prune/tree/dev) branch (see [docs/development.md](https://github.com/viniciuslopesgit/prune/blob/dev/docs/development.md)). `main` only has what is needed to build the stable version.
 
-### Versões
+When a version becomes stable: [release criteria](https://github.com/viniciuslopesgit/prune/blob/dev/docs/RELEASE_CRITERIA.md). How to contribute: [CONTRIBUTING.md](CONTRIBUTING.md). Vulnerabilities: [SECURITY.md](SECURITY.md).
 
-`main` é a versão estável (escolhida e verificada automaticamente no `dev`) e `dev` o trabalho em curso. Cada versão tem uma tag `vX.Y.Z` e uma [Release](https://github.com/viniciuslopesgit/prune/releases) com o DMG e o `SHA256SUMS`: sai como beta (pré-lançamento) e passa a **Latest** quando é promovida a estável.
+### Versions
 
-## Licença
+`main` is the stable version (chosen and verified automatically on `dev`) and `dev` is the work in progress. Each version has a `vX.Y.Z` tag and a [Release](https://github.com/viniciuslopesgit/prune/releases) with the DMG and `SHA256SUMS`: it comes out as a beta (pre-release) and becomes **Latest** when it is promoted to stable.
+
+## License
 
 [GPL-3.0](LICENSE)

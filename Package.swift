@@ -15,8 +15,8 @@ var targets: [Target] = [
     ),
 ]
 
-// Testes de unidade (scripts/test.sh). Testam o executável diretamente com @testable import.
-// Só existem no ramo dev: o main tem apenas o necessário para compilar a versão estável.
+// Unit tests (scripts/test.sh). They test the executable directly with @testable import.
+// They only exist on the dev branch: main only has what is needed to build the stable version.
 if FileManager.default.fileExists(atPath: Context.packageDirectory + "/Tests/PruneTests") {
     targets.append(.testTarget(name: "PruneTests", dependencies: ["Prune"], path: "Tests/PruneTests"))
 }

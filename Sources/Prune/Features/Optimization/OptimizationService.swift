@@ -7,7 +7,16 @@ struct LoginItem: Identifiable {
 }
 
 struct LaunchItem: Identifiable {
-    enum Domain: String { case userAgent = "Utilizador", globalAgent = "Global", daemon = "Sistema" }
+    enum Domain: String {
+        case userAgent, globalAgent, daemon
+        var title: String {
+            switch self {
+            case .userAgent: String(localized: "User")
+            case .globalAgent: String(localized: "Global")
+            case .daemon: String(localized: "System")
+            }
+        }
+    }
     var id: String { url.path }
     let url: URL
     let label: String
@@ -103,7 +112,7 @@ enum OptimizationService {
         return s
     }
 
-    /// Nome legível: tenta encontrar a app a que o programa pertence.
+    /// Readable name: tries to find the app the program belongs to.
     static func ownerName(label: String, program: String?) -> String {
         if let program, let range = program.range(of: ".app/") {
             return URL(fileURLWithPath: String(program[..<range.lowerBound]) + ".app").deletingPathExtension().lastPathComponent

@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Guarda a ação `openWindow` do SwiftUI para a poder usar fora das vistas.
+/// Keeps SwiftUI's `openWindow` action so it can be used outside views.
 @MainActor
 final class WindowOpener {
     static let shared = WindowOpener()

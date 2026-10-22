@@ -1,6 +1,6 @@
 import AppKit
 
-// Fundo da janela do instalador (640×400 pt). Uso: swift make_dmg_background.swift <saida.png> <escala>
+// Installer window background (640×400 pt). Usage: swift make_dmg_background.swift <output.png> <scale>
 let args = CommandLine.arguments
 let out = URL(fileURLWithPath: args[1])
 let scale = Double(args.count > 2 ? args[2] : "1") ?? 1
@@ -13,7 +13,7 @@ rep.size = NSSize(width: w, height: h)
 NSGraphicsContext.saveGraphicsState()
 NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: rep)
 
-// Identidade da app: marfim e tinta, como o ícone.
+// The app's identity: ivory and ink, like the icon.
 let bounds = NSRect(x: 0, y: 0, width: w, height: h)
 let ink = NSColor(red: 0x1F / 255.0, green: 0x1F / 255.0, blue: 0x1C / 255.0, alpha: 1)
 NSColor(red: 0xF5 / 255.0, green: 0xF4 / 255.0, blue: 0xEE / 255.0, alpha: 1).setFill()
@@ -30,11 +30,11 @@ func text(_ s: String, size: CGFloat, weight: NSFont.Weight, alpha: CGFloat, y: 
     NSAttributedString(string: s, attributes: attrs).draw(in: NSRect(x: 20, y: y, width: w - 40, height: size * 1.6))
 }
 
-// Coordenadas com origem em baixo (AppKit). Os ícones ficam centrados em y = 200 (de cima) → 200 (de baixo).
-text("Instalar o Prune", size: 24, weight: .semibold, alpha: 1, y: h - 70)
-text("Arraste o ícone para a pasta Aplicações", size: 14, weight: .regular, alpha: 0.7, y: h - 98)
+// Coordinates with the origin at the bottom (AppKit). The icons are centered at y = 200 (from the top) → 200 (from the bottom).
+text("Install Prune", size: 24, weight: .semibold, alpha: 1, y: h - 70)
+text("Drag the icon to the Applications folder", size: 14, weight: .regular, alpha: 0.7, y: h - 98)
 
-// Seta entre a app (x = 170) e Aplicações (x = 470).
+// Arrow between the app (x = 170) and Applications (x = 470).
 let arrow = NSBezierPath()
 let y = h - 210
 arrow.move(to: NSPoint(x: 262, y: y))
@@ -51,7 +51,7 @@ head.close()
 ink.setFill()
 head.fill()
 
-text("Primeira abertura bloqueada pelo macOS? Abra «Como abrir.txt».", size: 12, weight: .medium, alpha: 0.6, y: 28)
+text("First launch blocked by macOS? Open “How to open.txt”.", size: 12, weight: .medium, alpha: 0.6, y: 28)
 
 NSGraphicsContext.restoreGraphicsState()
 try! rep.representation(using: .png, properties: [:])!.write(to: out)

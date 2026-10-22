@@ -1,133 +1,146 @@
 # Changelog
 
-Alterações relevantes de cada versão. Formato [Keep a Changelog](https://keepachangelog.com/pt-PT/1.1.0/), versões [SemVer](https://semver.org/lang/pt-PT/).
+Notable changes in each version. Format [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions [SemVer](https://semver.org/).
+
+## [1.4.0] - 2026-10-22
+
+Prune now speaks your language: the interface follows the language of your Mac, in English or Portuguese. The whole project (code, documentation and history) is now written in English.
+
+### Added
+- Automatic translation: the app shows in Portuguese on a Mac set to Portuguese (Portugal or Brazil) and in English in every other language. You can choose a language for Prune alone in System Settings ▸ General ▸ Language & Region ▸ Applications.
+- Dates and "last opened" times follow the language of the interface.
+
+### Changed
+- English is the app's default language, and the installer, its instructions and the Release notes are in English.
+- The README, the contribution guide, the security policy and this CHANGELOG are in English.
 
 ## [1.3.3] - 2026-10-22
 
-Diagnóstico dos testes no GitHub mais completo. A app não muda.
+More complete diagnostics for the tests on GitHub. The app does not change.
 
-### Corrigido
-- Os registos dos testes no GitHub passam a ficar guardados e mostram a causa de cada falha.
+### Fixed
+- The logs of the tests on GitHub are now kept and show the cause of each failure.
 
 ## [1.3.2] - 2026-10-22
 
-Fotografias semelhantes deixa de falhar em silêncio.
+Similar photos no longer fails silently.
 
-### Corrigido
-- Fotografias semelhantes: quando o Mac não consegue analisar as imagens, a app passa a avisar, em vez de dizer que não há nada semelhante. Imagens danificadas são contadas e indicadas.
+### Fixed
+- Similar photos: when the Mac cannot analyze the images, the app now warns you, instead of saying there is nothing similar. Damaged images are counted and reported.
 
 ## [1.3.1] - 2026-10-22
 
-Correção encontrada pelos novos testes no GitHub.
+A fix found by the new tests on GitHub.
 
-### Corrigido
-- A app voltou a compilar com o Xcode 16 (Swift 6.0), usado no macOS 14: as miniaturas de imagens davam erro de compilação.
+### Fixed
+- The app builds again with Xcode 16 (Swift 6.0), used on macOS 14: image thumbnails caused a build error.
 
 ## [1.3.0] - 2026-10-22
 
-Uma versão só passa a estável com evidência: testes em várias versões do macOS, sem erros reportados e verificada de novo antes de chegar ao main. A app não muda.
+A version only becomes stable with evidence: tests on several macOS versions, no reported bugs and verified again before it reaches main. The app does not change.
 
-### Adicionado
-- Cada Release traz um ficheiro SHA256SUMS para confirmar que o DMG descarregado não foi alterado.
-- Critérios de lançamento, registo de riscos, política de segurança (SECURITY.md) e guia para contribuir (CONTRIBUTING.md).
-- Testes automáticos no GitHub em macOS 14 e 15 a cada alteração.
+### Added
+- Each Release comes with a SHA256SUMS file to confirm the downloaded DMG was not altered.
+- Release criteria, risk register, security policy (SECURITY.md) and contribution guide (CONTRIBUTING.md).
+- Automated tests on GitHub on macOS 14 and 15 for every change.
 
-### Alterado
-- As versões novas saem como beta (pré-lançamento). "Descarregar a última versão" passa a dar sempre a última estável.
-- Para uma versão passar a estável, os testes no GitHub têm de ter passado. Uma versão major precisa de aprovação explícita.
+### Changed
+- New versions come out as betas (pre-releases). "Download the latest version" now always gives the latest stable.
+- For a version to become stable, the tests on GitHub must have passed. A major version needs explicit approval.
 
 ## [1.2.9] - 2026-10-22
 
-O ramo main passa a ter só o necessário para compilar a versão estável. A app não muda.
+The main branch now only has what is needed to build the stable version. The app does not change.
 
-### Alterado
-- O main deixa de ter os testes, os hooks e os scripts de publicação, que ficam só no ramo dev. Cada versão estável chega ao main como um único commit, depois de ser compilada e testada sem esses ficheiros.
+### Changed
+- main no longer has the tests, hooks and publishing scripts, which stay only on the dev branch. Each stable version reaches main as a single commit, after being built and tested without those files.
 
-### Corrigido
-- Ficheiros de cache do Python deixaram de ser guardados no repositório.
-- A publicação já não para com "a pasta mudou" quando um ficheiro é retirado do repositório.
+### Fixed
+- Python cache files are no longer stored in the repository.
+- Publishing no longer stops with "the folder changed" when a file is removed from the repository.
 
 ## [1.2.8] - 2026-10-22
 
-A versão estável passa a chegar ao main sozinha. A app não muda.
+The stable version now reaches main on its own. The app does not change.
 
-### Alterado
-- Cada publicação verifica se há uma versão estável mais nova do que a do main e, se houver, testa-a de novo e leva-a para o main.
+### Changed
+- Each publication checks whether there is a stable version newer than main's and, if so, tests it again and takes it to main.
 
 ## [1.2.7] - 2026-10-22
 
-O main passa a receber só versões estáveis, escolhidas e verificadas automaticamente. A app não muda.
+main now only gets stable versions, chosen and verified automatically. The app does not change.
 
-### Adicionado
-- Verificação automática da versão estável para o main: a mais recente publicada há pelo menos 24 horas, com o instalador, sem erros reportados e sem correções em versões posteriores. Antes de chegar ao main, é testada de novo numa cópia limpa.
+### Added
+- Automatic selection of the stable version for main: the most recent one published at least 24 hours ago, with the installer, no reported bugs and no fixes in later versions. Before reaching main, it is tested again in a clean copy.
 
 ## [1.2.6] - 2026-10-22
 
-Cada versão passa agora por testes automáticos antes de ser publicada. A app não muda.
+Every version now goes through automated tests before being published. The app does not change.
 
-### Adicionado
-- Testes automáticos às partes que apagam ou escolhem ficheiros: proteção de pastas, Destruidor, limpeza, duplicados, fotografias semelhantes e Lente de Espaço.
-- Cada versão só é registada e publicada se passar nos testes, compilar sem avisos e o autoteste da app correr sem falhas.
+### Added
+- Automated tests for the parts that delete or choose files: folder protection, Shredder, cleanup, duplicates, similar photos and Space Lens.
+- Each version is only committed and published if it passes the tests, builds without warnings and the app's self-test runs without failures.
 
 ## [1.2.5] - 2026-10-22
 
-### Corrigido
-- Destruidor: as ligações simbólicas dentro de uma pasta já não levam a sobrescrever o ficheiro original, fora da pasta.
-- Destruidor: uma falha de escrita (disco cheio, ficheiro bloqueado) já não fecha a app.
-- Proteção de pastas do sistema: passa a resolver ligações como /var e /tmp.
-- Duplicados: fica sempre pelo menos uma cópia de cada ficheiro.
-- Restos de apps: definições do sistema (impressão, iCloud) e do próprio Prune deixam de aparecer.
-- Lente de Espaço: itens dentro de pastas também marcadas já não contam duas vezes.
-- Limpeza: as categorias vazias saem da lista depois de limpar.
+### Fixed
+- Shredder: symbolic links inside a folder no longer cause the original file, outside the folder, to be overwritten.
+- Shredder: a write failure (full disk, locked file) no longer crashes the app.
+- System folder protection: now resolves links such as /var and /tmp.
+- Duplicates: at least one copy of each file is always kept.
+- App leftovers: system settings (printing, iCloud) and Prune's own no longer show up.
+- Space Lens: items inside folders that are also marked are no longer counted twice.
+- Cleanup: empty categories leave the list after cleaning.
 
-### Alterado
-- Textos da app, README e instruções de instalação mais curtos e diretos, com plurais corretos.
-- A secção "Velocidade" passa a chamar-se "Sistema".
+### Changed
+- Shorter, more direct app texts, README and installation instructions, with correct plurals.
+- The "Speed" section is now called "System".
 
 ## [1.2.4] - 2026-10-22
 
-Primeira versão pública.
+First public version.
 
-### Adicionado
-- Licença GPL-3.0, este CHANGELOG e instruções de instalação no README.
+### Added
+- GPL-3.0 license, this CHANGELOG and installation instructions in the README.
 
 ## [1.2.3] - 2026-10-22
 
-### Corrigido
-- Assinatura, instalação e README voltaram a funcionar depois da mudança de nome; o projeto usa só o nome Prune.
+### Fixed
+- Signing, installation and the README work again after the name change; the project only uses the name Prune.
 
 ## [1.2.2] - 2026-10-22
 
-### Alterado
-- Uma só folha em toda a app (a do ícone): ecrã de conclusão, consentimento e barra de menus.
+### Changed
+- A single leaf throughout the app (the icon's): completion screen, consent and menu bar.
 
 ## [1.2.1] - 2026-10-22
 
-### Alterado
-- Código reorganizado por funcionalidade; removido o que não era usado.
+### Changed
+- Code reorganized by feature; removed what was not used.
 
 ## [1.2.0] - 2026-10-22
 
-### Removido
-- Gestão de RAM: cartão "Velocidade" da Análise Inteligente e botões Sair/Forçar nos grandes consumidores. O macOS gere a memória sozinho; ficam as métricas.
+### Removed
+- RAM management: the "Speed" card in Smart Scan and the Quit/Force Quit buttons in heavy consumers. macOS manages memory on its own; the metrics stay.
 
 ## [1.1.1] - 2026-10-22
 
-### Corrigido
-- O assistente de Acesso Total ao Disco já não verifica a permissão sozinho a cada 1,5 s.
+### Fixed
+- The Full Disk Access assistant no longer checks the permission on its own every 1.5 s.
 
 ## [1.1.0] - 2026-10-22
 
-### Alterado
-- Novo nome, Prune, novo ícone (folha) e novo design marfim e tinta, com modo claro e escuro.
+### Changed
+- New name, Prune, new icon (a leaf) and a new ivory-and-ink design, with light and dark mode.
 
-### Adicionado
-- Estatísticas de utilização anónimas e opcionais, com pedido de consentimento no primeiro arranque.
+### Added
+- Anonymous, optional usage statistics, with a consent prompt on first launch.
 
 ## [1.0.0] - 2026-10-22
 
-- Primeira versão: Análise Inteligente, Painel, limpeza, privacidade, otimização, manutenção, desinstalador, atualizador, extensões, Lente de Espaço, ficheiros grandes, duplicados e destruidor.
+- First version: Smart Scan, Dashboard, cleanup, privacy, optimization, maintenance, uninstaller, updater, extensions, Space Lens, large files, duplicates and shredder.
 
+[1.4.0]: https://github.com/viniciuslopesgit/prune/releases/tag/v1.4.0
 [1.3.3]: https://github.com/viniciuslopesgit/prune/releases/tag/v1.3.3
 [1.3.2]: https://github.com/viniciuslopesgit/prune/releases/tag/v1.3.2
 [1.3.1]: https://github.com/viniciuslopesgit/prune/releases/tag/v1.3.1

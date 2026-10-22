@@ -2,9 +2,9 @@ import AppKit
 import ImageIO
 import SwiftUI
 
-/// Miniaturas de imagens, descodificadas já no tamanho final.
-/// Abrir uma fotografia de 48 MP com `NSImage(contentsOf:)` ocupa ~190 MB descodificada;
-/// uma miniatura de 400 px ocupa ~0,6 MB.
+/// Image thumbnails, decoded straight at their final size.
+/// Opening a 48 MP photo with `NSImage(contentsOf:)` takes ~190 MB decoded;
+/// a 400 px thumbnail takes ~0.6 MB.
 enum Thumbnails {
     private static let cache: NSCache<NSString, NSImage> = {
         let c = NSCache<NSString, NSImage>()
@@ -37,7 +37,7 @@ enum Thumbnails {
     static func clear() { cache.removeAllObjects() }
 }
 
-/// Mostra a miniatura (carregada fora da thread principal) ou o ícone do ficheiro.
+/// Shows the thumbnail (loaded off the main thread) or the file's icon.
 struct ThumbnailView: View {
     let url: URL
     var maxPixel = 400
@@ -61,8 +61,8 @@ struct ThumbnailView: View {
     }
 }
 
-/// Leva a miniatura da thread de fundo para a principal. O `NSImage` só é `Sendable` nos SDKs mais
-/// recentes; aqui é seguro porque a imagem é criada uma vez e depois só é lida.
+/// Carries the thumbnail from the background thread to the main one. `NSImage` is only `Sendable` in the most
+/// recent SDKs; here it is safe because the image is created once and then only read.
 private struct LoadedImage: @unchecked Sendable {
     let image: NSImage?
 }

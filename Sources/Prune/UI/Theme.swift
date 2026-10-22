@@ -13,16 +13,16 @@ extension Color {
     }
 }
 
-/// Identidade do Prune: uma folha escura sobre marfim, como o ícone. Monocromática (tinta e marfim),
-/// com um só acento natural, o verde-salva da folha, para estados e controlos do sistema.
-/// Cores adaptativas (modo claro e escuro) e uma só família tipográfica, com a largura como variável.
+/// Prune's identity: a dark leaf on ivory, like the icon. Monochrome (ink and ivory),
+/// with a single natural accent, the leaf's sage green, for states and system controls.
+/// Adaptive colors (light and dark mode) and a single type family, with width as the variable.
 enum Theme {
     static let background = adaptive(light: 0xF5F4EE, dark: 0x1C1C19)
     static let panel = adaptive(light: 0xFBFAF6, dark: 0x252521)
     static let stone = adaptive(light: 0xE8E6DC, dark: 0x2D2D28)
-    /// Tinta no modo claro, marfim no escuro: ações principais, anéis, seleção.
+    /// Ink in light mode, ivory in dark mode: main actions, rings, selection.
     static let accent = adaptive(light: 0x1F1F1C, dark: 0xF5F4EE)
-    /// Texto sobre `accent`.
+    /// Text on `accent`.
     static let onAccent = adaptive(light: 0xF5F4EE, dark: 0x1F1F1C)
     static let leaf = adaptive(light: 0x5E7A4F, dark: 0x9DBB88)
     static let amber = adaptive(light: 0xA86A14, dark: 0xD9A04A)
@@ -30,7 +30,7 @@ enum Theme {
     static let inset = Color.primary.opacity(0.045)
     static let selection = Color.primary.opacity(0.09)
 
-    /// Títulos e números: SF Pro Expanded.
+    /// Titles and numbers: SF Pro Expanded.
     static func display(_ size: CGFloat, _ weight: Font.Weight = .semibold) -> Font {
         .system(size: size, weight: weight).width(.expanded)
     }

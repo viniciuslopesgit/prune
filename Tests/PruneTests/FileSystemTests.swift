@@ -2,9 +2,9 @@ import Foundation
 import Testing
 @testable import Prune
 
-@Suite("Ficheiros")
+@Suite("Files")
 struct FileSystemTests {
-    @Test("Tamanho em disco de ficheiros e pastas")
+    @Test("On-disk size of files and folders")
     func sizes() throws {
         let tmp = try TempDir()
         let a = try tmp.file("p/a", bytes: 100_000, fill: 1)
@@ -13,58 +13,58 @@ struct FileSystemTests {
         #expect(sa >= 100_000)
         #expect(sb >= 50_000)
         #expect(FS.size(of: tmp.path("p")) == sa + sb)
-        #expect(FS.size(of: tmp.path("nao-existe")) == 0)
-        #expect(FS.sizes(of: [a, b, tmp.path("nao-existe")]) == [sa, sb, 0])
+        #expect(FS.size(of: tmp.path("does-not-exist")) == 0)
+        #expect(FS.sizes(of: [a, b, tmp.path("does-not-exist")]) == [sa, sb, 0])
     }
 
-    @Test("Ligações simbólicas não contam (nem seguem para o destino)")
+    @Test("Symbolic links do not count (nor are they followed)")
     func symlinksHaveNoSize() throws {
         let tmp = try TempDir()
-        let big = try tmp.file("grande", bytes: 200_000, fill: 1)
+        let big = try tmp.file("big", bytes: 200_000, fill: 1)
         try tmp.dir("p")
-        let link = try tmp.symlink("p/ligacao", to: big)
+        let link = try tmp.symlink("p/link", to: big)
         #expect(FS.size(of: link) == 0)
-        try tmp.symlink("p/pasta", to: tmp.url)
+        try tmp.symlink("p/folder", to: tmp.url)
         #expect(FS.size(of: tmp.path("p")) == 0)
     }
 
-    @Test("childItems ignora .DS_Store, exclusões e itens abaixo do mínimo; ordena por tamanho")
+    @Test("childItems skips .DS_Store, exclusions and items below the minimum; sorts by size")
     func childItems() throws {
         let tmp = try TempDir()
         try tmp.file("d/.DS_Store", bytes: 9000, fill: 0)
         try tmp.file("d/.localized", "")
-        try tmp.file("d/pequeno", bytes: 10, fill: 1)
-        try tmp.file("d/grande", bytes: 90_000, fill: 1)
-        try tmp.file("d/medio", bytes: 20_000, fill: 1)
-        try tmp.file("d/Manter-Isto", bytes: 50_000, fill: 1)
+        try tmp.file("d/small", bytes: 10, fill: 1)
+        try tmp.file("d/big", bytes: 90_000, fill: 1)
+        try tmp.file("d/medium", bytes: 20_000, fill: 1)
+        try tmp.file("d/Keep-This", bytes: 50_000, fill: 1)
 
-        let items = FS.childItems(of: tmp.path("d"), selected: false, excluding: ["manter"], minSize: 5000, detail: "nota")
-        #expect(items.map(\.name) == ["grande", "medio"])
-        #expect(items.allSatisfy { !$0.selected && $0.detail == "nota" })
+        let items = FS.childItems(of: tmp.path("d"), selected: false, excluding: ["keep"], minSize: 5000, detail: "note")
+        #expect(items.map(\.name) == ["big", "medium"])
+        #expect(items.allSatisfy { !$0.selected && $0.detail == "note" })
     }
 
-    @Test("childItems com olderThan só inclui o que não foi mexido desde então")
+    @Test("childItems with olderThan only includes what has not been touched since")
     func childItemsOlderThan() throws {
         let tmp = try TempDir()
-        let old = try tmp.file("d/antigo", "x")
-        try tmp.file("d/recente", "x")
+        let old = try tmp.file("d/old", "x")
+        try tmp.file("d/recent", "x")
         try FileManager.default.setAttributes([.modificationDate: Date().addingTimeInterval(-86_400 * 30)], ofItemAtPath: old.path)
         let items = FS.childItems(of: tmp.path("d"), olderThan: Date().addingTimeInterval(-86_400 * 7))
-        #expect(items.map(\.name) == ["antigo"])
+        #expect(items.map(\.name) == ["old"])
     }
 
-    @Test("item(_:) só existe para pastas não vazias e não protegidas")
+    @Test("item(_:) only exists for non-empty, unprotected folders")
     func singleItem() throws {
         let tmp = try TempDir()
-        try tmp.file("cheia/x", "x")
-        try tmp.dir("vazia")
-        #expect(FS.item(tmp.path("cheia"), name: "Cheia")?.name == "Cheia")
-        #expect(FS.item(tmp.path("vazia")) == nil)
-        #expect(FS.item(tmp.path("nao-existe")) == nil)
+        try tmp.file("full/x", "x")
+        try tmp.dir("empty")
+        #expect(FS.item(tmp.path("full"), name: "Full")?.name == "Full")
+        #expect(FS.item(tmp.path("empty")) == nil)
+        #expect(FS.item(tmp.path("does-not-exist")) == nil)
         #expect(FS.item(URL(fileURLWithPath: "/System")) == nil)
     }
 
-    @Test("forEach percorre tudo e para quando o corpo devolve false")
+    @Test("forEach walks everything and stops when the body returns false")
     func forEachStops() throws {
         let tmp = try TempDir()
         for i in 0..<600 { try tmp.file("f\(i)", "") }
@@ -78,19 +78,19 @@ struct FileSystemTests {
         #expect(count(limit: 100) == 100)
     }
 
-    @Test("displayPath abrevia a pasta pessoal")
+    @Test("displayPath abbreviates the home folder")
     func displayPath() {
         #expect(URL.home("Downloads/a.zip").displayPath == "~/Downloads/a.zip")
         #expect(URL(fileURLWithPath: "/Library/Caches").displayPath == "/Library/Caches")
     }
 
-    @Test("URL.isDirectory e exists")
+    @Test("URL.isDirectory and exists")
     func urlHelpers() throws {
         let tmp = try TempDir()
         let f = try tmp.file("f", "x")
         #expect(tmp.url.isDirectory)
         #expect(!f.isDirectory)
         #expect(f.exists)
-        #expect(!tmp.path("nao").exists)
+        #expect(!tmp.path("no").exists)
     }
 }

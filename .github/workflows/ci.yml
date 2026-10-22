@@ -1,5 +1,5 @@
-# CI: a mesma verificação completa que o scripts/ship.sh corre localmente, em várias versões do macOS.
-# O resultado no commit de cada tag é um dos critérios para a versão passar a estável (scripts/stable.py).
+# CI: the same full check scripts/ship.sh runs locally, on several macOS versions.
+# The result on each tag's commit is one of the criteria for a version to become stable (scripts/stable.py).
 name: CI
 
 on:
@@ -18,19 +18,19 @@ concurrency:
 
 jobs:
   check:
-    name: Verificação completa (${{ matrix.os }})
+    name: Full check (${{ matrix.os }})
     strategy:
       fail-fast: false
       matrix:
-        # O Prune suporta macOS 14 ou mais recente. Os executores do GitHub são Apple silicon;
-        # o binário Intel é compilado e verificado (lipo), mas não executado aqui.
+        # Prune supports macOS 14 or later. GitHub's runners are Apple silicon;
+        # the Intel binary is built and checked (lipo), but not run here.
         os: [macos-14, macos-15]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
 
-      - name: Xcode mais recente do executor
+      - name: Runner's latest Xcode
         run: |
           XCODE=$(ls -d /Applications/Xcode_*.app | sort -V | tail -1)
           sudo xcode-select -s "$XCODE"
@@ -41,12 +41,12 @@ jobs:
       - name: ./scripts/check.sh --full
         run: ./scripts/check.sh --full
 
-      - name: Registos
+      - name: Logs
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: registos-${{ matrix.os }}
+          name: logs-${{ matrix.os }}
           path: .build/check-*.log
-          include-hidden-files: true   # .build é uma pasta oculta
+          include-hidden-files: true   # .build is a hidden folder
           if-no-files-found: ignore
           retention-days: 14

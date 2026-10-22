@@ -2,9 +2,9 @@ import Foundation
 import Testing
 @testable import Prune
 
-@Suite("Versões")
+@Suite("Versions")
 struct VersionTests {
-    @Test("Comparação numérica", arguments: [
+    @Test("Numeric comparison", arguments: [
         ("1.10.2", "1.9", true), ("2.0", "2.0.0", false), ("1.2", "1.10", false), ("1.2.5", "1.2.4", true),
         ("1.2.4", "1.2.5", false), ("10", "9.9.9", true), ("v2.1", "2.0", true), ("1.0 (45)", "1.0 (44)", true),
         ("", "1.0", false), ("1.0", "", false), ("beta", "1.0", false), ("1.0.1", "1.0", true),
@@ -13,7 +13,7 @@ struct VersionTests {
         #expect(Version.isNewer(a, than: b) == expected)
     }
 
-    @Test("Nunca é mais nova do que ela própria")
+    @Test("Is never newer than itself")
     func irreflexive() {
         for v in ["1", "1.2", "1.2.3", "0.0.1"] { #expect(!Version.isNewer(v, than: v)) }
     }
@@ -24,11 +24,25 @@ struct VersionTests {
     }
 }
 
-@Suite("Formatação")
+@Suite("Formatting")
 struct FormattingTests {
-    @Test("Plurais", arguments: [(0, "0 itens"), (1, "1 item"), (2, "2 itens"), (1000, "1000 itens")])
+    @Test("Plurals", arguments: [(0, "0 items"), (1, "1 item"), (2, "2 items"), (1000, "1000 items")])
     func count(_ n: Int, _ expected: String) {
-        #expect(Fmt.count(n, "item", "itens") == expected)
+        #expect(Fmt.count(n, "item", "items") == expected)
+        #expect(Fmt.items(n) == expected)
+    }
+
+    @Test func files() {
+        #expect(Fmt.files(1) == "1 file")
+        #expect(Fmt.files(3) == "3 files")
+    }
+
+    @Test("Freed space message, with the files that could not be removed")
+    func freedMessage() {
+        let size = Fmt.bytes(2_000_000)
+        #expect(Fmt.freedMessage(2_000_000, failed: 0) == "\(size) freed.")
+        #expect(Fmt.freedMessage(2_000_000, failed: 1) == "\(size) freed. 1 file was not removed.")
+        #expect(Fmt.freedMessage(2_000_000, failed: 4) == "\(size) freed. 4 files were not removed.")
     }
 
     @Test func percent() {
@@ -39,8 +53,18 @@ struct FormattingTests {
 
     @Test func emptyDates() {
         #expect(Fmt.date(nil) == "—")
-        #expect(Fmt.relative(nil) == "nunca")
+        #expect(Fmt.relative(nil) == "never")
         #expect(!Fmt.date(Date()).isEmpty)
+    }
+
+    @Test("Dates follow the interface language, not a fixed language")
+    func datesFollowLanguage() {
+        let day = Date(timeIntervalSince1970: 1_792_670_400)  // 22 October 2026
+        #expect(Fmt.date(day, locale: Locale(identifier: "en_US")).contains("Oct"))
+        #expect(Fmt.date(day, locale: Locale(identifier: "pt_PT")) != Fmt.date(day, locale: Locale(identifier: "en_US")))
+        let threeDaysAgo = Date().addingTimeInterval(-3 * 86_400)
+        #expect(Fmt.relative(threeDaysAgo, locale: Locale(identifier: "en_US")).contains("ago"))
+        #expect(Fmt.relative(threeDaysAgo, locale: Locale(identifier: "pt_PT")).contains("há"))
     }
 
     @Test func bytes() {
@@ -52,40 +76,40 @@ struct FormattingTests {
 @Suite("Shell")
 struct ShellTests {
     static let nasty = [
-        "simples", "com espaços", "aspa'simples", "''", "\"duplas\"", "$HOME", "`whoami`", "$(rm -rf /)",
-        "a;b && c | d", "nova\nlinha", "barra\\invertida", "*?[]", "~", "-rf", "ç ã é 🍃",
+        "simple", "with spaces", "single'quote", "''", "\"double\"", "$HOME", "`whoami`", "$(rm -rf /)",
+        "a;b && c | d", "new\nline", "back\\slash", "*?[]", "~", "-rf", "ç ã é 🍃",
     ]
 
-    @Test("quote: o shell recebe o texto exatamente como está", arguments: nasty)
+    @Test("quote: the shell receives the text exactly as it is", arguments: nasty)
     func quoteRoundTrip(_ s: String) {
         let r = Shell.runSync("/bin/sh", ["-c", "printf %s " + Shell.quote(s)])
         #expect(r.ok)
         #expect(r.out == s)
     }
 
-    @Test("appleScriptEscape escapa aspas e barras")
+    @Test("appleScriptEscape escapes quotes and backslashes")
     func appleScriptEscape() {
         #expect(Shell.appleScriptEscape(#"a"b\c"#) == #"a\"b\\c"#)
     }
 
-    @Test("runSync devolve saída, erro e código de saída")
+    @Test("runSync returns output, error and exit code")
     func runSync() {
-        let ok = Shell.runSync("/bin/echo", ["olá"])
-        #expect(ok.ok && ok.out == "olá\n")
-        let fail = Shell.runSync("/bin/sh", ["-c", "echo erro >&2; exit 3"])
-        #expect(fail.status == 3 && fail.err == "erro\n" && !fail.ok)
-        let missing = Shell.runSync("/nao/existe")
+        let ok = Shell.runSync("/bin/echo", ["héllo"])
+        #expect(ok.ok && ok.out == "héllo\n")
+        let fail = Shell.runSync("/bin/sh", ["-c", "echo error >&2; exit 3"])
+        #expect(fail.status == 3 && fail.err == "error\n" && !fail.ok)
+        let missing = Shell.runSync("/does/not/exist")
         #expect(missing.status == -1)
     }
 
-    @Test("run com variáveis de ambiente")
+    @Test("run with environment variables")
     func runWithEnv() async {
-        let r = await Shell.run("/bin/sh", ["-c", "printf %s \"$PRUNE_TESTE\""], env: ["PRUNE_TESTE": "valor"])
-        #expect(r.out == "valor")
+        let r = await Shell.run("/bin/sh", ["-c", "printf %s \"$PRUNE_TEST\""], env: ["PRUNE_TEST": "value"])
+        #expect(r.out == "value")
     }
 }
 
-@Suite("Pequenas funções")
+@Suite("Small functions")
 struct MiscTests {
     @Test func launchItemProgram() {
         #expect(LaunchItemParser.program(of: ["Program": "/a"]) == "/a")
@@ -97,7 +121,7 @@ struct MiscTests {
 
     @Test func vendor() {
         #expect(AppScanner.vendor(from: "com.adobe.Photoshop") == "Adobe")
-        #expect(AppScanner.vendor(from: "semPontos") == "semPontos")
+        #expect(AppScanner.vendor(from: "noDots") == "noDots")
     }
 
     @Test func expandHome() {
@@ -105,7 +129,7 @@ struct MiscTests {
         #expect(AppScanner.expand("/Library/Caches").path == "/Library/Caches")
     }
 
-    @Test("Os sítios de restos de apps são pastas, nunca podem ser apagados por inteiro")
+    @Test("App leftover locations are folders that can never be deleted entirely")
     func leftoverLocationsAreProtectedRoots() {
         for loc in AppScanner.leftoverLocations where loc.hasPrefix("~/Library/") && !loc.contains("Internet Plug-Ins") && !loc.contains("Application Scripts") && !loc.contains("ByHost") {
             #expect(!SafetyGuard.canDelete(AppScanner.expand(loc)), "\(loc)")

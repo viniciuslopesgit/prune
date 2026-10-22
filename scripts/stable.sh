@@ -1,17 +1,17 @@
 #!/bin/zsh
-# Qual é a versão estável que deve estar no main (regras em scripts/stable.py) e promoção para lá.
+# Which stable version should be on main (rules in scripts/stable.py), and its promotion there.
 #
-#   ./scripts/stable.sh                 relatório: estado de cada versão publicada e a candidata
-#   ./scripts/stable.sh --apply         promove a candidata para o main; sem candidata, limpa o main
-#                                       se tiver ficheiros a mais (ex.: um Pull Request do dev feito à mão)
-#   ./scripts/stable.sh --check 1.2.6   só a verificação completa dessa versão, numa cópia limpa
-#   ./scripts/stable.sh --dry-run 1.2.9 ensaia a promoção dessa versão (verificações incluídas), sem enviar nada
+#   ./scripts/stable.sh                 report: state of each published version and the candidate
+#   ./scripts/stable.sh --apply         promotes the candidate to main; with no candidate, cleans main
+#                                       if it has extra files (e.g. a Pull Request from dev made by hand)
+#   ./scripts/stable.sh --check 1.2.6   only the full check of that version, in a clean copy
+#   ./scripts/stable.sh --dry-run 1.2.9 rehearses the promotion of that version (checks included), without pushing anything
 #
-# O main não recebe o histórico do dev: cada versão estável é um commit "Prune X.Y.Z (versão estável)"
-# com o conteúdo da tag vX.Y.Z sem os ficheiros de desenvolvimento (.mainignore), por Pull Request.
-# Antes, a tag passa a verificação completa numa cópia limpa e o conteúdo do main compila e passa o autoteste.
+# main does not get dev's history: each stable version is a "Prune X.Y.Z (stable version)" commit
+# with the content of the vX.Y.Z tag without the development files (.mainignore), through a Pull Request.
+# First, the tag passes the full check in a clean copy and main's content builds and passes the self-test.
 #
-# STABLE_SOAK_HOURS=24  horas de observação depois de publicada (predefinição: 24).
+# STABLE_SOAK_HOURS=24  hours of observation after publication (default: 24).
 set -e
 cd "$(dirname "$0")/.."
 
@@ -21,12 +21,12 @@ while [ $# -gt 0 ]; do
         --apply) APPLY=1 ;;
         --check) CHECK=${2#v}; shift ;;
         --dry-run) DRY=${2#v}; shift ;;
-        *) echo "Opção desconhecida: $1"; exit 2 ;;
+        *) echo "Unknown option: $1"; exit 2 ;;
     esac
     shift
 done
 
-gh auth status >/dev/null 2>&1 || { echo "✗ O gh não tem sessão iniciada no GitHub (gh auth login)."; exit 1; }
+gh auth status >/dev/null 2>&1 || { echo "✗ gh is not signed in to GitHub (gh auth login)."; exit 1; }
 
 TMP=$(mktemp -d)
 WORKTREES=()
@@ -38,23 +38,23 @@ trap cleanup EXIT
 
 json() { python3 -I -c "import json,sys; print(json.load(sys.stdin)[\"$1\"] or '')"; }
 
-# Verificação completa do commit exato da tag, numa cópia limpa (sem alterações locais nem caches).
+# Full check of the tag's exact commit, in a clean copy (no local changes or caches).
 verify_tag() {
     local version=$1 sha=$(git rev-parse "refs/tags/v$1^{commit}")
     git cat-file -e "${sha}:scripts/check.sh" 2>/dev/null \
-        || { echo "✗ A $version é anterior ao sistema de testes: não pode ser verificada automaticamente."; return 1; }
+        || { echo "✗ $version predates the test system: it cannot be verified automatically."; return 1; }
     local wt=$TMP/tag-$version
     git worktree add -q --detach "$wt" "$sha"; WORKTREES+=($wt)
-    echo "• A verificar a $version numa cópia limpa (compila tudo de raiz; alguns minutos)…"
+    echo "• Verifying $version in a clean copy (builds everything from scratch; a few minutes)…"
     if ! (cd "$wt" && ./scripts/check.sh --full >"$wt.log" 2>&1); then
         tail -25 "$wt.log"
-        echo "✗ A $version falhou a verificação completa (registo em $wt.log)."
+        echo "✗ $version failed the full check (log in $wt.log)."
         return 1
     fi
-    echo "✓ A $version passou a verificação completa."
+    echo "✓ $version passed the full check."
 }
 
-# Árvore do main para uma versão: a da tag sem os caminhos do .mainignore (a lista em vigor no dev).
+# main's tree for a version: the tag's, without the .mainignore paths (the list in force on dev).
 main_tree() {
     local tag=v$1 idx=$TMP/index-$1
     GIT_INDEX_FILE=$idx git read-tree "refs/tags/$tag"
@@ -65,82 +65,85 @@ main_tree() {
     GIT_INDEX_FILE=$idx git write-tree
 }
 
-# O conteúdo do main tem de compilar sozinho (sem testes nem scripts de desenvolvimento) e passar o autoteste.
+# main's content must build on its own (without tests or development scripts) and pass the self-test.
 verify_main_commit() {
     local version=$1 commit=$2 wt=$TMP/main-$1
-    # Só podem faltar os ficheiros de desenvolvimento; nada mais pode ser diferente da tag.
+    # Only the development files may be missing; nothing else may differ from the tag.
     local other=$(git diff --name-status "refs/tags/v$version" "$commit" | grep -v '^D' || true)
-    [ -z "$other" ] || { echo "✗ O commit do main difere da tag em mais do que os ficheiros de desenvolvimento:"; print -r -- "$other"; return 1; }
+    [ -z "$other" ] || { echo "✗ The main commit differs from the tag in more than the development files:"; print -r -- "$other"; return 1; }
     git worktree add -q --detach "$wt" "$commit"; WORKTREES+=($wt)
-    echo "• A compilar o conteúdo do main da $version (sem ficheiros de desenvolvimento)…"
+    echo "• Building main's content for $version (without development files)…"
     if ! (cd "$wt" && ./scripts/build_app.sh >"$wt.log" 2>&1); then
-        tail -25 "$wt.log"; echo "✗ O conteúdo do main da $version não compila (registo em $wt.log)."; return 1
+        tail -25 "$wt.log"; echo "✗ main's content for $version does not build (log in $wt.log)."; return 1
     fi
     local app=$wt/build/Prune.app out=$wt.selftest
-    codesign --verify --deep --strict "$app" 2>/dev/null || { echo "✗ A app do main tem a assinatura inválida."; return 1; }
+    codesign --verify --deep --strict "$app" 2>/dev/null || { echo "✗ main's app has an invalid signature."; return 1; }
     perl -e 'alarm shift; exec @ARGV' 300 "$app/Contents/MacOS/Prune" --selftest >"$out" 2>&1 \
-        || { tail -20 "$out"; echo "✗ O autoteste da app do main falhou."; return 1; }
-    for expected in "Treemap: área total 240000" "SafetyGuard bloqueia pastas críticas: true" \
-                    "SafetyGuard resolve ligações (/var/db → /private/var/db): true" \
-                    "Destruidor não segue ligações simbólicas: true"; do
-        grep -qF -- "$expected" "$out" || { echo "✗ Autoteste do main: falta \"$expected\" (ver $out)."; return 1; }
+        || { tail -20 "$out"; echo "✗ The self-test of main's app failed."; return 1; }
+    # Each line in English (from 1.4.0) or in Portuguese (older versions, whose self-test was in Portuguese).
+    for expected in "Treemap: total area 240000|Treemap: área total 240000" \
+                    "SafetyGuard blocks critical folders: true|SafetyGuard bloqueia pastas críticas: true" \
+                    "SafetyGuard resolves links (/var/db → /private/var/db): true|SafetyGuard resolve ligações (/var/db → /private/var/db): true" \
+                    "Shredder does not follow symbolic links: true|Destruidor não segue ligações simbólicas: true"; do
+        grep -qF -e "${expected%%|*}" -e "${expected#*|}" "$out" || { echo "✗ main self-test: missing \"${expected%%|*}\" (see $out)."; return 1; }
     done
+    echo "✓ main's content builds, is signed and passes the self-test."
     echo "✓ O conteúdo do main compila, está assinado e passa o autoteste."
 }
 
-# Leva a versão para o main por Pull Request. $2 descreve o motivo. Com --dry-run, para antes de enviar.
+# Takes the version to main through a Pull Request. $2 describes the reason. With --dry-run, stops before pushing.
 promote() {
     local version=$1 why=$2 tag=v$1
     git fetch -q origin main
     local tree=$(main_tree "$version")
     if [ "$tree" = "$(git rev-parse 'origin/main^{tree}')" ]; then
-        echo "• O main já tem a $version só com os ficheiros essenciais."; return 0
+        echo "• main already has $version with only the essential files."; return 0
     fi
     verify_tag "$version"
-    local commit=$(printf 'Prune %s (versão estável)\n\n%s\nConteúdo da tag %s do dev, sem os ficheiros de desenvolvimento (.mainignore).\n' \
+    local commit=$(printf 'Prune %s (stable version)\n\n%s\nContent of the %s tag from dev, without the development files (.mainignore).\n' \
         "$version" "$why" "$tag" | git commit-tree "$tree" -p origin/main)
     verify_main_commit "$version" "$commit"
     if [ -n "$DRY" ]; then
-        echo "✓ Ensaio: o commit $commit seria enviado para o main ($(wc -l <"$TMP/excluded-$version" | tr -d ' ') ficheiros de desenvolvimento retirados)."
+        echo "✓ Rehearsal: commit $commit would be pushed to main ($(wc -l <"$TMP/excluded-$version" | tr -d ' ') development files removed)."
         git ls-tree -r --name-only "$commit" >"$TMP/main-files"
-        echo "  Ficheiros no main: $(wc -l <"$TMP/main-files" | tr -d ' ') (lista em $TMP/main-files)"
+        echo "  Files on main: $(wc -l <"$TMP/main-files" | tr -d ' ') (list in $TMP/main-files)"
         return 0
     fi
 
     mkdir -p .build
-    print -r -- "$tree" >.build/stable-verified   # o hook pre-push só deixa enviar para o main esta árvore
+    print -r -- "$tree" >.build/stable-verified   # the pre-push hook only lets this tree be pushed to main
     local branch=stable/$tag
     git push -q -f origin "${commit}:refs/heads/${branch}"
     local removed=$(wc -l <"$TMP/excluded-$version" | tr -d ' ')
     local body="$why
 
-- Conteúdo da tag \`$tag\`, sem $removed ficheiros de desenvolvimento (lista em \`.mainignore\` no dev).
-- A tag passou \`./scripts/check.sh --full\` numa cópia limpa; o conteúdo do main compila, está assinado e passa o autoteste.
+- Content of the \`$tag\` tag, without $removed development files (list in \`.mainignore\` on dev).
+- The tag passed \`./scripts/check.sh --full\` in a clean copy; main's content builds, is signed and passes the self-test.
 
 $(python3 -I scripts/stable.py | sed 's/^/    /')"
-    local url=$(gh pr create --base main --head "$branch" --title "Versão estável: Prune $version" --body "$body")
+    local url=$(gh pr create --base main --head "$branch" --title "Stable version: Prune $version" --body "$body")
     echo "✓ Pull Request: $url"
     gh pr merge "$url" --merge --delete-branch
     git fetch -q origin main
     if [ "$(git rev-parse 'origin/main^{tree}')" = "$tree" ]; then
-        echo "✓ O main tem agora a Prune $version, só com os ficheiros essenciais."
-        # A Release deixa de ser beta e passa a ser a "Latest" (a que o README manda descarregar).
+        echo "✓ main now has Prune $version, with only the essential files."
+        # The Release stops being a beta and becomes "Latest" (the one the README says to download).
         gh release edit "$tag" --prerelease=false --latest >/dev/null
-        echo "✓ Release $tag marcada como estável (Latest)."
+        echo "✓ Release $tag marked as stable (Latest)."
     else
-        echo "⚠️  O main foi atualizado, mas o conteúdo não é o esperado: reveja com git diff $commit origin/main."
+        echo "⚠️  main was updated, but its content is not the expected one: review with git diff $commit origin/main."
         return 1
     fi
 }
 
 if [ -n "$DRY" ]; then
-    git rev-parse -q --verify "refs/tags/v$DRY" >/dev/null || { echo "✗ Não há a tag v$DRY."; exit 1; }
-    promote "$DRY" "Ensaio da promoção da **Prune $DRY**."
+    git rev-parse -q --verify "refs/tags/v$DRY" >/dev/null || { echo "✗ There is no v$DRY tag."; exit 1; }
+    promote "$DRY" "Rehearsal of the promotion of **Prune $DRY**."
     exit 0
 fi
 
 if [ -n "$CHECK" ]; then
-    git rev-parse -q --verify "refs/tags/v$CHECK" >/dev/null || { echo "✗ Não há a tag v$CHECK."; exit 1; }
+    git rev-parse -q --verify "refs/tags/v$CHECK" >/dev/null || { echo "✗ There is no v$CHECK tag."; exit 1; }
     verify_tag "$CHECK"
     exit 0
 fi
@@ -152,13 +155,13 @@ REPORT=$(python3 -I scripts/stable.py --json)
 CANDIDATE=$(print -r -- "$REPORT" | json candidate)
 MAIN=$(print -r -- "$REPORT" | json main)
 if [ -n "$CANDIDATE" ]; then
-    promote "$CANDIDATE" "Promove a **Prune $CANDIDATE** a versão estável."
+    promote "$CANDIDATE" "Promotes **Prune $CANDIDATE** to stable version."
 elif [ -n "$MAIN" ] && git cat-file -e "refs/tags/v${MAIN}:.mainignore" 2>/dev/null; then
-    # Sem versão nova: confirma que o main tem só os ficheiros essenciais da versão que já lá está.
-    promote "$MAIN" "Limpa o main: mantém a **Prune $MAIN**, só com os ficheiros essenciais para a compilar."
+    # No new version: confirms that main has only the essential files of the version already there.
+    promote "$MAIN" "Cleans main: keeps **Prune $MAIN**, with only the essential files to build it."
 elif [ -n "$MAIN" ]; then
-    echo "• Nada a promover. A $MAIN no main é anterior ao main só com ficheiros essenciais:"
-    echo "  o main fica limpo quando a próxima versão estável for promovida."
+    echo "• Nothing to promote. $MAIN on main predates the main with only essential files:"
+    echo "  main will be cleaned when the next stable version is promoted."
 else
-    echo "• Nada a promover."
+    echo "• Nothing to promote."
 fi

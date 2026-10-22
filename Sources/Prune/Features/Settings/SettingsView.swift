@@ -9,50 +9,50 @@ struct SettingsView: View {
     var body: some View {
         TabView {
             Form {
-                Section("Geral") {
-                    Toggle("Mostrar monitor na barra de menus", isOn: $showMenuBar)
-                    Toggle("Abrir ao iniciar sessão", isOn: $launchAtLogin)
+                Section("General") {
+                    Toggle("Show monitor in the menu bar", isOn: $showMenuBar)
+                    Toggle("Open at login", isOn: $launchAtLogin)
                         .onChange(of: launchAtLogin) { _, v in settings.launchAtLogin = v }
                 }
-                Section("Remoção") {
-                    Picker("Lixo do sistema (caches, registos)", selection: $settings.junkDeleteMode) {
+                Section("Removal") {
+                    Picker("System junk (caches, logs)", selection: $settings.junkDeleteMode) {
                         ForEach(DeleteMode.allCases) { Text($0.title).tag($0) }
                     }
-                    Picker("Ficheiros e aplicações", selection: $settings.filesDeleteMode) {
+                    Picker("Files and applications", selection: $settings.filesDeleteMode) {
                         ForEach(DeleteMode.allCases) { Text($0.title).tag($0) }
                     }
-                    Stepper("Passagens do Destruidor: \(settings.shredPasses)", value: $settings.shredPasses, in: 1...7)
-                    Stepper("Tamanho mínimo em Grandes e Antigos: \(settings.largeFileMinMB) MB", value: $settings.largeFileMinMB, in: 10...5000, step: 10)
+                    Stepper("Shredder passes: \(settings.shredPasses)", value: $settings.shredPasses, in: 1...7)
+                    Stepper("Minimum size in Large & Old Files: \(settings.largeFileMinMB) MB", value: $settings.largeFileMinMB, in: 10...5000, step: 10)
                 }
                 if Analytics.isAvailable {
-                    Section("Estatísticas") {
-                        Toggle("Partilhar estatísticas de utilização anónimas", isOn: Binding(
+                    Section("Statistics") {
+                        Toggle("Share anonymous usage statistics", isOn: Binding(
                             get: { settings.analyticsEnabled },
                             set: { settings.analyticsEnabled = $0; settings.analyticsAsked = true }))
                         Text(Analytics.disclosure).font(.caption).foregroundStyle(.secondary)
                     }
                 }
-                Section("Permissões") {
+                Section("Permissions") {
                     HStack {
-                        Label(hasFDA ? "Acesso Total ao Disco concedido" : "Acesso Total ao Disco em falta",
+                        Label(hasFDA ? "Full Disk Access granted" : "Full Disk Access missing",
                               systemImage: hasFDA ? "checkmark.seal.fill" : "exclamationmark.triangle.fill")
                             .foregroundStyle(hasFDA ? Theme.leaf : Theme.amber)
                         Spacer()
-                        Button("Abrir Definições") { Permissions.openFullDiskAccessSettings() }
+                        Button("Open Settings") { Permissions.openFullDiskAccessSettings() }
                     }
-                    Text("Sem esta permissão, o macOS pede autorização para cada pasta protegida.")
+                    Text("Without this permission, macOS asks for authorization for each protected folder.")
                         .font(.caption).foregroundStyle(.secondary)
-                    Toggle("Lembrar ao abrir enquanto faltar a permissão", isOn: Binding(
+                    Toggle("Remind me on launch while the permission is missing", isOn: Binding(
                         get: { !settings.fdaOnboardingDismissed }, set: { settings.fdaOnboardingDismissed = !$0 }))
                 }
             }
             .formStyle(.grouped)
-            .tabItem { Label("Geral", systemImage: "gearshape") }
+            .tabItem { Label("General", systemImage: "gearshape") }
 
             Form {
                 Section {
                     if settings.ignoredPaths.isEmpty {
-                        Text("Nenhum item ignorado.").foregroundStyle(.secondary)
+                        Text("No ignored items.").foregroundStyle(.secondary)
                     }
                     ForEach(settings.ignoredPaths, id: \.self) { path in
                         HStack {
@@ -63,7 +63,7 @@ struct SettingsView: View {
                                 .buttonStyle(.borderless)
                         }
                     }
-                    Button("Adicionar…") {
+                    Button("Add…") {
                         let panel = NSOpenPanel()
                         panel.canChooseDirectories = true
                         panel.allowsMultipleSelection = true
@@ -72,11 +72,11 @@ struct SettingsView: View {
                         }
                     }
                 } header: {
-                    Text("O Prune nunca remove estes ficheiros e pastas")
+                    Text("Prune never removes these files and folders")
                 }
             }
             .formStyle(.grouped)
-            .tabItem { Label("Lista de exclusões", systemImage: "hand.raised") }
+            .tabItem { Label("Exclusion list", systemImage: "hand.raised") }
         }
         .frame(width: 560, height: 460)
         .onAppear { hasFDA = Permissions.hasFullDiskAccess }

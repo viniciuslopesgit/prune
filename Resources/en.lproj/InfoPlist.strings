@@ -1,0 +1,2 @@
+/* Shown by macOS when Prune asks for permission to control System Events. */
+"NSAppleEventsUsageDescription" = "Prune uses System Events to list and remove login items.";
