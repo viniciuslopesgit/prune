@@ -50,7 +50,6 @@ if [ ! -f build/AppIcon.icns ] || [ scripts/make_icon.swift -nt build/AppIcon.ic
         build/make_icon "$ICONSET/icon_${s}x${s}.png" $s
         build/make_icon "$ICONSET/icon_${s}x${s}@2x.png" $((s*2))
     done
-    cp "$ICONSET/icon_512x512@2x.png" build/icon_1024.png
     iconutil -c icns "$ICONSET" -o build/AppIcon.icns
     rm -rf "$ICONSET" build/make_icon
 fi

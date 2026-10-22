@@ -1,6 +1,4 @@
 import AppKit
-import Foundation
-import UniformTypeIdentifiers
 
 let home = FileManager.default.homeDirectoryForCurrentUser
 
@@ -118,10 +116,6 @@ enum FS {
         return CleanItem(url: url, name: name ?? url.lastPathComponent, size: s, selected: selected, detail: detail)
     }
 
-    static func glob(_ base: URL, matching predicate: (String) -> Bool) -> [URL] {
-        children(base).filter { predicate($0.lastPathComponent) }
-    }
-
     private static let iconCache: NSCache<NSString, NSImage> = {
         let c = NSCache<NSString, NSImage>()
         c.countLimit = 400
@@ -142,31 +136,6 @@ enum FS {
     static func reveal(_ url: URL) {
         NSWorkspace.shared.activateFileViewerSelecting([url])
     }
-}
-
-enum Fmt {
-    static func bytes(_ b: Int64) -> String {
-        ByteCountFormatter.string(fromByteCount: b, countStyle: .file)
-    }
-
-    static func date(_ d: Date?) -> String {
-        guard let d else { return "—" }
-        let f = DateFormatter()
-        f.locale = Locale(identifier: "pt_PT")
-        f.dateStyle = .medium
-        f.timeStyle = .none
-        return f.string(from: d)
-    }
-
-    static func relative(_ d: Date?) -> String {
-        guard let d else { return "nunca" }
-        let f = RelativeDateTimeFormatter()
-        f.locale = Locale(identifier: "pt_PT")
-        f.unitsStyle = .full
-        return f.localizedString(for: d, relativeTo: Date())
-    }
-
-    static func percent(_ v: Double) -> String { String(format: "%.0f%%", v * 100) }
 }
 
 /// Lê o Info.plist diretamente. `Bundle(url:)` guarda cada bundle numa cache global

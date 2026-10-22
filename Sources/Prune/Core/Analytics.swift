@@ -1,4 +1,3 @@
-import AppKit
 import Foundation
 
 /// Estatísticas de utilização anónimas via Google Analytics 4 (Measurement Protocol).
@@ -29,10 +28,10 @@ enum Analytics {
     /// Há chaves neste build (sem elas, a opção nem aparece).
     static var isAvailable: Bool { config != nil }
 
-    /// Ferramentas de desenvolvimento (--selftest, --bench, --snapshot) nunca enviam.
+    /// Ferramentas de diagnóstico (--selftest, --bench, --fdacheck) nunca enviam.
     private static var isToolRun: Bool {
         let args = CommandLine.arguments
-        return ["--selftest", "--bench", "--snapshot", "--fdacheck"].contains { args.contains($0) }
+        return ["--selftest", "--bench", "--fdacheck"].contains { args.contains($0) }
     }
 
     /// Identificador aleatório desta instalação. Criado só quando o utilizador aceita; apagado quando recusa.

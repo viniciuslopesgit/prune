@@ -73,7 +73,7 @@ O Prune pode enviar estatísticas anónimas para o Google Analytics 4 (Measureme
 ## Segurança
 
 - Nada é apagado sem confirmação. Os resultados de cada análise podem ser revistos item a item.
-- Pastas críticas do sistema e do utilizador são bloqueadas (`Core/Safety.swift`), independentemente do que for selecionado.
+- Pastas críticas do sistema e do utilizador são bloqueadas (`Sources/Prune/Core/SafetyGuard.swift`), independentemente do que for selecionado.
 - Por defeito, ficheiros pessoais e apps vão para o **Lixo**; caches e registos regeneráveis são apagados diretamente (configurável em Definições).
 - **Lista de exclusões** nas Definições: o que lá estiver nunca é removido.
 - As tarefas que exigem administrador pedem a palavra-passe através do diálogo do macOS.
@@ -87,7 +87,38 @@ build/Prune.app/Contents/MacOS/Prune --selftest
 
 # Mede a memória de cada análise pesada (--twice repete para detetar fugas, --photos inclui fotos semelhantes)
 build/Prune.app/Contents/MacOS/Prune --bench --twice
+
+# Verifica o Acesso Total ao Disco com a identidade da app (lançada pelo macOS)
+open -n /Applications/Prune.app --args --fdacheck /tmp/prune-fda.txt
 ```
+
+## Estrutura do projeto
+
+```
+├── Package.swift            Pacote Swift (executável, macOS 14+)
+├── Resources/
+│   ├── Info.plist           Identificador, versão, permissões
+│   └── Como abrir.txt       Instruções incluídas no DMG
+├── scripts/
+│   ├── build_app.sh         Compila e cria build/Prune.app (universal, assinada)
+│   ├── install.sh           Compila e atualiza /Applications/Prune.app no lugar
+│   ├── make_dmg.sh          Cria o instalador build/Prune-<versão>.dmg
+│   ├── setup_signing.sh     Cria o certificado local de assinatura (uma vez)
+│   ├── make_icon.swift      Desenha o ícone da app
+│   └── make_dmg_background.swift  Desenha o fundo da janela do DMG
+└── Sources/Prune/
+    ├── App/                 Arranque, estado global, janela principal, lista de módulos
+    ├── Core/                Infraestrutura: shell, ficheiros, permissões, definições, monitor do sistema
+    │   └── Cleaning/        Modelo comum de limpeza (itens, categorias, remoção)
+    ├── UI/                  Componentes partilhados: tema, estrutura dos ecrãs, controlos, gráficos
+    ├── Features/            Uma pasta por funcionalidade (modelo + serviço + vista)
+    │   ├── SmartScan/  Dashboard/  Cleanup/  Privacy/  Optimization/  Maintenance/
+    │   ├── Uninstaller/  Updater/  Extensions/  SpaceLens/  LargeFiles/  Duplicates/  Shredder/
+    │   └── Settings/  MenuBar/  Onboarding/
+    └── Diagnostics/         Ferramentas --selftest, --bench e --fdacheck
+```
+
+Ficheiros gerados (ignorados pelo git): `build/` (app, DMG, ícone) e `.build/` (compilação do Swift; `swift package clean` liberta-a).
 
 ## Memória
 
@@ -95,4 +126,3 @@ build/Prune.app/Contents/MacOS/Prune --bench --twice
 - A Lente de Espaço guarda só nomes (os caminhos são reconstruídos), agrega pastas pequenas e limita cada pasta a 50 filhos.
 - Imagens são mostradas como miniaturas em cache (máx. 48 MB); os ícones também ficam em cache.
 - Ao fechar a janela (a app continua na barra de menus) ou com pouca memória no sistema, os resultados pesados são libertados.
-# prune
