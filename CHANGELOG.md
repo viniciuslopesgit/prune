@@ -2,6 +2,13 @@
 
 Alterações relevantes de cada versão. Formato [Keep a Changelog](https://keepachangelog.com/pt-PT/1.1.0/), versões [SemVer](https://semver.org/lang/pt-PT/).
 
+## [1.2.8] - 2026-10-22
+
+A versão estável passa a chegar ao main sozinha. A app não muda.
+
+### Alterado
+- Cada publicação verifica se há uma versão estável mais nova do que a do main e, se houver, testa-a de novo e leva-a para o main.
+
 ## [1.2.7] - 2026-10-22
 
 O main passa a receber só versões estáveis, escolhidas e verificadas automaticamente. A app não muda.
@@ -76,6 +83,7 @@ Primeira versão pública.
 
 - Primeira versão: Análise Inteligente, Painel, limpeza, privacidade, otimização, manutenção, desinstalador, atualizador, extensões, Lente de Espaço, ficheiros grandes, duplicados e destruidor.
 
+[1.2.8]: https://github.com/viniciuslopesgit/prune/releases/tag/v1.2.8
 [1.2.7]: https://github.com/viniciuslopesgit/prune/releases/tag/v1.2.7
 [1.2.6]: https://github.com/viniciuslopesgit/prune/releases/tag/v1.2.6
 [1.2.5]: https://github.com/viniciuslopesgit/prune/releases/tag/v1.2.5

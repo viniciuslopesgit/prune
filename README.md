@@ -60,7 +60,7 @@ Nada é registado nem instalado sem passar nos testes.
 - **Verificação rápida** (antes de cada commit, pelo hook `pre-commit`): sintaxe dos scripts, nenhuma chave de `analytics.env` nas alterações, ficheiros novos em `Sources/` acompanhados de testes, compilação sem avisos, testes de unidade e cobertura mínima nos ficheiros que apagam ou escolhem ficheiros.
 - **Verificação completa** (antes de cada push, pelo hook `pre-push`, e no `ship.sh`): tudo o anterior, secção da versão preenchida no CHANGELOG, app universal e assinada, e o autoteste da app compilada.
 - `./scripts/stable.sh` diz qual a versão estável que deve estar no `main`: a Release mais recente com o DMG, sem issues abertas de `bug` que a mencionem, publicada há pelo menos 24 h e sem correções em versões posteriores. `--apply` verifica-a de novo numa cópia limpa e promove-a para o `main` por Pull Request; `--check X.Y.Z` só verifica.
-- `ship.sh` publica a Release `vX.Y.Z` com o DMG e as notas tiradas do CHANGELOG. Aceita `--install` (instala em /Applications) e `--no-release`.
+- `ship.sh` publica a Release `vX.Y.Z` com o DMG e as notas tiradas do CHANGELOG e, no fim, promove a versão estável para o `main` (`stable.sh --apply`), se houver uma mais nova. Aceita `--install` (instala em /Applications), `--no-release` e `--no-promote`.
 
 ### Versões
 

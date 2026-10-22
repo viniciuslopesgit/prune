@@ -5,6 +5,10 @@
 #   ./scripts/ship.sh "Mensagem do commit"     verificação completa → commit → push dev → Release
 #   ./scripts/ship.sh "…" --install            … e instala a app em /Applications
 #   ./scripts/ship.sh "…" --no-release         só commit e push (sem versão nova)
+#   ./scripts/ship.sh "…" --no-promote         não promove a versão estável para o main
+#
+# No fim, se houver uma versão estável mais nova do que a do main (regras em scripts/stable.py),
+# é verificada de novo numa cópia limpa e promovida para o main por Pull Request.
 #
 # Cada Release precisa de uma versão nova: antes, ./scripts/bump_version.sh patch|minor|major
 # e preencher a secção dela no CHANGELOG. A tag vX.Y.Z aponta para o commit testado no dev.
@@ -12,17 +16,18 @@
 set -e
 cd "$(dirname "$0")/.."
 
-MSG="" RELEASE=1 INSTALL=0
+MSG="" RELEASE=1 INSTALL=0 PROMOTE=1
 for a in "$@"; do
     case $a in
         --install) INSTALL=1 ;;
         --no-release) RELEASE=0 ;;
+        --no-promote) PROMOTE=0 ;;
         --no-install) ;;   # predefinição; aceite por compatibilidade
         -*) echo "Opção desconhecida: $a"; exit 2 ;;
         *) [ -z "$MSG" ] && MSG=$a || { echo "Só uma mensagem de commit, entre aspas."; exit 2; } ;;
     esac
 done
-[ -n "$MSG" ] || { echo "Uso: ./scripts/ship.sh \"Mensagem do commit\" [--install] [--no-release]"; exit 2; }
+[ -n "$MSG" ] || { echo "Uso: ./scripts/ship.sh \"Mensagem do commit\" [--install] [--no-release] [--no-promote]"; exit 2; }
 
 BRANCH=$(git branch --show-current)
 [ "$BRANCH" = dev ] || { echo "✗ O ship.sh publica a partir do ramo dev (está em \"$BRANCH\")."; exit 1; }
@@ -75,9 +80,15 @@ if [ $RELEASE = 1 ]; then
     echo "✓ Release Prune $VERSION publicada: $(gh release view "$TAG" --json url --jq .url)"
 fi
 
-# 5. Que versão deve estar no main (só informação; promover é ./scripts/stable.sh --apply).
-echo "• Versão estável para o main:"
-python3 -I scripts/stable.py | sed 's/^/    /' || echo "    (não foi possível consultar o GitHub)"
+# 5. Versão estável para o main: se houver candidata, é verificada numa cópia limpa e promovida
+#    por Pull Request (scripts/stable.sh --apply). O dev e a Release já estão publicados nesta altura.
+if [ $PROMOTE = 1 ]; then
+    echo "• Versão estável para o main:"
+    if ! ./scripts/stable.sh --apply; then
+        echo "✗ A promoção para o main falhou (o commit, o push para o dev e a Release já estão feitos)."
+        exit 1
+    fi
+fi
 
 # 6. Opcional: instala a app testada em /Applications, sem recompilar.
 if [ $INSTALL = 1 ]; then
