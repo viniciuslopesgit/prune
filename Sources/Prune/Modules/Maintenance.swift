@@ -71,12 +71,6 @@ final class MaintenanceModel {
         selected = Set(recommended.filter { !$0.requiresAdmin }.map(\.id))
     }
 
-    /// Tarefas recomendadas que a Análise Inteligente pode executar sem perguntar nada,
-    /// a não ser que o utilizador autorize tarefas de administrador nas Definições.
-    var recommendedForSmartScan: [MaintenanceTask] {
-        recommended.filter { !$0.requiresAdmin || AppSettings.shared.smartScanAdminTasks }
-    }
-
     func lastRun(_ id: String) -> Date? { defaults.object(forKey: "maint.\(id)") as? Date }
 
     var recommended: [MaintenanceTask] {

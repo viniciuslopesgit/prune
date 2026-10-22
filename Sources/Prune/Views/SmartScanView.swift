@@ -12,12 +12,11 @@ struct SmartScanView: View {
                 HeroView(
                     module: .smartScan,
                     headline: "Bem-vindo ao Prune",
-                    message: "Uma análise completa do seu Mac: lixo para limpar, estado das proteções e tarefas para o manter rápido.",
+                    message: "Uma análise do seu Mac num clique: o lixo que pode limpar e o estado das proteções do macOS.",
                     features: [("externaldrive.badge.xmark", "Caches, registos e Lixo para limpar"),
-                               ("checkmark.shield", "Estado das proteções do macOS"),
-                               ("bolt", "Tarefas de manutenção que o mantêm rápido")]
+                               ("checkmark.shield", "Estado das proteções do macOS")]
                 ) {
-                    Task { await model.scan(maintenance: state.maintenance) }
+                    Task { await model.scan() }
                 }
             case .scanning:
                 ScanningView(module: .smartScan, title: "A analisar: \(model.step)", detail: model.progressText)
@@ -40,7 +39,6 @@ struct SmartScanView: View {
     private func summary(_ m: SmartScanModel) -> String {
         var parts: [String] = []
         if m.runCleanup { parts.append("\(Fmt.bytes(m.cleanReport.freed)) de lixo removido") }
-        if m.runSpeed { parts.append("\(m.tasksRun) tarefa(s) de manutenção executada(s)") }
         return parts.isEmpty ? "Nada a fazer." : parts.joined(separator: " · ")
     }
 
@@ -62,19 +60,13 @@ struct SmartScanView: View {
                 enabled: nil, colors: Module.privacy.colors,
                 review: { state.selection = .dashboard }
             )
-            ResultCard(
-                icon: "bolt", title: "Velocidade",
-                value: "\(model.tasks.count)", caption: model.tasks.isEmpty ? "Nada recomendado" : "tarefas recomendadas",
-                enabled: $model.runSpeed, colors: Module.maintenance.colors,
-                review: { state.selection = .maintenance }
-            )
         }
         .padding(.horizontal, 32)
         .frame(maxHeight: .infinity)
 
         HStack(spacing: 14) {
-            BigActionButton(title: "Executar", disabled: !(model.runCleanup || model.runSpeed)) {
-                Task { await model.run(maintenance: state.maintenance) }
+            BigActionButton(title: "Limpar", disabled: !model.runCleanup) {
+                Task { await model.run() }
             }
             Button("Cancelar") { model.phase = .idle }.buttonStyle(.bordered).controlSize(.large)
             Spacer()

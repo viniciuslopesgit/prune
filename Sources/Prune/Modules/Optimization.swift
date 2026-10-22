@@ -163,13 +163,6 @@ enum OptimizationService {
             )
         }
     }
-
-    static func quit(_ p: ProcessInfoRow, force: Bool) -> Bool {
-        if let app = NSRunningApplication(processIdentifier: p.pid) {
-            return force ? app.forceTerminate() : app.terminate()
-        }
-        return kill(p.pid, force ? SIGKILL : SIGTERM) == 0
-    }
 }
 
 @MainActor
@@ -238,11 +231,5 @@ final class OptimizationModel {
             message = "Não foi possível remover \(item.name). Verifique a permissão de Automação para \"System Events\"."
         }
         loginItems = await OptimizationService.loginItems()
-    }
-
-    func quit(_ p: ProcessInfoRow, force: Bool) async {
-        if !OptimizationService.quit(p, force: force) { message = "Não foi possível terminar \(p.name)." }
-        await Task.pause(0.8)
-        await refreshProcesses()
     }
 }

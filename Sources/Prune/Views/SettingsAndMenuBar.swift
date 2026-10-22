@@ -13,10 +13,6 @@ struct SettingsView: View {
                     Toggle("Mostrar monitor na barra de menus", isOn: $showMenuBar)
                     Toggle("Abrir ao iniciar sessão", isOn: $launchAtLogin)
                         .onChange(of: launchAtLogin) { _, v in settings.launchAtLogin = v }
-                    Toggle("A Análise Inteligente executa tarefas de manutenção", isOn: $settings.smartScanRunsMaintenance)
-                    Toggle("Incluir tarefas que pedem a palavra-passe de administrador", isOn: $settings.smartScanAdminTasks)
-                        .disabled(!settings.smartScanRunsMaintenance)
-                        .help("Limpar DNS, espaço purgável, reindexar o Spotlight… O macOS pede a palavra-passe sempre que estas tarefas correm.")
                 }
                 Section("Remoção") {
                     Picker("Lixo do sistema (caches, registos)", selection: $settings.junkDeleteMode) {
