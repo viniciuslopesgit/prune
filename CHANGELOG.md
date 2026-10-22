@@ -2,6 +2,13 @@
 
 Alterações relevantes de cada versão. Formato [Keep a Changelog](https://keepachangelog.com/pt-PT/1.1.0/), versões [SemVer](https://semver.org/lang/pt-PT/).
 
+## [1.3.2] - 2026-10-22
+
+Fotografias semelhantes deixa de falhar em silêncio.
+
+### Corrigido
+- Fotografias semelhantes: quando o Mac não consegue analisar as imagens, a app passa a avisar, em vez de dizer que não há nada semelhante. Imagens danificadas são contadas e indicadas.
+
 ## [1.3.1] - 2026-10-22
 
 Correção encontrada pelos novos testes no GitHub.
@@ -114,6 +121,7 @@ Primeira versão pública.
 
 - Primeira versão: Análise Inteligente, Painel, limpeza, privacidade, otimização, manutenção, desinstalador, atualizador, extensões, Lente de Espaço, ficheiros grandes, duplicados e destruidor.
 
+[1.3.2]: https://github.com/viniciuslopesgit/prune/releases/tag/v1.3.2
 [1.3.1]: https://github.com/viniciuslopesgit/prune/releases/tag/v1.3.1
 [1.3.0]: https://github.com/viniciuslopesgit/prune/releases/tag/v1.3.0
 [1.2.9]: https://github.com/viniciuslopesgit/prune/releases/tag/v1.2.9

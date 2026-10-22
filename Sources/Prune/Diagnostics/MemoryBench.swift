@@ -45,7 +45,7 @@ enum MemoryBench {
             await step("Duplicados (4 pastas)") { DuplicateFinder.find(in: roots, minSize: 100 * 1024, progress: p) }
             await step("Lente de Espaço (casa)") { SpaceScanner(progress: p).scan(home) }
             if CommandLine.arguments.contains("--photos") {
-                await step("Fotos semelhantes (Imagens)") { DuplicateFinder.similarPhotos(in: [URL.home("Pictures")], threshold: 0.45, progress: p) }
+                await step("Fotos semelhantes (Imagens)") { DuplicateFinder.similarPhotos(in: [URL.home("Pictures")], threshold: 0.45, progress: p).groups }
             }
             if rounds > 1 { keep.removeAll() }
             }

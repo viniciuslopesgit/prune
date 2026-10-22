@@ -28,15 +28,30 @@ final class DuplicatesModel {
         marked = []
         let reporter = ProgressReporter { [weak self] in self?.progressText = $0 }
         let roots = self.roots, minSize = Int64(minKB) * 1024, mode = self.mode, threshold = Float(similarity)
-        groups = await Task.detached(priority: .userInitiated) {
-            mode == .exact
-                ? DuplicateFinder.find(in: roots, minSize: minSize, progress: reporter)
-                : DuplicateFinder.similarPhotos(in: roots, threshold: threshold, progress: reporter)
-        }.value
+        if mode == .exact {
+            groups = await Task.detached(priority: .userInitiated) {
+                DuplicateFinder.find(in: roots, minSize: minSize, progress: reporter)
+            }.value
+        } else {
+            let r = await Task.detached(priority: .userInitiated) {
+                DuplicateFinder.similarPhotos(in: roots, threshold: threshold, progress: reporter)
+            }.value
+            groups = r.groups
+            message = Self.unreadableMessage(analysed: r.analysed, unreadable: r.unreadable, error: r.firstError)
+        }
         if mode == .exact { autoSelect() }
         focusedGroup = groups.first?.id
         scanning = false
         scanned = true
+    }
+
+    /// Aviso quando o Vision não consegue analisar fotografias: sem ele, "nada encontrado" seria enganador.
+    nonisolated static func unreadableMessage(analysed: Int, unreadable: Int, error: String?) -> String? {
+        guard unreadable > 0 else { return nil }
+        if analysed == 0 {
+            return "Não foi possível analisar as fotografias neste Mac" + (error.map { " (\($0))" } ?? "") + "."
+        }
+        return "\(Fmt.count(unreadable, "fotografia não pôde ser analisada", "fotografias não puderam ser analisadas"))."
     }
 
     func reset() {
