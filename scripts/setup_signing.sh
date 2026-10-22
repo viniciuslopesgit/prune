@@ -1,15 +1,15 @@
 #!/bin/zsh
-# Cria um certificado local (auto-assinado) para assinar o MaCClear. Corre-se uma única vez.
+# Cria um certificado local (auto-assinado) para assinar o Prune. Corre-se uma única vez.
 #
 # Porquê: com assinatura ad-hoc, cada compilação tem uma identidade nova e o macOS esquece
 # as permissões (Acesso Total ao Disco, pastas, Automação). Com um certificado fixo, a
 # identidade da app mantém-se entre versões e as permissões ficam.
 #
 # Não precisa de conta Apple Developer e não altera definições de confiança do sistema.
-# Para remover: Acesso a Porta-chaves ▸ início de sessão ▸ apagar "MaCClear Local Signing".
+# Para remover: Acesso a Porta-chaves ▸ início de sessão ▸ apagar "Prune Local Signing".
 set -e
 
-NAME="MaCClear Local Signing"
+NAME="Prune Local Signing"
 KEYCHAIN="$HOME/Library/Keychains/login.keychain-db"
 
 if security find-identity -p codesigning "$KEYCHAIN" | grep -q "$NAME"; then

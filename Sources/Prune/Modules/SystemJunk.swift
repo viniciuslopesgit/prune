@@ -7,7 +7,7 @@ enum SystemJunkScanner {
     static let cacheExclusions: Set<String> = [
         "CloudKit", "com.apple.bird", "com.apple.akd", "FamilyCircle", "com.apple.homed",
         "com.apple.containermanagerd", "com.apple.ap.adprivacyd", "com.apple.Safari.SafeBrowsing",
-        "com.apple.nsservicescache", "com.apple.iCloudHelper", "MaCClear", "com.apple.amsengagementd",
+        "com.apple.nsservicescache", "com.apple.iCloudHelper", "Prune", "app.prune.Prune", "com.apple.amsengagementd",
         "com.apple.ctcategories", "GeoServices",
     ]
 
@@ -64,7 +64,7 @@ enum SystemJunkScanner {
         cats.append(CleanCategory(
             id: "temp", name: "Ficheiros temporários", icon: "clock.arrow.circlepath",
             info: "Ficheiros temporários com mais de 2 dias que as apps deixaram para trás.",
-            items: FS.childItems(of: tmp, excluding: ["MaCClear", "com.apple"], olderThan: twoDaysAgo)
+            items: FS.childItems(of: tmp, excluding: ["Prune", "app.prune.Prune", "com.apple"], olderThan: twoDaysAgo)
         ))
 
         p.report("A analisar lixo do Xcode…")
