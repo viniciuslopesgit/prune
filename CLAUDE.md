@@ -2,6 +2,13 @@
 
 App de macOS (SwiftUI, Swift Package, só Command Line Tools). Código, textos e commits em português de Portugal.
 
+## Regra obrigatória do utilizador (em vigor até ordem em contrário)
+
+1. **Sempre** correr os testes rigorosos (`./scripts/check.sh --full`, através do `ship.sh`) e **só** fazer commit se passarem.
+2. **Sempre** que alterar código ou ficheiros do projeto, fazer commit automaticamente no fim, sem perguntar: `./scripts/ship.sh "Mensagem" --no-install`.
+
+Se os testes falharem, corrigir e repetir até passarem; nunca registar código que falhe, nunca `--no-verify`. Instalar em `/Applications` (sem `--no-install`), criar DMG ou fazer push só quando o utilizador pedir. O hook Stop em `.claude/settings.json` não deixa terminar com alterações por registar.
+
 ## Testes obrigatórios
 
 Nenhuma alteração é registada nem instalada sem passar no portão de qualidade (`scripts/check.sh`).
