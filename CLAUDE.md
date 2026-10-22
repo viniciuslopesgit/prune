@@ -12,6 +12,10 @@ Sempre que alterar código ou ficheiros do projeto, no fim e sem perguntar:
 
 Se os testes falharem, corrigir e repetir até passarem; nunca registar código que falhe, nunca `--no-verify`. Nunca fazer push direto para o `main`: o `main` só recebe a versão estável, pelo `stable.sh --apply` que o `ship.sh` corre no fim (o hook pre-push recusa o resto). Instalar em `/Applications` (`--install`) só quando o utilizador pedir. O hook Stop em `.claude/settings.json` não deixa terminar com alterações por registar ou commits por enviar.
 
+## O que vai para o main
+
+O `main` tem só o necessário para compilar e distribuir a versão estável. Tudo o que for só de desenvolvimento (testes, hooks, scripts de publicação, documentação interna) entra na lista do `.mainignore` no mesmo commit em que é criado. O `stable.sh` compila o conteúdo filtrado antes de o promover: se algo essencial ficar de fora, a promoção falha.
+
 ## Testes obrigatórios
 
 Nenhuma alteração é registada nem instalada sem passar no portão de qualidade (`scripts/check.sh`).

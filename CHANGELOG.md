@@ -2,6 +2,17 @@
 
 Alterações relevantes de cada versão. Formato [Keep a Changelog](https://keepachangelog.com/pt-PT/1.1.0/), versões [SemVer](https://semver.org/lang/pt-PT/).
 
+## [1.2.9] - 2026-10-22
+
+O ramo main passa a ter só o necessário para compilar a versão estável. A app não muda.
+
+### Alterado
+- O main deixa de ter os testes, os hooks e os scripts de publicação, que ficam só no ramo dev. Cada versão estável chega ao main como um único commit, depois de ser compilada e testada sem esses ficheiros.
+
+### Corrigido
+- Ficheiros de cache do Python deixaram de ser guardados no repositório.
+- A publicação já não para com "a pasta mudou" quando um ficheiro é retirado do repositório.
+
 ## [1.2.8] - 2026-10-22
 
 A versão estável passa a chegar ao main sozinha. A app não muda.
@@ -83,6 +94,7 @@ Primeira versão pública.
 
 - Primeira versão: Análise Inteligente, Painel, limpeza, privacidade, otimização, manutenção, desinstalador, atualizador, extensões, Lente de Espaço, ficheiros grandes, duplicados e destruidor.
 
+[1.2.9]: https://github.com/viniciuslopesgit/prune/releases/tag/v1.2.9
 [1.2.8]: https://github.com/viniciuslopesgit/prune/releases/tag/v1.2.8
 [1.2.7]: https://github.com/viniciuslopesgit/prune/releases/tag/v1.2.7
 [1.2.6]: https://github.com/viniciuslopesgit/prune/releases/tag/v1.2.6

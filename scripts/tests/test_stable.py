@@ -6,7 +6,8 @@ import unittest
 from datetime import datetime, timedelta, timezone
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-from stable import Release, changelog_sections, evaluate, has_fixes, main_status, mentions, parse_version  # noqa: E402
+from stable import (Release, changelog_sections, evaluate, excluded_paths, has_fixes, is_excluded,  # noqa: E402
+                    load_patterns, main_status, mentions, parse_version, plist_version)  # noqa: E402
 
 NOW = datetime(2026, 11, 1, 12, 0, tzinfo=timezone.utc)
 
@@ -117,6 +118,7 @@ class EvaluateTests(unittest.TestCase):
             rel("1.8.0", 100, assets=[]),
             rel("1.7.0", 100, assets=["Prune-1.6.0.dmg"]),
             rel("1.6.0", 100, on_dev=False),
+            rel("1.5.5", 100, main_ready=False),
             rel("1.5.0", 100),
         ]
         cand, verdicts = evaluate(rs, changelog(), "1.0.0", NOW)
@@ -127,6 +129,7 @@ class EvaluateTests(unittest.TestCase):
         self.assertIn("Prune-1.8.0.dmg", reasons["1.8.0"])
         self.assertIn("Prune-1.7.0.dmg", reasons["1.7.0"])
         self.assertIn("histórico do dev", reasons["1.6.0"])
+        self.assertIn(".mainignore", reasons["1.5.5"])
 
     def test_open_bug_issue_blocks_version(self):
         rs = [rel("1.1.0", 100), rel("1.2.0", 50)]
@@ -167,6 +170,57 @@ class MainStatusTests(unittest.TestCase):
         _, verdicts = evaluate([rel("1.0.0", 100)], changelog(), "1.5.0", NOW)
         self.assertIn("não tem Release", main_status("1.5.0", verdicts))
         self.assertIsNone(main_status(None, verdicts))
+
+
+class MainFilesTests(unittest.TestCase):
+    PATTERNS = load_patterns("""
+        # comentário
+        .claude/
+        Tests/
+        CLAUDE.md
+        scripts/check.sh
+        scripts/tests/
+        docs/*.draft
+    """)
+
+    def test_load_patterns(self):
+        self.assertEqual(self.PATTERNS[0], ".claude/")
+        self.assertNotIn("# comentário", self.PATTERNS)
+        self.assertEqual(len(self.PATTERNS), 6)
+
+    def test_folders_exact_files_and_globs(self):
+        for p in [".claude/settings.json", ".claude/hooks/a.sh", "Tests/PruneTests/X.swift", "CLAUDE.md",
+                  "scripts/check.sh", "scripts/tests/test_stable.py", "docs/notas.draft"]:
+            self.assertTrue(is_excluded(p, self.PATTERNS), p)
+
+    def test_essential_files_stay(self):
+        for p in ["Sources/Prune/App/PruneApp.swift", "Package.swift", "README.md", "LICENSE",
+                  "scripts/build_app.sh", "scripts/check.sh.bak", "TestsExtra/a", "src/Tests/a",
+                  "docs/guia.md", "CLAUDE.md.txt", ".claudeignore"]:
+            self.assertFalse(is_excluded(p, self.PATTERNS), p)
+
+    def test_excluded_paths_keeps_order(self):
+        paths = ["CLAUDE.md", "Package.swift", "Tests/a.swift", "Sources/b.swift"]
+        self.assertEqual(excluded_paths(paths, self.PATTERNS), ["CLAUDE.md", "Tests/a.swift"])
+
+    def test_repository_mainignore_keeps_what_builds_the_app(self):
+        root = os.path.join(os.path.dirname(__file__), "..", "..")
+        patterns = load_patterns(open(os.path.join(root, ".mainignore"), encoding="utf-8").read())
+        for essential in ["Package.swift", "Sources/Prune/App/PruneApp.swift", "Resources/Info.plist",
+                          "Resources/Como abrir.txt", "scripts/build_app.sh", "scripts/make_dmg.sh",
+                          "scripts/make_icon.swift", "scripts/make_dmg_background.swift", "scripts/install.sh",
+                          "scripts/setup_signing.sh", "README.md", "CHANGELOG.md", "LICENSE", ".gitignore"]:
+            self.assertFalse(is_excluded(essential, patterns), essential)
+        for dev_only in [".mainignore", "CLAUDE.md", ".claude/settings.json", ".githooks/pre-push",
+                         "Tests/PruneTests/ShredderTests.swift", "scripts/test.sh", "scripts/ship.sh",
+                         "scripts/stable.py", "scripts/tests/test_stable.py"]:
+            self.assertTrue(is_excluded(dev_only, patterns), dev_only)
+
+    def test_plist_version(self):
+        import plistlib
+        self.assertEqual(plist_version(plistlib.dumps({"CFBundleShortVersionString": "1.2.6"})), "1.2.6")
+        self.assertIsNone(plist_version(b""))
+        self.assertIsNone(plist_version(b"not a plist"))
 
 
 if __name__ == "__main__":

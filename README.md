@@ -44,27 +44,13 @@ Requer macOS 14 ou mais recente e as Command Line Tools do Xcode (`xcode-select 
 ./scripts/make_dmg.sh        # cria build/Prune-<versão>.dmg
 ```
 
-### Testes e deploy
+### Testes e publicação
 
-Nada é registado nem instalado sem passar nos testes.
-
-```bash
-./scripts/setup_hooks.sh               # uma vez: liga os hooks do git
-./scripts/test.sh                      # testes de unidade (Tests/PruneTests)
-./scripts/check.sh                     # verificação rápida
-./scripts/check.sh --full              # verificação completa
-./scripts/bump_version.sh patch        # versão nova (patch, minor ou major) e secção no CHANGELOG
-./scripts/ship.sh "Mensagem do commit" # verificação completa → commit → push dev → Release
-```
-
-- **Verificação rápida** (antes de cada commit, pelo hook `pre-commit`): sintaxe dos scripts, nenhuma chave de `analytics.env` nas alterações, ficheiros novos em `Sources/` acompanhados de testes, compilação sem avisos, testes de unidade e cobertura mínima nos ficheiros que apagam ou escolhem ficheiros.
-- **Verificação completa** (antes de cada push, pelo hook `pre-push`, e no `ship.sh`): tudo o anterior, secção da versão preenchida no CHANGELOG, app universal e assinada, e o autoteste da app compilada.
-- `./scripts/stable.sh` diz qual a versão estável que deve estar no `main`: a Release mais recente com o DMG, sem issues abertas de `bug` que a mencionem, publicada há pelo menos 24 h e sem correções em versões posteriores. `--apply` verifica-a de novo numa cópia limpa e promove-a para o `main` por Pull Request; `--check X.Y.Z` só verifica.
-- `ship.sh` publica a Release `vX.Y.Z` com o DMG e as notas tiradas do CHANGELOG e, no fim, promove a versão estável para o `main` (`stable.sh --apply`), se houver uma mais nova. Aceita `--install` (instala em /Applications), `--no-release` e `--no-promote`.
+O trabalho em curso, os testes automáticos e a publicação de versões estão no ramo [`dev`](https://github.com/viniciuslopesgit/prune/tree/dev) (ver [docs/desenvolvimento.md](https://github.com/viniciuslopesgit/prune/blob/dev/docs/desenvolvimento.md)). O `main` tem só o necessário para compilar a versão estável.
 
 ### Versões
 
-`main` é a versão estável (escolhida pelo `scripts/stable.sh`) e `dev` o trabalho em curso. Cada versão tem uma tag `vX.Y.Z` e uma [Release](https://github.com/viniciuslopesgit/prune/releases) com o DMG.
+`main` é a versão estável (escolhida e verificada automaticamente no `dev`) e `dev` o trabalho em curso. Cada versão tem uma tag `vX.Y.Z` e uma [Release](https://github.com/viniciuslopesgit/prune/releases) com o DMG.
 
 ## Licença
 

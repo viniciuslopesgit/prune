@@ -1,5 +1,8 @@
 .DS_Store
 .build/
 build/
-# Chaves do Google Analytics (ver analytics.env.example)
+# Chaves do Google Analytics (ver README)
 analytics.env
+# Cache do Python (scripts/stable.py e os testes)
+__pycache__/
+*.pyc

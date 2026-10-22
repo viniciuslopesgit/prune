@@ -2,7 +2,7 @@
 
 Uma versão publicada é estável quando, por esta ordem:
   1. é uma Release publicada (nem rascunho nem pré-lançamento) com o DMG;
-  2. a tag está no histórico do dev;
+  2. a tag está no histórico do dev e já tem o .mainignore (as anteriores não compilam sem os testes);
   3. não tem issues abertas com a etiqueta "bug" que a mencionem (vX.Y.Z ou X.Y.Z);
   4. já está publicada há pelo menos SOAK horas (período de observação) sem problemas;
   5. nenhuma versão publicada depois dela traz correções (### Corrigido no CHANGELOG):
@@ -11,10 +11,15 @@ Uma versão publicada é estável quando, por esta ordem:
 A candidata é a versão mais recente que cumpre tudo; só é promovida se for mais nova do que a do main.
 Depois, o scripts/stable.sh volta a correr a verificação completa no commit da tag antes de a promover.
 
+No main só ficam os ficheiros essenciais: o conteúdo da tag sem o que está em .mainignore.
+
 Uso: python3 scripts/stable.py [--json]   (dados do GitHub via gh e do git)
+     python3 scripts/stable.py excluded <ref>   caminhos de <ref> que não vão para o main
 """
 
+import fnmatch
 import json
+import plistlib
 import re
 import subprocess
 import sys
@@ -32,6 +37,7 @@ class Release:
     prerelease: bool = False
     assets: list = field(default_factory=list)
     on_dev: bool = True
+    main_ready: bool = True
 
 
 @dataclass
@@ -97,6 +103,9 @@ def evaluate(releases, changelog, main_version, now, soak_hours=DEFAULT_SOAK_HOU
         if not r.on_dev:
             verdicts.append(Verdict(r.version, False, "a tag não está no histórico do dev"))
             continue
+        if not r.main_ready:
+            verdicts.append(Verdict(r.version, False, "anterior ao main só com ficheiros essenciais (sem .mainignore)"))
+            continue
         bugs = [title for title, text in bug_issues if mentions(text, r.version)]
         if bugs:
             verdicts.append(Verdict(r.version, False, f"issue de bug aberta: {bugs[0]}"))
@@ -118,6 +127,33 @@ def evaluate(releases, changelog, main_version, now, soak_hours=DEFAULT_SOAK_HOU
     return candidate, verdicts
 
 
+def load_patterns(text):
+    """Linhas do .mainignore, sem comentários nem linhas vazias."""
+    return [line.strip() for line in text.splitlines() if line.strip() and not line.lstrip().startswith("#")]
+
+
+def is_excluded(path, patterns):
+    for p in patterns:
+        if p.endswith("/"):
+            if path.startswith(p) or fnmatch.fnmatchcase(path.split("/")[0] + "/", p):
+                return True
+        elif path == p or fnmatch.fnmatchcase(path, p):
+            return True
+    return False
+
+
+def excluded_paths(paths, patterns):
+    return [p for p in paths if is_excluded(p, patterns)]
+
+
+def plist_version(data):
+    """CFBundleShortVersionString de um Info.plist (bytes), ou None."""
+    try:
+        return plistlib.loads(data).get("CFBundleShortVersionString")
+    except Exception:
+        return None
+
+
 # ---- Recolha de dados (git e gh) -------------------------------------------------------------
 
 def run(*args):
@@ -133,23 +169,33 @@ def gather():
         tag = d["tagName"]
         assets = json.loads(run("gh", "release", "view", tag, "--json", "assets"))["assets"]
         on_dev = subprocess.run(["git", "merge-base", "--is-ancestor", f"refs/tags/{tag}", "origin/dev"]).returncode == 0
+        main_ready = subprocess.run(["git", "cat-file", "-e", f"refs/tags/{tag}:.mainignore"],
+                                    capture_output=True).returncode == 0
         releases.append(Release(
             version=tag.lstrip("v"),
             published=datetime.fromisoformat(d["publishedAt"].replace("Z", "+00:00")),
             draft=d["isDraft"], prerelease=d["isPrerelease"],
-            assets=[a["name"] for a in assets], on_dev=on_dev,
+            assets=[a["name"] for a in assets], on_dev=on_dev, main_ready=main_ready,
         ))
     issues = json.loads(run("gh", "issue", "list", "--state", "open", "--label", "bug", "--limit", "200",
                             "--json", "title,body"))
     bug_issues = [(i["title"], i["title"] + "\n" + (i["body"] or "")) for i in issues]
     changelog = run("git", "show", "origin/dev:CHANGELOG.md")
-    main_tag = subprocess.run(["git", "describe", "--tags", "--abbrev=0", "--match", "v*", "origin/main"],
-                              capture_output=True, text=True).stdout.strip()
-    return releases, changelog, main_tag.lstrip("v") or None, bug_issues
+    # O main não partilha o histórico das tags (cada versão estável é um commit próprio): a versão
+    # vem do Info.plist do main.
+    plist = subprocess.run(["git", "show", "origin/main:Resources/Info.plist"], capture_output=True).stdout
+    return releases, changelog, plist_version(plist), bug_issues
 
 
 def main():
     import os
+    if len(sys.argv) == 3 and sys.argv[1] == "excluded":
+        # A lista em vigor é a do dev (STABLE_MAINIGNORE=ficheiro para ensaiar uma lista local).
+        local = os.environ.get("STABLE_MAINIGNORE")
+        patterns = load_patterns(open(local, encoding="utf-8").read() if local else run("git", "show", "origin/dev:.mainignore"))
+        paths = run("git", "ls-tree", "-r", "--name-only", sys.argv[2]).splitlines()
+        print("\n".join(excluded_paths(paths, patterns)))
+        return
     soak = float(os.environ.get("STABLE_SOAK_HOURS", DEFAULT_SOAK_HOURS))
     releases, changelog, main_version, bug_issues = gather()
     candidate, verdicts = evaluate(releases, changelog, main_version, datetime.now(timezone.utc), soak, bug_issues)
