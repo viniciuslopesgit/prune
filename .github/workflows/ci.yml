@@ -41,6 +41,14 @@ jobs:
       - name: ./scripts/check.sh --full
         run: ./scripts/check.sh --full
 
+      # If the built app crashed in the self-test, run it again under lldb to get the backtrace.
+      - name: Self-test backtrace
+        if: failure() && hashFiles('build/Prune.app/Contents/MacOS/Prune') != ''
+        run: |
+          perl -e 'alarm shift; exec @ARGV' 300 lldb --batch -o run -k "thread backtrace all" -k quit \
+            -- build/Prune.app/Contents/MacOS/Prune --selftest >.build/check-backtrace.log 2>&1 || true
+          grep -nE "stop reason|frame #[0-9]+:" .build/check-backtrace.log | head -60
+
       - name: Logs
         if: always()
         uses: actions/upload-artifact@v4

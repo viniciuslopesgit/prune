@@ -199,7 +199,12 @@ if [ $FULL = 1 ]; then
     if [ $RC != 0 ]; then
         tail -20 $OUT
         # macOS writes a crash report for the app: keep the newest one next to the logs (CI uploads it).
-        CRASH=$(ls -t ~/Library/Logs/DiagnosticReports/Prune*.ips 2>/dev/null | head -1)
+        # ReportCrash writes it a few seconds after the crash.
+        for _ in {1..15}; do
+            CRASH=$(ls -t ~/Library/Logs/DiagnosticReports/Prune*.ips 2>/dev/null | head -1)
+            [ -n "$CRASH" ] && break
+            sleep 1
+        done
         if [ -n "$CRASH" ]; then
             cp "$CRASH" .build/check-crash.log
             grep -E '"exception"|"termination"|"type"|"signal"|"codes"|"indicator"|"symbol"' "$CRASH" | head -15 | cut -c1-200

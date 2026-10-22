@@ -24,6 +24,7 @@ enum SelfTest {
         setvbuf(stdout, nil, _IOLBF, 0)
         Task.detached {
             func time<T>(_ name: String, _ f: () async -> T) async -> T {
+                print("  → \(name)")   // before the step: if it crashes, the log says where
                 let t = Date()
                 let r = await f()
                 print(String(format: "  [%5.1fs] %@", Date().timeIntervalSince(t), name))
