@@ -2,6 +2,13 @@
 
 Notable changes in each version. Format [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions [SemVer](https://semver.org/).
 
+## [1.4.3] - 2026-10-23
+
+Better diagnosis when the app's self-test fails. The app does not change.
+
+### Changed
+- If the self-test fails, the check now shows the exit code and keeps macOS's crash report, and the self-test output survives a crash.
+
 ## [1.4.2] - 2026-10-23
 
 Fix to the publishing scripts. The app does not change.
@@ -156,6 +163,7 @@ First public version.
 
 - First version: Smart Scan, Dashboard, cleanup, privacy, optimization, maintenance, uninstaller, updater, extensions, Space Lens, large files, duplicates and shredder.
 
+[1.4.3]: https://github.com/viniciuslopesgit/prune/releases/tag/v1.4.3
 [1.4.2]: https://github.com/viniciuslopesgit/prune/releases/tag/v1.4.2
 [1.4.1]: https://github.com/viniciuslopesgit/prune/releases/tag/v1.4.1
 [1.4.0]: https://github.com/viniciuslopesgit/prune/releases/tag/v1.4.0

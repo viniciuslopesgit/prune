@@ -194,8 +194,20 @@ if [ $FULL = 1 ]; then
     # Runs every scan of the real app, read-only. The output stays in .build (it has names of
     # apps and files on this Mac) and only the check lines show here.
     OUT=.build/check-selftest.log
-    perl -e 'alarm shift; exec @ARGV' 300 $APP/Contents/MacOS/Prune --selftest >$OUT 2>&1 \
-        || { tail -20 $OUT; fail "The self-test failed, hung or took more than 5 min."; }
+    RC=0
+    perl -e 'alarm shift; exec @ARGV' 300 $APP/Contents/MacOS/Prune --selftest >$OUT 2>&1 || RC=$?
+    if [ $RC != 0 ]; then
+        tail -20 $OUT
+        # macOS writes a crash report for the app: keep the newest one next to the logs (CI uploads it).
+        CRASH=$(ls -t ~/Library/Logs/DiagnosticReports/Prune*.ips 2>/dev/null | head -1)
+        if [ -n "$CRASH" ]; then
+            cp "$CRASH" .build/check-crash.log
+            grep -E '"exception"|"termination"|"type"|"signal"|"codes"|"indicator"|"symbol"' "$CRASH" | head -15 | cut -c1-200
+        fi
+        SIG=""; (( RC > 128 && RC < 160 )) && SIG=" (signal $((RC - 128)))"
+        [ $RC = 142 ] && SIG=" (5 min timeout)"
+        fail "The self-test exited with code $RC$SIG (log in $OUT${CRASH:+, crash report in .build/check-crash.log})."
+    fi
     for expected in \
         "AppleScript in process: ok=true lines=2" \
         "Treemap: total area 240000" \

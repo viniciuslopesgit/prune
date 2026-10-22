@@ -20,6 +20,8 @@ enum SelfTest {
 
     static func runIfRequested() {
         guard CommandLine.arguments.contains("--selftest") else { return }
+        // Line by line even when the output goes to a file: if the app crashes, the lines up to the crash stay.
+        setvbuf(stdout, nil, _IOLBF, 0)
         Task.detached {
             func time<T>(_ name: String, _ f: () async -> T) async -> T {
                 let t = Date()
