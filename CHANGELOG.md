@@ -2,6 +2,14 @@
 
 Notable changes in each version. Format [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions [SemVer](https://semver.org/).
 
+## [1.4.2] - 2026-10-23
+
+Fix to the publishing scripts. The app does not change.
+
+### Fixed
+- Promoting the stable version to main no longer fails when the development branch differs a lot from that version (as after the translation to English in 1.4.0); the fix shipped in 1.4.1's scripts.
+- The promotion no longer prints its success message twice, once in Portuguese.
+
 ## [1.4.1] - 2026-10-23
 
 The automatic tests on GitHub now pass on macOS 14 too. The app does not change.
@@ -148,6 +156,7 @@ First public version.
 
 - First version: Smart Scan, Dashboard, cleanup, privacy, optimization, maintenance, uninstaller, updater, extensions, Space Lens, large files, duplicates and shredder.
 
+[1.4.2]: https://github.com/viniciuslopesgit/prune/releases/tag/v1.4.2
 [1.4.1]: https://github.com/viniciuslopesgit/prune/releases/tag/v1.4.1
 [1.4.0]: https://github.com/viniciuslopesgit/prune/releases/tag/v1.4.0
 [1.3.3]: https://github.com/viniciuslopesgit/prune/releases/tag/v1.3.3

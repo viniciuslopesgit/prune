@@ -90,7 +90,6 @@ verify_main_commit() {
         grep -qF -e "${expected%%|*}" -e "${expected#*|}" "$out" || { echo "✗ main self-test: missing \"${expected%%|*}\" (see $out)."; return 1; }
     done
     echo "✓ main's content builds, is signed and passes the self-test."
-    echo "✓ O conteúdo do main compila, está assinado e passa o autoteste."
 }
 
 # Takes the version to main through a Pull Request. $2 describes the reason. $3 = stable: only then does the
