@@ -2,6 +2,13 @@
 
 Notable changes in each version. Format [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions [SemVer](https://semver.org/).
 
+## [1.4.5] - 2026-10-23
+
+A new look for the project page, with a screenshot of the app and a quicker guide to get started. The app does not change.
+
+### Changed
+- The README now opens with a screenshot of Prune, a download button and a three-step guide to install it and run your first scan.
+
 ## [1.4.4] - 2026-10-23
 
 More diagnosis for a self-test crash seen on GitHub's macOS 14 test machine. The app does not change.
@@ -170,6 +177,7 @@ First public version.
 
 - First version: Smart Scan, Dashboard, cleanup, privacy, optimization, maintenance, uninstaller, updater, extensions, Space Lens, large files, duplicates and shredder.
 
+[1.4.5]: https://github.com/viniciuslopesgit/prune/releases/tag/v1.4.5
 [1.4.4]: https://github.com/viniciuslopesgit/prune/releases/tag/v1.4.4
 [1.4.3]: https://github.com/viniciuslopesgit/prune/releases/tag/v1.4.3
 [1.4.2]: https://github.com/viniciuslopesgit/prune/releases/tag/v1.4.2

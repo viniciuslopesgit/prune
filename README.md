@@ -1,8 +1,31 @@
-# Prune
+<div align="center">
 
-Clean, organize and protect your Mac. Free and open source.
+# 🌿 Prune
 
-**[Download the latest version](https://github.com/viniciuslopesgit/prune/releases/latest)** · macOS 14 or later · Apple silicon and Intel · English and Portuguese (follows the system language)
+### Your Mac, lighter. Cleaner. Safer.
+
+Clean junk, uninstall apps completely, protect your privacy and keep an eye on your Mac — all in one beautiful, native app. **Free and open source.**
+
+<a href="https://github.com/viniciuslopesgit/prune/releases/latest"><img alt="Download for macOS" src="https://img.shields.io/badge/Download%20for%20macOS-000000?style=for-the-badge&logo=apple&logoColor=white" height="44"></a>
+
+![Latest release](https://img.shields.io/github/v/release/viniciuslopesgit/prune?label=version&color=2ea44f)
+![macOS 14+](https://img.shields.io/badge/macOS-14%2B-lightgrey?logo=apple)
+![Apple silicon & Intel](https://img.shields.io/badge/Apple%20silicon%20%26%20Intel-universal-blue)
+![License GPL-3.0](https://img.shields.io/badge/license-GPL--3.0-orange)
+
+<br>
+
+<img src=".github/assets/screenshot.png" alt="Prune Smart Scan: junk to clean and the state of macOS protections, in one click" width="900">
+
+<sub>English and Portuguese · follows your system language · nothing is deleted without your confirmation</sub>
+
+</div>
+
+## Get started in 30 seconds
+
+1. **[Download Prune](https://github.com/viniciuslopesgit/prune/releases/latest)** and drag it to Applications.
+2. Open it and allow it once (see below).
+3. Click **Scan**. That's it — review what was found and clean in one click.
 
 ## Install
 
