@@ -4,10 +4,13 @@ App de macOS (SwiftUI, Swift Package, só Command Line Tools). Código, textos e
 
 ## Regra obrigatória do utilizador (em vigor até ordem em contrário)
 
-1. **Sempre** correr os testes rigorosos (`./scripts/check.sh --full`, através do `ship.sh`) e **só** fazer commit se passarem.
-2. **Sempre** que alterar código ou ficheiros do projeto, fazer commit automaticamente no fim, sem perguntar: `./scripts/ship.sh "Mensagem" --no-install`.
+Sempre que alterar código ou ficheiros do projeto, no fim e sem perguntar:
 
-Se os testes falharem, corrigir e repetir até passarem; nunca registar código que falhe, nunca `--no-verify`. Instalar em `/Applications` (sem `--no-install`), criar DMG ou fazer push só quando o utilizador pedir. O hook Stop em `.claude/settings.json` não deixa terminar com alterações por registar.
+1. Subir a versão consoante a alteração: `./scripts/bump_version.sh patch` (correções, alterações internas), `minor` (funcionalidade nova) ou `major` (mudança incompatível).
+2. Preencher a secção da versão no `CHANGELOG.md`: um parágrafo de resumo (vai para o topo da Release) e as listas `### Adicionado / Alterado / Corrigido / Removido`, escritas para quem usa a app.
+3. `./scripts/ship.sh "Mensagem (X.Y.Z)"`: testes rigorosos → commit **só se passarem** → push para o **dev** → Release `vX.Y.Z` no GitHub com o DMG.
+
+Se os testes falharem, corrigir e repetir até passarem; nunca registar código que falhe, nunca `--no-verify`. Nunca fazer push para o `main`. Instalar em `/Applications` (`--install`) só quando o utilizador pedir. O hook Stop em `.claude/settings.json` não deixa terminar com alterações por registar ou commits por enviar.
 
 ## Testes obrigatórios
 
@@ -26,7 +29,6 @@ Nenhuma alteração é registada nem instalada sem passar no portão de qualidad
 ./scripts/test.sh                        # testes de unidade (--filter ShredderTests para um grupo)
 ./scripts/check.sh                       # verificação rápida (o hook pre-commit corre esta)
 ./scripts/check.sh --full                # + versão/CHANGELOG, app universal assinada e autoteste
-./scripts/ship.sh "Mensagem" [--dmg] [--push]   # verificação completa → commit → instalar
+./scripts/bump_version.sh patch|minor|major     # versão nova + secção no CHANGELOG
+./scripts/ship.sh "Mensagem (X.Y.Z)"            # testes → commit → push dev → Release
 ```
-
-Depois de concluir uma funcionalidade: atualizar o CHANGELOG (e a versão em `Resources/Info.plist`, se for uma versão nova) e correr `./scripts/ship.sh "…"`. Se falhar, corrigir a causa e repetir; nunca contornar o portão. `--push` só quando o utilizador pedir.

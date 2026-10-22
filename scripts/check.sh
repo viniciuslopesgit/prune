@@ -143,6 +143,10 @@ if [ $FULL = 1 ]; then
     [[ $VERSION =~ '^[0-9]+\.[0-9]+\.[0-9]+$' ]] || fail "CFBundleShortVersionString \"$VERSION\" não é X.Y.Z."
     [[ $BUILD =~ '^[0-9]+$' ]] || fail "CFBundleVersion \"$BUILD\" não é um número."
     grep -q "^## \[$VERSION\]" CHANGELOG.md || fail "O CHANGELOG não tem a secção ## [$VERSION]."
+    NOTES=$(./scripts/release_notes.sh "$VERSION") || fail "Não foi possível gerar as notas da Release."
+    SECTION=$(awk -v v="## [$VERSION]" 'index($0, v) == 1 { on = 1; next } /^## \[|^\[[0-9]/ { on = 0 } on' CHANGELOG.md)
+    print -r -- "$SECTION" | grep -qE 'RESUMO DA VERSÃO|^- *$' && fail "A secção ## [$VERSION] do CHANGELOG está por preencher."
+    print -r -- "$SECTION" | grep -qE '^- .+' || fail "A secção ## [$VERSION] do CHANGELOG não tem nenhuma alteração listada."
     plutil -lint -s Resources/Info.plist || fail "Resources/Info.plist inválido."
     ok "$VERSION ($BUILD) no CHANGELOG"
 

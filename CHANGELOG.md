@@ -2,6 +2,14 @@
 
 Alterações relevantes de cada versão. Formato [Keep a Changelog](https://keepachangelog.com/pt-PT/1.1.0/), versões [SemVer](https://semver.org/lang/pt-PT/).
 
+## [1.2.6] - 2026-10-22
+
+Cada versão passa agora por testes automáticos antes de ser publicada. A app não muda.
+
+### Adicionado
+- Testes automáticos às partes que apagam ou escolhem ficheiros: proteção de pastas, Destruidor, limpeza, duplicados, fotografias semelhantes e Lente de Espaço.
+- Cada versão só é registada e publicada se passar nos testes, compilar sem avisos e o autoteste da app correr sem falhas.
+
 ## [1.2.5] - 2026-10-22
 
 ### Corrigido
@@ -61,5 +69,6 @@ Primeira versão pública.
 
 - Primeira versão: Análise Inteligente, Painel, limpeza, privacidade, otimização, manutenção, desinstalador, atualizador, extensões, Lente de Espaço, ficheiros grandes, duplicados e destruidor.
 
+[1.2.6]: https://github.com/viniciuslopesgit/prune/releases/tag/v1.2.6
 [1.2.5]: https://github.com/viniciuslopesgit/prune/releases/tag/v1.2.5
 [1.2.4]: https://github.com/viniciuslopesgit/prune/releases/tag/v1.2.4

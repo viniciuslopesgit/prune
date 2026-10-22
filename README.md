@@ -53,23 +53,13 @@ Nada é registado nem instalado sem passar nos testes.
 ./scripts/test.sh                      # testes de unidade (Tests/PruneTests)
 ./scripts/check.sh                     # verificação rápida
 ./scripts/check.sh --full              # verificação completa
-./scripts/ship.sh "Mensagem do commit" # verificação completa → commit → instalar em /Applications
+./scripts/bump_version.sh patch        # versão nova (patch, minor ou major) e secção no CHANGELOG
+./scripts/ship.sh "Mensagem do commit" # verificação completa → commit → push dev → Release
 ```
 
 - **Verificação rápida** (antes de cada commit, pelo hook `pre-commit`): sintaxe dos scripts, nenhuma chave de `analytics.env` nas alterações, ficheiros novos em `Sources/` acompanhados de testes, compilação sem avisos, testes de unidade e cobertura mínima nos ficheiros que apagam ou escolhem ficheiros.
-- **Verificação completa** (antes de cada push, pelo hook `pre-push`, e no `ship.sh`): tudo o anterior, versão do `Info.plist` no CHANGELOG, app universal e assinada, e o autoteste da app compilada.
-- `ship.sh` aceita `--dmg` (cria o instalador), `--push` (envia o ramo) e `--no-install`.
-
-Estatísticas: crie `analytics.env` (ignorado pelo git) com `GA_MEASUREMENT_ID` e `GA_API_SECRET`. Sem este ficheiro, a app não envia nada.
-
-Diagnóstico:
-
-```bash
-build/Prune.app/Contents/MacOS/Prune --selftest      # todas as análises, só em leitura
-build/Prune.app/Contents/MacOS/Prune --bench --twice # memória de cada análise
-```
-
-Estrutura de `Sources/Prune`: `App` (arranque e janela), `Core` (ficheiros, permissões, definições, limpeza), `UI` (tema e componentes), `Features` (uma pasta por funcionalidade) e `Diagnostics`.
+- **Verificação completa** (antes de cada push, pelo hook `pre-push`, e no `ship.sh`): tudo o anterior, secção da versão preenchida no CHANGELOG, app universal e assinada, e o autoteste da app compilada.
+- `ship.sh` publica a Release `vX.Y.Z` com o DMG e as notas tiradas do CHANGELOG. Aceita `--install` (instala em /Applications) e `--no-release`.
 
 ### Versões
 
