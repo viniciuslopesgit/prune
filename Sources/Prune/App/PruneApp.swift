@@ -7,9 +7,14 @@ struct PruneApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var delegate
 
     init() {
-        SelfTest.fdaCheckIfRequested()
-        SelfTest.runIfRequested()
-        MemoryBench.runIfRequested()
+        // The diagnostic tools start only once the main run loop is running. Started from here, their
+        // background scans could touch AppKit (e.g. NSWorkspace) before the main event queue exists,
+        // and on macOS 14 AppKit then stops the app (_NSAssertMainEventQueueIsCurrentEventQueue).
+        DispatchQueue.main.async {
+            SelfTest.fdaCheckIfRequested()
+            SelfTest.runIfRequested()
+            MemoryBench.runIfRequested()
+        }
     }
 
     var body: some Scene {
