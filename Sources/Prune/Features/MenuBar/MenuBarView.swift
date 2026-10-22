@@ -5,11 +5,20 @@ struct MenuBarLabel: View {
     private var stats: SystemStats { SystemStats.shared }
     var body: some View {
         HStack(spacing: 3) {
-            Image(systemName: "sparkles")
+            Image(nsImage: Self.leafTemplate)
             Text("\(Int(stats.cpu * 100))%").monospacedDigit()
         }
         .onAppear { WindowOpener.shared.action = openWindow }
     }
+
+    /// A folha da marca como imagem "template", para a barra de menus a pintar de claro/escuro.
+    @MainActor private static let leafTemplate: NSImage = {
+        let renderer = ImageRenderer(content: LeafMark(size: 16, color: .black))
+        renderer.scale = 2
+        let image = renderer.nsImage ?? NSImage()
+        image.isTemplate = true
+        return image
+    }()
 }
 
 struct MenuBarView: View {
@@ -21,8 +30,8 @@ struct MenuBarView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Image(systemName: "sparkles").font(.title3)
-                Text("Prune").font(.headline)
+                LeafMark(size: 22)
+                Text("Prune").font(Theme.display(14))
                 Spacer()
                 Text("Ligado há \(stats.uptimeText)").font(.caption).foregroundStyle(.secondary)
             }

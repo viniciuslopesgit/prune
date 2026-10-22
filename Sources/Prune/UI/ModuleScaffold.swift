@@ -85,8 +85,10 @@ struct HeroView: View {
 
 /// A ilustração dos módulos: a folha do ícone, com o símbolo do módulo recortado no meio.
 /// Com `swaying`, a folha baloiça devagar (é o único movimento contínuo da app, durante as análises).
+/// `symbol` substitui o símbolo do módulo (ex.: um visto no ecrã de conclusão).
 struct ModuleArtwork: View {
     let module: Module
+    var symbol: String?
     var swaying = false
     @State private var tilt: Double = 0
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -102,7 +104,7 @@ struct ModuleArtwork: View {
                     LeafShape().stroke(Theme.accent, style: StrokeStyle(lineWidth: side * 0.022, lineCap: .round))
                 }
                 .rotationEffect(.degrees(tilt), anchor: UnitPoint(x: 0.27, y: 0.73))
-                Image(systemName: module.icon)
+                Image(systemName: symbol ?? module.icon)
                     .font(.system(size: side * 0.15, weight: .medium))
                     .foregroundStyle(Theme.stone)
                     .offset(x: side * 0.025, y: -side * 0.025)
@@ -122,6 +124,22 @@ struct ModuleArtwork: View {
                 withAnimation(.easeInOut(duration: 1.8).repeatForever(autoreverses: true)) { tilt = 4 }
             }
         }
+    }
+}
+
+/// A folha da marca sozinha, sem fundo: a única folha usada na app (consentimento, barra de menus…).
+struct LeafMark: View {
+    var size: CGFloat
+    var color: Color = Theme.accent
+    var body: some View {
+        ZStack {
+            LeafShape().fill(color)
+            LeafShape().stroke(color, style: StrokeStyle(lineWidth: size * 0.022, lineCap: .round))
+        }
+        // A forma ocupa ~75% do quadrado (como no ícone); amplia para preencher o tamanho pedido.
+        .scaleEffect(1.3)
+        .frame(width: size, height: size)
+        .accessibilityHidden(true)
     }
 }
 
@@ -201,10 +219,8 @@ struct DoneView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            Image(systemName: "leaf.fill")
-                .font(.system(size: 56))
-                .foregroundStyle(Theme.leaf)
-            Text(title).font(Theme.display(30)).padding(.top, 22)
+            ModuleArtwork(module: module, symbol: "checkmark").frame(width: 170, height: 170)
+            Text(title).font(Theme.display(30)).padding(.top, 28)
             Text(message).font(.title3).foregroundStyle(.secondary).multilineTextAlignment(.center).padding(.top, 10)
             if failedCount > 0 {
                 VStack(spacing: 8) {

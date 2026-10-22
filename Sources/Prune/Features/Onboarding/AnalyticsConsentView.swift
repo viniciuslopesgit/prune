@@ -8,9 +8,7 @@ struct AnalyticsConsentView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
             HStack(spacing: 14) {
-                Image(systemName: "leaf.fill")
-                    .font(.system(size: 34))
-                    .foregroundStyle(Theme.leaf)
+                LeafMark(size: 44)
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Ajudar a melhorar o Prune?").font(Theme.display(20))
                     Text("Pode partilhar estatísticas anónimas de utilização. Ajudam a perceber que secções são úteis e o que corrigir.")
