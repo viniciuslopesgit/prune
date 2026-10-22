@@ -1,13 +1,15 @@
 """Escolhe a versão estável que deve estar no main.
 
-Uma versão publicada é estável quando, por esta ordem:
-  1. é uma Release publicada (nem rascunho nem pré-lançamento) com o DMG;
+Uma versão publicada é estável quando, por esta ordem (critérios completos em docs/RELEASE_CRITERIA.md):
+  1. é uma Release publicada (não rascunho) com o DMG e o SHA256SUMS; publicada como pré-lançamento é
+     uma beta, e é isso que se espera até ser promovida;
   2. a tag está no histórico do dev e já tem o .mainignore (as anteriores não compilam sem os testes);
-  3. não tem issues abertas com a etiqueta "bug" que a mencionem (vX.Y.Z ou X.Y.Z);
-  4. já está publicada há pelo menos SOAK horas (período de observação) sem problemas;
-  5. nenhuma versão publicada depois dela traz correções (### Corrigido no CHANGELOG):
-     se trouxer, a versão tinha erros conhecidos e a estável passa a ser a da correção,
-     quando esta também cumprir as regras.
+  3. o CI do GitHub passou no commit da tag (todas as verificações concluídas com sucesso);
+  4. não tem issues abertas com a etiqueta "bug" que a mencionem (vX.Y.Z ou X.Y.Z);
+  5. nenhuma versão publicada depois dela traz correções (### Corrigido no CHANGELOG): se trouxer,
+     a versão tinha erros conhecidos e a estável passa a ser a da correção;
+  6. já está publicada há pelo menos SOAK horas (período mínimo de espera, não prova de fiabilidade);
+  7. uma versão major nova (X muda) só é promovida com aprovação explícita (STABLE_APPROVE=X.Y.Z).
 A candidata é a versão mais recente que cumpre tudo; só é promovida se for mais nova do que a do main.
 Depois, o scripts/stable.sh volta a correr a verificação completa no commit da tag antes de a promover.
 
@@ -38,6 +40,7 @@ class Release:
     assets: list = field(default_factory=list)
     on_dev: bool = True
     main_ready: bool = True
+    ci_ok: bool = True
 
 
 @dataclass
@@ -79,12 +82,12 @@ def main_status(main_version, verdicts):
     return f"o main tem a {main_version}, que ainda não é estável ({reason}); última estável: {stable or 'nenhuma'}"
 
 
-def evaluate(releases, changelog, main_version, now, soak_hours=DEFAULT_SOAK_HOURS, bug_issues=()):
+def evaluate(releases, changelog, main_version, now, soak_hours=DEFAULT_SOAK_HOURS, bug_issues=(), approved=()):
     """Devolve (candidata ou None, [Verdict] da mais recente para a mais antiga)."""
     sections = changelog_sections(changelog)
     main_key = parse_version(main_version) if main_version else None
     published = sorted(
-        (r for r in releases if parse_version(r.version) and not r.draft and not r.prerelease),
+        (r for r in releases if parse_version(r.version) and not r.draft),
         key=lambda r: parse_version(r.version),
         reverse=True,
     )
@@ -94,17 +97,23 @@ def evaluate(releases, changelog, main_version, now, soak_hours=DEFAULT_SOAK_HOU
         if key is None:
             verdicts.append(Verdict(r.version, False, "não é uma versão X.Y.Z"))
             continue
-        if r.draft or r.prerelease:
-            verdicts.append(Verdict(r.version, False, "rascunho ou pré-lançamento"))
+        if r.draft:
+            verdicts.append(Verdict(r.version, False, "rascunho (não publicada)"))
             continue
         if f"Prune-{r.version}.dmg" not in r.assets:
             verdicts.append(Verdict(r.version, False, f"a Release não tem o Prune-{r.version}.dmg"))
+            continue
+        if r.main_ready and "SHA256SUMS" not in r.assets:
+            verdicts.append(Verdict(r.version, False, "a Release não tem o SHA256SUMS"))
             continue
         if not r.on_dev:
             verdicts.append(Verdict(r.version, False, "a tag não está no histórico do dev"))
             continue
         if not r.main_ready:
             verdicts.append(Verdict(r.version, False, "anterior ao main só com ficheiros essenciais (sem .mainignore)"))
+            continue
+        if not r.ci_ok:
+            verdicts.append(Verdict(r.version, False, "sem CI verde no commit da tag"))
             continue
         bugs = [title for title, text in bug_issues if mentions(text, r.version)]
         if bugs:
@@ -118,6 +127,9 @@ def evaluate(releases, changelog, main_version, now, soak_hours=DEFAULT_SOAK_HOU
         if age < timedelta(hours=soak_hours):
             until = (r.published + timedelta(hours=soak_hours)).astimezone().strftime("%d/%m %H:%M")
             verdicts.append(Verdict(r.version, False, f"em observação até {until} ({soak_hours:g} h)"))
+            continue
+        if main_key and key[0] > main_key[0] and r.version not in approved:
+            verdicts.append(Verdict(r.version, False, f"versão major: precisa de aprovação (STABLE_APPROVE={r.version})"))
             continue
         verdicts.append(Verdict(r.version, True, "estável"))
 
@@ -160,6 +172,19 @@ def run(*args):
     return subprocess.run(args, check=True, capture_output=True, text=True).stdout
 
 
+def ci_conclusions_ok(conclusions):
+    """Todas as verificações concluídas com sucesso (e pelo menos uma)."""
+    return bool(conclusions) and all(c in ("success", "skipped", "neutral") for c in conclusions)
+
+
+def ci_passed(sha):
+    try:
+        out = run("gh", "api", f"repos/{{owner}}/{{repo}}/commits/{sha}/check-runs", "--jq", "[.check_runs[].conclusion]")
+    except subprocess.CalledProcessError:
+        return False
+    return ci_conclusions_ok(json.loads(out or "[]"))
+
+
 def gather():
     run("git", "fetch", "-q", "--tags", "origin", "dev", "main")
     data = json.loads(run("gh", "release", "list", "--limit", "100", "--json",
@@ -171,11 +196,12 @@ def gather():
         on_dev = subprocess.run(["git", "merge-base", "--is-ancestor", f"refs/tags/{tag}", "origin/dev"]).returncode == 0
         main_ready = subprocess.run(["git", "cat-file", "-e", f"refs/tags/{tag}:.mainignore"],
                                     capture_output=True).returncode == 0
+        ci_ok = main_ready and ci_passed(run("git", "rev-parse", f"refs/tags/{tag}^{{commit}}").strip())
         releases.append(Release(
             version=tag.lstrip("v"),
             published=datetime.fromisoformat(d["publishedAt"].replace("Z", "+00:00")),
             draft=d["isDraft"], prerelease=d["isPrerelease"],
-            assets=[a["name"] for a in assets], on_dev=on_dev, main_ready=main_ready,
+            assets=[a["name"] for a in assets], on_dev=on_dev, main_ready=main_ready, ci_ok=ci_ok,
         ))
     issues = json.loads(run("gh", "issue", "list", "--state", "open", "--label", "bug", "--limit", "200",
                             "--json", "title,body"))
@@ -198,7 +224,8 @@ def main():
         return
     soak = float(os.environ.get("STABLE_SOAK_HOURS", DEFAULT_SOAK_HOURS))
     releases, changelog, main_version, bug_issues = gather()
-    candidate, verdicts = evaluate(releases, changelog, main_version, datetime.now(timezone.utc), soak, bug_issues)
+    approved = {v.strip().lstrip("v") for v in os.environ.get("STABLE_APPROVE", "").split(",") if v.strip()}
+    candidate, verdicts = evaluate(releases, changelog, main_version, datetime.now(timezone.utc), soak, bug_issues, approved)
     warning = main_status(main_version, verdicts)
     if "--json" in sys.argv:
         print(json.dumps({"main": main_version, "candidate": candidate, "main_warning": warning,

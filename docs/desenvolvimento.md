@@ -20,3 +20,9 @@ Nada é registado nem instalado sem passar nos testes.
 
 O `main` tem só o necessário para compilar e distribuir a versão estável: sem testes, hooks nem scripts de publicação. A lista do que fica de fora está em [`.mainignore`](../.mainignore). Cada versão estável chega ao `main` como um único commit "Prune X.Y.Z (versão estável)", com o conteúdo da tag `vX.Y.Z` sem esses ficheiros, por Pull Request.
 
+## Critérios e riscos
+
+- [RELEASE_CRITERIA.md](RELEASE_CRITERIA.md): estados de uma versão (alfa, beta, candidata, estável), portões de qualidade, governação e critérios da primeira versão "GA certificada".
+- [RISK_REGISTER.md](RISK_REGISTER.md): riscos conhecidos, prioridade e estado.
+- O CI (`.github/workflows/ci.yml`) corre `./scripts/check.sh --full` em macOS 14 e 15 em cada push e Pull Request para o `dev`.
+

@@ -6,7 +6,7 @@
 .githooks/
 CLAUDE.md
 Tests/
-docs/desenvolvimento.md
+docs/
 scripts/tests/
 scripts/check.sh
 scripts/test.sh
@@ -16,3 +16,4 @@ scripts/release_notes.sh
 scripts/setup_hooks.sh
 scripts/stable.sh
 scripts/stable.py
+.github/workflows/ci.yml

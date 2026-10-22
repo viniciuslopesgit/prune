@@ -48,9 +48,11 @@ Requer macOS 14 ou mais recente e as Command Line Tools do Xcode (`xcode-select 
 
 O trabalho em curso, os testes automáticos e a publicação de versões estão no ramo [`dev`](https://github.com/viniciuslopesgit/prune/tree/dev) (ver [docs/desenvolvimento.md](https://github.com/viniciuslopesgit/prune/blob/dev/docs/desenvolvimento.md)). O `main` tem só o necessário para compilar a versão estável.
 
+Quando uma versão passa a estável: [critérios de lançamento](https://github.com/viniciuslopesgit/prune/blob/dev/docs/RELEASE_CRITERIA.md). Como contribuir: [CONTRIBUTING.md](CONTRIBUTING.md). Vulnerabilidades: [SECURITY.md](SECURITY.md).
+
 ### Versões
 
-`main` é a versão estável (escolhida e verificada automaticamente no `dev`) e `dev` o trabalho em curso. Cada versão tem uma tag `vX.Y.Z` e uma [Release](https://github.com/viniciuslopesgit/prune/releases) com o DMG.
+`main` é a versão estável (escolhida e verificada automaticamente no `dev`) e `dev` o trabalho em curso. Cada versão tem uma tag `vX.Y.Z` e uma [Release](https://github.com/viniciuslopesgit/prune/releases) com o DMG e o `SHA256SUMS`: sai como beta (pré-lançamento) e passa a **Latest** quando é promovida a estável.
 
 ## Licença
 

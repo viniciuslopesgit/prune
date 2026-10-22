@@ -2,6 +2,19 @@
 
 Alterações relevantes de cada versão. Formato [Keep a Changelog](https://keepachangelog.com/pt-PT/1.1.0/), versões [SemVer](https://semver.org/lang/pt-PT/).
 
+## [1.3.0] - 2026-10-22
+
+Uma versão só passa a estável com evidência: testes em várias versões do macOS, sem erros reportados e verificada de novo antes de chegar ao main. A app não muda.
+
+### Adicionado
+- Cada Release traz um ficheiro SHA256SUMS para confirmar que o DMG descarregado não foi alterado.
+- Critérios de lançamento, registo de riscos, política de segurança (SECURITY.md) e guia para contribuir (CONTRIBUTING.md).
+- Testes automáticos no GitHub em macOS 14 e 15 a cada alteração.
+
+### Alterado
+- As versões novas saem como beta (pré-lançamento). "Descarregar a última versão" passa a dar sempre a última estável.
+- Para uma versão passar a estável, os testes no GitHub têm de ter passado. Uma versão major precisa de aprovação explícita.
+
 ## [1.2.9] - 2026-10-22
 
 O ramo main passa a ter só o necessário para compilar a versão estável. A app não muda.
@@ -94,6 +107,7 @@ Primeira versão pública.
 
 - Primeira versão: Análise Inteligente, Painel, limpeza, privacidade, otimização, manutenção, desinstalador, atualizador, extensões, Lente de Espaço, ficheiros grandes, duplicados e destruidor.
 
+[1.3.0]: https://github.com/viniciuslopesgit/prune/releases/tag/v1.3.0
 [1.2.9]: https://github.com/viniciuslopesgit/prune/releases/tag/v1.2.9
 [1.2.8]: https://github.com/viniciuslopesgit/prune/releases/tag/v1.2.8
 [1.2.7]: https://github.com/viniciuslopesgit/prune/releases/tag/v1.2.7

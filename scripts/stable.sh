@@ -124,6 +124,9 @@ $(python3 -I scripts/stable.py | sed 's/^/    /')"
     git fetch -q origin main
     if [ "$(git rev-parse 'origin/main^{tree}')" = "$tree" ]; then
         echo "✓ O main tem agora a Prune $version, só com os ficheiros essenciais."
+        # A Release deixa de ser beta e passa a ser a "Latest" (a que o README manda descarregar).
+        gh release edit "$tag" --prerelease=false --latest >/dev/null
+        echo "✓ Release $tag marcada como estável (Latest)."
     else
         echo "⚠️  O main foi atualizado, mas o conteúdo não é o esperado: reveja com git diff $commit origin/main."
         return 1

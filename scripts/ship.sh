@@ -2,7 +2,7 @@
 # Testa, faz commit, envia para o dev e publica a Release, por esta ordem.
 # Se um passo falhar, os seguintes não acontecem.
 #
-#   ./scripts/ship.sh "Mensagem do commit"     verificação completa → commit → push dev → Release
+#   ./scripts/ship.sh "Mensagem do commit"     verificação completa → commit → push dev → Release beta
 #   ./scripts/ship.sh "…" --install            … e instala a app em /Applications
 #   ./scripts/ship.sh "…" --no-release         só commit e push (sem versão nova)
 #   ./scripts/ship.sh "…" --no-promote         não promove a versão estável para o main
@@ -71,13 +71,17 @@ if [ $RELEASE = 1 ]; then
     SKIP_BUILD=1 ./scripts/make_dmg.sh
     DMG=build/Prune-$VERSION.dmg
     [ -f "$DMG" ] || { echo "✗ $DMG não foi criado."; exit 1; }
+    # Soma de verificação do DMG, para quem descarrega confirmar que o ficheiro não foi alterado.
+    SUMS=build/SHA256SUMS
+    (cd build && shasum -a 256 "Prune-$VERSION.dmg") >"$SUMS"
     NOTES=$(mktemp)
-    ./scripts/release_notes.sh "$VERSION" >"$NOTES"
+    ./scripts/release_notes.sh "$VERSION" --beta >"$NOTES"
     git tag -a "$TAG" -m "Prune $VERSION"
     git push -q origin "$TAG"
-    gh release create "$TAG" "$DMG" --title "Prune $VERSION" --notes-file "$NOTES" --verify-tag --latest
+    # Sai como pré-lançamento (beta): só passa a "Latest" quando o stable.sh a promove a estável.
+    gh release create "$TAG" "$DMG" "$SUMS" --title "Prune $VERSION" --notes-file "$NOTES" --verify-tag --prerelease
     rm -f "$NOTES"
-    echo "✓ Release Prune $VERSION publicada: $(gh release view "$TAG" --json url --jq .url)"
+    echo "✓ Release Prune $VERSION publicada como beta: $(gh release view "$TAG" --json url --jq .url)"
 fi
 
 # 5. Versão estável para o main: se houver candidata, é verificada numa cópia limpa e promovida

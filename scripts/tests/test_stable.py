@@ -6,14 +6,14 @@ import unittest
 from datetime import datetime, timedelta, timezone
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-from stable import (Release, changelog_sections, evaluate, excluded_paths, has_fixes, is_excluded,  # noqa: E402
+from stable import (Release, changelog_sections, ci_conclusions_ok, evaluate, excluded_paths, has_fixes, is_excluded,  # noqa: E402
                     load_patterns, main_status, mentions, parse_version, plist_version)  # noqa: E402
 
 NOW = datetime(2026, 11, 1, 12, 0, tzinfo=timezone.utc)
 
 
 def rel(version, hours_ago, **kw):
-    kw.setdefault("assets", [f"Prune-{version}.dmg"])
+    kw.setdefault("assets", [f"Prune-{version}.dmg", "SHA256SUMS"])
     return Release(version=version, published=NOW - timedelta(hours=hours_ago), **kw)
 
 
@@ -113,7 +113,8 @@ class EvaluateTests(unittest.TestCase):
 
     def test_rejections(self):
         rs = [
-            rel("2.0.0", 100, prerelease=True),
+            rel("1.9.5", 100, ci_ok=False),
+            rel("1.9.2", 100, assets=["Prune-1.9.2.dmg"]),
             rel("1.9.0", 100, draft=True),
             rel("1.8.0", 100, assets=[]),
             rel("1.7.0", 100, assets=["Prune-1.6.0.dmg"]),
@@ -124,12 +125,39 @@ class EvaluateTests(unittest.TestCase):
         cand, verdicts = evaluate(rs, changelog(), "1.0.0", NOW)
         self.assertEqual(cand, "1.5.0")
         reasons = {v.version: v.reason for v in verdicts}
-        self.assertIn("pré-lançamento", reasons["2.0.0"])
+        self.assertIn("sem CI verde", reasons["1.9.5"])
+        self.assertIn("SHA256SUMS", reasons["1.9.2"])
         self.assertIn("rascunho", reasons["1.9.0"])
         self.assertIn("Prune-1.8.0.dmg", reasons["1.8.0"])
         self.assertIn("Prune-1.7.0.dmg", reasons["1.7.0"])
         self.assertIn("histórico do dev", reasons["1.6.0"])
         self.assertIn(".mainignore", reasons["1.5.5"])
+
+    def test_prerelease_is_a_beta_and_can_be_promoted(self):
+        self.assertEqual(evaluate([rel("1.1.0", 50, prerelease=True)], changelog(), "1.0.0", NOW)[0], "1.1.0")
+
+    def test_old_releases_without_checksums_are_judged_by_main_ready(self):
+        r = rel("1.0.5", 50, assets=["Prune-1.0.5.dmg"], main_ready=False)
+        _, verdicts = evaluate([r], changelog(), "1.0.0", NOW)
+        self.assertIn(".mainignore", verdicts[0].reason)
+
+    def test_major_needs_explicit_approval(self):
+        rs = [rel("1.5.0", 100), rel("2.0.0", 50)]
+        cand, verdicts = evaluate(rs, changelog(), "1.4.0", NOW)
+        self.assertEqual(cand, "1.5.0")
+        self.assertIn("STABLE_APPROVE=2.0.0", verdicts[0].reason)
+        self.assertEqual(evaluate(rs, changelog(), "1.4.0", NOW, approved={"2.0.0"})[0], "2.0.0")
+
+    def test_minor_and_patch_need_no_approval(self):
+        self.assertEqual(evaluate([rel("1.5.1", 50)], changelog(), "1.4.0", NOW)[0], "1.5.1")
+
+    def test_ci_conclusions(self):
+        self.assertTrue(ci_conclusions_ok(["success", "success"]))
+        self.assertTrue(ci_conclusions_ok(["success", "skipped"]))
+        self.assertFalse(ci_conclusions_ok([]), "sem CI não é CI verde")
+        self.assertFalse(ci_conclusions_ok(["success", "failure"]))
+        self.assertFalse(ci_conclusions_ok(["success", None]), "ainda a correr")
+        self.assertFalse(ci_conclusions_ok(["cancelled"]))
 
     def test_open_bug_issue_blocks_version(self):
         rs = [rel("1.1.0", 100), rel("1.2.0", 50)]
@@ -209,11 +237,13 @@ class MainFilesTests(unittest.TestCase):
         for essential in ["Package.swift", "Sources/Prune/App/PruneApp.swift", "Resources/Info.plist",
                           "Resources/Como abrir.txt", "scripts/build_app.sh", "scripts/make_dmg.sh",
                           "scripts/make_icon.swift", "scripts/make_dmg_background.swift", "scripts/install.sh",
-                          "scripts/setup_signing.sh", "README.md", "CHANGELOG.md", "LICENSE", ".gitignore"]:
+                          "scripts/setup_signing.sh", "README.md", "CHANGELOG.md", "LICENSE", ".gitignore",
+                          "SECURITY.md", "CONTRIBUTING.md"]:
             self.assertFalse(is_excluded(essential, patterns), essential)
         for dev_only in [".mainignore", "CLAUDE.md", ".claude/settings.json", ".githooks/pre-push",
                          "Tests/PruneTests/ShredderTests.swift", "scripts/test.sh", "scripts/ship.sh",
-                         "scripts/stable.py", "scripts/tests/test_stable.py"]:
+                         "scripts/stable.py", "scripts/tests/test_stable.py", "docs/RELEASE_CRITERIA.md",
+                         ".github/workflows/ci.yml"]:
             self.assertTrue(is_excluded(dev_only, patterns), dev_only)
 
     def test_plist_version(self):
