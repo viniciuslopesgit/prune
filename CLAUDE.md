@@ -8,9 +8,17 @@ Sempre que alterar código ou ficheiros do projeto, no fim e sem perguntar:
 
 1. Subir a versão consoante a alteração: `./scripts/bump_version.sh patch` (correções, alterações internas), `minor` (funcionalidade nova) ou `major` (mudança incompatível).
 2. Preencher a secção da versão no `CHANGELOG.md`: um parágrafo de resumo (vai para o topo da Release) e as listas `### Adicionado / Alterado / Corrigido / Removido`, escritas para quem usa a app.
-3. `./scripts/ship.sh "Mensagem (X.Y.Z)"`: testes rigorosos → commit **só se passarem** → push para o **dev** → Release `vX.Y.Z` no GitHub com o DMG.
+3. `./scripts/ship.sh "Mensagem (X.Y.Z)"`: testes rigorosos → commit **só se passarem** → push para o **dev** → Release `vX.Y.Z` no GitHub com o DMG → se houver uma versão estável mais nova do que a do `main`, verifica-a numa cópia limpa e promove-a para o `main` por Pull Request (`stable.sh --apply`).
 
-Se os testes falharem, corrigir e repetir até passarem; nunca registar código que falhe, nunca `--no-verify`. Nunca fazer push para o `main`. Instalar em `/Applications` (`--install`) só quando o utilizador pedir. O hook Stop em `.claude/settings.json` não deixa terminar com alterações por registar ou commits por enviar.
+Se os testes falharem, corrigir e repetir até passarem; nunca registar código que falhe, nunca `--no-verify`. Nunca fazer push direto para o `main`: o `main` só recebe a versão estável, pelo `stable.sh --apply` que o `ship.sh` corre no fim (o hook pre-push recusa o resto). Instalar em `/Applications` (`--install`) só quando o utilizador pedir. O hook Stop em `.claude/settings.json` não deixa terminar com alterações por registar ou commits por enviar.
+
+## Critérios de estabilidade
+
+Os estados (alfa, beta, candidata, estável), portões e governação estão em `docs/RELEASE_CRITERIA.md`; os riscos em `docs/RISK_REGISTER.md`. Ao resolver um risco, atualizar o estado no registo no mesmo commit. As Releases saem como beta (pré-lançamento) e só ficam Latest quando promovidas.
+
+## O que vai para o main
+
+O `main` tem só o necessário para compilar e distribuir a versão estável. Tudo o que for só de desenvolvimento (testes, hooks, scripts de publicação, documentação interna) entra na lista do `.mainignore` no mesmo commit em que é criado. O `stable.sh` compila o conteúdo filtrado antes de o promover: se algo essencial ficar de fora, a promoção falha.
 
 ## Testes obrigatórios
 
@@ -31,4 +39,7 @@ Nenhuma alteração é registada nem instalada sem passar no portão de qualidad
 ./scripts/check.sh --full                # + versão/CHANGELOG, app universal assinada e autoteste
 ./scripts/bump_version.sh patch|minor|major     # versão nova + secção no CHANGELOG
 ./scripts/ship.sh "Mensagem (X.Y.Z)"            # testes → commit → push dev → Release
+./scripts/stable.sh [--apply | --check X.Y.Z]   # versão estável para o main (regras em scripts/stable.py)
 ```
+
+Versão estável = a Release mais recente com DMG, no histórico do dev, sem issues abertas de `bug` que a mencionem, publicada há ≥ 24 h (`STABLE_SOAK_HOURS`) e sem correções (`### Corrigido`) em versões publicadas depois. Testes das regras em `scripts/tests` (corridos pelo `check.sh`).

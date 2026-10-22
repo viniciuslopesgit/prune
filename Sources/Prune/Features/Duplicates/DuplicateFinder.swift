@@ -86,8 +86,17 @@ enum DuplicateFinder {
         return hasher.finalize().map { String(format: "%02x", $0) }.joined()
     }
 
+    /// Resultado das fotografias semelhantes: os grupos e quantas imagens o Vision não conseguiu analisar
+    /// (ficheiro danificado, formato não suportado, ou Vision indisponível neste Mac).
+    struct SimilarPhotos {
+        var groups: [DupGroup] = []
+        var analysed = 0
+        var unreadable = 0
+        var firstError: String?
+    }
+
     /// Fotografias semelhantes (não idênticas) com o Vision.
-    static func similarPhotos(in roots: [URL], threshold: Float, progress: ProgressReporter) -> [DupGroup] {
+    static func similarPhotos(in roots: [URL], threshold: Float, progress: ProgressReporter) -> SimilarPhotos {
         let exts: Set<String> = ["jpg", "jpeg", "png", "heic", "heif", "tiff", "tif", "webp", "gif", "bmp"]
         var images: [DupFile] = []
         for root in roots {
@@ -102,17 +111,28 @@ enum DuplicateFinder {
             if images.count >= 3000 { break }
         }
         var prints: [(DupFile, VNFeaturePrintObservation)] = []
+        var result = SimilarPhotos()
         for (i, img) in images.enumerated() {
             progress.report("A analisar fotografias… \(i + 1)/\(images.count)")
             // Cada imagem é descodificada e libertada antes da seguinte.
             autoreleasepool {
                 let req = VNGenerateImageFeaturePrintRequest()
                 let handler = VNImageRequestHandler(url: img.url, options: [:])
-                if (try? handler.perform([req])) != nil, let obs = req.results?.first as? VNFeaturePrintObservation {
-                    prints.append((img, obs))
+                do {
+                    try handler.perform([req])
+                    if let obs = req.results?.first as? VNFeaturePrintObservation {
+                        prints.append((img, obs))
+                    } else {
+                        result.unreadable += 1
+                        result.firstError = result.firstError ?? "sem resultado do Vision"
+                    }
+                } catch {
+                    result.unreadable += 1
+                    result.firstError = result.firstError ?? error.localizedDescription
                 }
             }
         }
+        result.analysed = prints.count
         // Agrupa com union-find.
         var parent = Array(0..<prints.count)
         func find(_ x: Int) -> Int { var x = x; while parent[x] != x { parent[x] = parent[parent[x]]; x = parent[x] }; return x }
@@ -127,8 +147,9 @@ enum DuplicateFinder {
         }
         var clusters: [Int: [DupFile]] = [:]
         for i in 0..<prints.count { clusters[find(i), default: []].append(prints[i].0) }
-        return clusters.values.filter { $0.count > 1 }
+        result.groups = clusters.values.filter { $0.count > 1 }
             .map { DupGroup(files: $0.sorted { $0.size > $1.size }, similar: true) }
             .sorted { $0.files.count > $1.files.count }
+        return result
     }
 }

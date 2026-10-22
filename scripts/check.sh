@@ -51,11 +51,11 @@ changed() {
     fi
 }
 
-# Árvore git do conteúdo atual (sem mexer no índice verdadeiro).
+# Árvore git do conteúdo atual, igual à que `git add -A` daria (sem mexer no índice verdadeiro).
+# Parte do índice e não do HEAD: um ficheiro retirado com `git rm --cached` continua fora.
 worktree_hash() {
     local idx=$(mktemp)
-    rm -f "$idx"
-    GIT_INDEX_FILE=$idx git read-tree HEAD
+    cp "$(git rev-parse --git-path index)" "$idx" 2>/dev/null || { rm -f "$idx"; GIT_INDEX_FILE=$idx git read-tree HEAD; }
     GIT_INDEX_FILE=$idx git add -A
     GIT_INDEX_FILE=$idx git write-tree
     rm -f "$idx"
@@ -70,6 +70,11 @@ for f in scripts/*.sh .githooks/*(N); do
     [ -x "$f" ] || fail "$f não é executável (chmod +x $f)."
 done
 ok "scripts e hooks"
+
+step "Testes dos scripts"
+python3 -I -m unittest discover -s scripts/tests >.build/check-scripts.log 2>&1 \
+    || { tail -30 .build/check-scripts.log; fail "Os testes dos scripts falharam."; }
+ok "$(grep -oE '^Ran [0-9]+ tests' .build/check-scripts.log | sed 's/Ran/passaram/; s/tests/testes/') (scripts/tests)"
 
 step "Segredos"
 if git ls-files --error-unmatch analytics.env >/dev/null 2>&1 || git diff --cached --name-only | grep -qx analytics.env; then
@@ -90,6 +95,14 @@ fi
 /usr/libexec/PlistBuddy -c "Print :PruneGAAPISecret" Resources/Info.plist >/dev/null 2>&1 \
     && fail "Resources/Info.plist não pode ter PruneGAAPISecret (é injetado no build)."
 ok "nenhuma chave nas alterações"
+
+step "Ficheiros registados"
+IGNORED=$(git ls-files --cached --ignored --exclude-standard)
+if [ -n "$IGNORED" ]; then
+    print -r -- "$IGNORED" | sed 's/^/    /' | head -20
+    fail "Há ficheiros registados no git que o .gitignore exclui (git rm --cached <ficheiro>)."
+fi
+ok "nenhum ficheiro ignorado registado no git"
 
 step "Funcionalidades novas trazem testes"
 NEW_SOURCES=(${(f)"$(changed A | grep -E '^Sources/.*\.swift$' | sort -u)"})
@@ -115,7 +128,8 @@ ok "debug, avisos tratados como erros"
 step "Testes de unidade"
 LOG=.build/check-tests.log
 if ! ./scripts/test.sh --enable-code-coverage >$LOG 2>&1; then
-    grep -E "✘|error:" $LOG | grep -v "^✘ Suite" | head -40
+    # ✘ é o teste que falhou; ↳ são os comentários dele (ex.: a causa registada pelo próprio teste).
+    grep -E "✘|↳|error:" $LOG | grep -vE "^✘ Suite|↳ (Testing Library|Target Platform)" | head -40
     fail "Há testes a falhar (registo completo em $LOG)."
 fi
 ok "$(grep -oE 'Test run with [0-9]+ tests in [0-9]+ suites' $LOG | sed 's/Test run with/passaram/; s/tests in/testes em/; s/suites/grupos/')"

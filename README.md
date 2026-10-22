@@ -44,26 +44,15 @@ Requer macOS 14 ou mais recente e as Command Line Tools do Xcode (`xcode-select 
 ./scripts/make_dmg.sh        # cria build/Prune-<versão>.dmg
 ```
 
-### Testes e deploy
+### Testes e publicação
 
-Nada é registado nem instalado sem passar nos testes.
+O trabalho em curso, os testes automáticos e a publicação de versões estão no ramo [`dev`](https://github.com/viniciuslopesgit/prune/tree/dev) (ver [docs/desenvolvimento.md](https://github.com/viniciuslopesgit/prune/blob/dev/docs/desenvolvimento.md)). O `main` tem só o necessário para compilar a versão estável.
 
-```bash
-./scripts/setup_hooks.sh               # uma vez: liga os hooks do git
-./scripts/test.sh                      # testes de unidade (Tests/PruneTests)
-./scripts/check.sh                     # verificação rápida
-./scripts/check.sh --full              # verificação completa
-./scripts/bump_version.sh patch        # versão nova (patch, minor ou major) e secção no CHANGELOG
-./scripts/ship.sh "Mensagem do commit" # verificação completa → commit → push dev → Release
-```
-
-- **Verificação rápida** (antes de cada commit, pelo hook `pre-commit`): sintaxe dos scripts, nenhuma chave de `analytics.env` nas alterações, ficheiros novos em `Sources/` acompanhados de testes, compilação sem avisos, testes de unidade e cobertura mínima nos ficheiros que apagam ou escolhem ficheiros.
-- **Verificação completa** (antes de cada push, pelo hook `pre-push`, e no `ship.sh`): tudo o anterior, secção da versão preenchida no CHANGELOG, app universal e assinada, e o autoteste da app compilada.
-- `ship.sh` publica a Release `vX.Y.Z` com o DMG e as notas tiradas do CHANGELOG. Aceita `--install` (instala em /Applications) e `--no-release`.
+Quando uma versão passa a estável: [critérios de lançamento](https://github.com/viniciuslopesgit/prune/blob/dev/docs/RELEASE_CRITERIA.md). Como contribuir: [CONTRIBUTING.md](CONTRIBUTING.md). Vulnerabilidades: [SECURITY.md](SECURITY.md).
 
 ### Versões
 
-`main` é a versão estável e `dev` o trabalho em curso. Cada versão tem uma tag `vX.Y.Z` e uma [Release](https://github.com/viniciuslopesgit/prune/releases) com o DMG.
+`main` é a versão estável (escolhida e verificada automaticamente no `dev`) e `dev` o trabalho em curso. Cada versão tem uma tag `vX.Y.Z` e uma [Release](https://github.com/viniciuslopesgit/prune/releases) com o DMG e o `SHA256SUMS`: sai como beta (pré-lançamento) e passa a **Latest** quando é promovida a estável.
 
 ## Licença
 

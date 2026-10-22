@@ -167,9 +167,36 @@ struct DuplicateFinderTests {
         try png(tmp, "xadrez.png", checker: true)
         try tmp.file("nao-e-imagem.txt", "x")
 
-        let groups = DuplicateFinder.similarPhotos(in: [tmp.url], threshold: 0.05, progress: .silent)
-        #expect(groups.count == 1)
-        #expect(groups.first.map(names) == ["riscas.png", "riscas-copia.png"])
-        #expect(groups.first?.similar == true)
+        let r = DuplicateFinder.similarPhotos(in: [tmp.url], threshold: 0.05, progress: .silent)
+        // Se o Vision não analisar as imagens, o erro aparece aqui em vez de um "nada encontrado".
+        try #require(r.analysed == 3, "Vision: \(r.unreadable) imagens por analisar — \(r.firstError ?? "sem erro")")
+        #expect(r.unreadable == 0)
+        #expect(r.groups.count == 1)
+        #expect(r.groups.first.map(names) == ["riscas.png", "riscas-copia.png"])
+        #expect(r.groups.first?.similar == true)
+    }
+
+    @Test("Imagem danificada conta como não analisada, sem parar a análise")
+    func unreadablePhotoIsCounted() throws {
+        let tmp = try TempDir()
+        try tmp.file("danificada.jpg", "isto não é uma imagem")
+        let r = DuplicateFinder.similarPhotos(in: [tmp.url], threshold: 0.05, progress: .silent)
+        #expect(r.unreadable == 1)
+        #expect(r.analysed == 0)
+        #expect(r.firstError != nil)
+        #expect(r.groups.isEmpty)
+    }
+
+    @Test("Aviso ao utilizador quando há fotografias por analisar")
+    func unreadableMessage() {
+        #expect(DuplicatesModel.unreadableMessage(analysed: 5, unreadable: 0, error: nil) == nil)
+        #expect(DuplicatesModel.unreadableMessage(analysed: 0, unreadable: 3, error: "Vision indisponível")
+            == "Não foi possível analisar as fotografias neste Mac (Vision indisponível).")
+        #expect(DuplicatesModel.unreadableMessage(analysed: 0, unreadable: 2, error: nil)
+            == "Não foi possível analisar as fotografias neste Mac.")
+        #expect(DuplicatesModel.unreadableMessage(analysed: 4, unreadable: 1, error: "x")
+            == "1 fotografia não pôde ser analisada.")
+        #expect(DuplicatesModel.unreadableMessage(analysed: 4, unreadable: 2, error: "x")
+            == "2 fotografias não puderam ser analisadas.")
     }
 }

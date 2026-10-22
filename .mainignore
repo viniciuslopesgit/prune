@@ -1,0 +1,19 @@
+# Ficheiros de desenvolvimento que não vão para o main.
+# O main tem só o necessário para compilar e distribuir a versão estável (scripts/stable.sh).
+# Uma linha por caminho; terminado em / é uma pasta inteira. Aceita * e ?.
+.mainignore
+.claude/
+.githooks/
+CLAUDE.md
+Tests/
+docs/
+scripts/tests/
+scripts/check.sh
+scripts/test.sh
+scripts/ship.sh
+scripts/bump_version.sh
+scripts/release_notes.sh
+scripts/setup_hooks.sh
+scripts/stable.sh
+scripts/stable.py
+.github/workflows/ci.yml
