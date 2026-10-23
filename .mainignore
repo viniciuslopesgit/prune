@@ -19,3 +19,4 @@ scripts/stable.sh
 scripts/stable.py
 .github/workflows/ci.yml
 site/
+.github/workflows/pages.yml
