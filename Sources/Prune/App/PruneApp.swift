@@ -65,6 +65,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             Task { @MainActor in
                 guard let closing, closing === WindowOpener.shared.mainWindow else { return }
                 AppState.shared.releaseHeavyResults()
+                // Hides the Dock icon: the app keeps running in the menu bar.
+                NSApp.setActivationPolicy(BackgroundMode.activationPolicy(mainWindowVisible: false, menuBarEnabled: BackgroundMode.menuBarEnabled))
             }
         }
         // …and when the system warns that memory is running low.
@@ -89,6 +91,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
-        UserDefaults.standard.object(forKey: "showMenuBar") as? Bool == false
+        !BackgroundMode.menuBarEnabled
+    }
+
+    /// Quit from the Dock or ⌘Q only sends the app to the background; the menu bar's Quit ends it.
+    @MainActor
+    func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
+        if BackgroundMode.shouldTerminate(menuBarEnabled: BackgroundMode.menuBarEnabled, explicitQuit: BackgroundMode.quitRequested) {
+            return .terminateNow
+        }
+        BackgroundMode.sendToBackground()
+        return .terminateCancel
     }
 }

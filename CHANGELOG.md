@@ -2,6 +2,14 @@
 
 Notable changes in each version. Format [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions [SemVer](https://semver.org/).
 
+## [1.7.0] - 2026-10-23
+
+Prune now keeps running in the background, like WireGuard. Closing the window or choosing Quit in the Dock hides it and removes its Dock icon, while the monitor stays in the menu bar.
+
+### Changed
+- Closing the main window, choosing Quit in the Dock or pressing ⌘Q now sends Prune to the background: the Dock icon disappears and the menu bar monitor keeps working. Open it again from the menu bar or from Launchpad.
+- To really quit Prune, use the power button in the menu bar monitor. If you turn the menu bar monitor off in Settings, Prune quits normally as before.
+
 ## [1.6.4] - 2026-10-23
 
 Security fixes found by a penetration test of Prune. Folder protection could be bypassed by writing a path in a different case, and the Shredder could destroy a copy of a file outside the folder you chose. Update if you use Prune.
@@ -247,6 +255,7 @@ First public version.
 
 - First version: Smart Scan, Dashboard, cleanup, privacy, optimization, maintenance, uninstaller, updater, extensions, Space Lens, large files, duplicates and shredder.
 
+[1.7.0]: https://github.com/viniciuslopesgit/prune/releases/tag/v1.7.0
 [1.6.4]: https://github.com/viniciuslopesgit/prune/releases/tag/v1.6.4
 [1.6.3]: https://github.com/viniciuslopesgit/prune/releases/tag/v1.6.3
 [1.6.2]: https://github.com/viniciuslopesgit/prune/releases/tag/v1.6.2

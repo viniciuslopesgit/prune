@@ -153,3 +153,20 @@ struct MiscTests {
         #expect(DeleteMode.allCases.count == 2)
     }
 }
+
+@Suite("Background mode")
+struct BackgroundModeTests {
+    @Test("Quit from the Dock only hides the app while the menu bar is on")
+    func terminate() {
+        #expect(!BackgroundMode.shouldTerminate(menuBarEnabled: true, explicitQuit: false))
+        #expect(BackgroundMode.shouldTerminate(menuBarEnabled: true, explicitQuit: true))
+        #expect(BackgroundMode.shouldTerminate(menuBarEnabled: false, explicitQuit: false))
+    }
+
+    @Test("Dock icon only while the window is open or without menu bar")
+    func policy() {
+        #expect(BackgroundMode.activationPolicy(mainWindowVisible: false, menuBarEnabled: true) == .accessory)
+        #expect(BackgroundMode.activationPolicy(mainWindowVisible: true, menuBarEnabled: true) == .regular)
+        #expect(BackgroundMode.activationPolicy(mainWindowVisible: false, menuBarEnabled: false) == .regular)
+    }
+}

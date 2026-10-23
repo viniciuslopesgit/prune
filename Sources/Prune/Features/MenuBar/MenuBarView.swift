@@ -88,7 +88,7 @@ struct MenuBarView: View {
                 }
                 Spacer()
                 Button { openMain() } label: { Image(systemName: "macwindow") }.help("Open Prune")
-                Button { NSApp.terminate(nil) } label: { Image(systemName: "power") }.help("Quit")
+                Button { BackgroundMode.quit() } label: { Image(systemName: "power") }.help("Quit")
             }
             .buttonStyle(.bordered)
         }

@@ -11,6 +11,7 @@ final class WindowOpener {
     }
 
     func openMain() {
+        NSApp.setActivationPolicy(.regular)
         if let w = mainWindow {
             w.makeKeyAndOrderFront(nil)
         } else {

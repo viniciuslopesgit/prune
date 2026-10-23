@@ -53,7 +53,7 @@ enum Permissions {
         p.executableURL = URL(fileURLWithPath: "/bin/sh")
         p.arguments = ["-c", "sleep 1; /usr/bin/open \(Shell.quote(path))"]
         try? p.run()
-        NSApp.terminate(nil)
+        BackgroundMode.quit()
     }
 
     /// Logs the permission state to ~/Library/Logs/Prune/permissions.log (diagnostics).
