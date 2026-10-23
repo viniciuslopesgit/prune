@@ -2,6 +2,13 @@
 
 Notable changes in each version. Format [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions [SemVer](https://semver.org/).
 
+## [1.6.1] - 2026-10-23
+
+The website now looks like the app: the same ivory and ink colours, the sage leaf, wide titles and rounded panels, with a scan ring around the Prune icon. The app does not change.
+
+### Changed
+- The website design follows the app's look: its colours, its icon, wide titles and panels like the app's modules, and a scan ring that fills when the page opens.
+
 ## [1.6.0] - 2026-10-23
 
 The Prune website has a new look and is now online at https://viniciuslopesgit.github.io/prune/. The app does not change.
@@ -208,6 +215,7 @@ First public version.
 
 - First version: Smart Scan, Dashboard, cleanup, privacy, optimization, maintenance, uninstaller, updater, extensions, Space Lens, large files, duplicates and shredder.
 
+[1.6.1]: https://github.com/viniciuslopesgit/prune/releases/tag/v1.6.1
 [1.6.0]: https://github.com/viniciuslopesgit/prune/releases/tag/v1.6.0
 [1.5.0]: https://github.com/viniciuslopesgit/prune/releases/tag/v1.5.0
 [1.4.7]: https://github.com/viniciuslopesgit/prune/releases/tag/v1.4.7
