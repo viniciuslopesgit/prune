@@ -2,6 +2,17 @@
 
 Notable changes in each version. Format [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions [SemVer](https://semver.org/).
 
+## [1.6.3] - 2026-10-23
+
+The website is easier to find in search engines and looks better when shared: links to it now show a preview image and description. The app does not change.
+
+### Added
+- A preview image, title and description when the website is shared on Product Hunt, X, Slack, Messages and other sites.
+- Details search engines use to show Prune as a free macOS app, and a site icon in browser tabs.
+
+### Changed
+- The website's title and description say what Prune is: a free, open-source Mac cleaner and uninstaller.
+
 ## [1.6.2] - 2026-10-23
 
 The website now explains better why macOS asks before opening Prune the first time, and how to check the app for yourself. The app does not change.
@@ -222,6 +233,7 @@ First public version.
 
 - First version: Smart Scan, Dashboard, cleanup, privacy, optimization, maintenance, uninstaller, updater, extensions, Space Lens, large files, duplicates and shredder.
 
+[1.6.3]: https://github.com/viniciuslopesgit/prune/releases/tag/v1.6.3
 [1.6.2]: https://github.com/viniciuslopesgit/prune/releases/tag/v1.6.2
 [1.6.1]: https://github.com/viniciuslopesgit/prune/releases/tag/v1.6.1
 [1.6.0]: https://github.com/viniciuslopesgit/prune/releases/tag/v1.6.0
