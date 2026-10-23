@@ -33,13 +33,13 @@ struct ModuleHeader<Trailing: View>: View {
     }
 }
 
-/// Ecrã inicial de um módulo: texto e ação à esquerda, a vidraça à direita.
+/// A module's start screen: text and action on the left, the artwork on the right.
 struct HeroView: View {
     let module: Module
     let headline: String
     let message: String
     var features: [(String, String)] = []
-    var buttonTitle = "Analisar"
+    var buttonTitle = String(localized: "Scan")
     var footnote: String?
     let action: () -> Void
 
@@ -83,9 +83,9 @@ struct HeroView: View {
     }
 }
 
-/// A ilustração dos módulos: a folha do ícone, com o símbolo do módulo recortado no meio.
-/// Com `swaying`, a folha baloiça devagar (é o único movimento contínuo da app, durante as análises).
-/// `symbol` substitui o símbolo do módulo (ex.: um visto no ecrã de conclusão).
+/// The modules' illustration: the icon's leaf, with the module's symbol cut out in the middle.
+/// With `swaying`, the leaf sways slowly (the app's only continuous motion, during scans).
+/// `symbol` replaces the module's symbol (e.g. a checkmark on the completion screen).
 struct ModuleArtwork: View {
     let module: Module
     var symbol: String?
@@ -119,7 +119,7 @@ struct ModuleArtwork: View {
         .onAppear {
             guard swaying, !reduceMotion else { return }
             tilt = -4
-            // Fora da transação de layout inicial, para não animar a posição da vista.
+            // Outside the initial layout transaction, so the view's position is not animated.
             DispatchQueue.main.async {
                 withAnimation(.easeInOut(duration: 1.8).repeatForever(autoreverses: true)) { tilt = 4 }
             }
@@ -127,7 +127,7 @@ struct ModuleArtwork: View {
     }
 }
 
-/// A folha da marca sozinha, sem fundo: a única folha usada na app (consentimento, barra de menus…).
+/// The brand's leaf on its own, without a background: the only leaf used in the app (consent, menu bar…).
 struct LeafMark: View {
     var size: CGFloat
     var color: Color = Theme.accent
@@ -136,18 +136,18 @@ struct LeafMark: View {
             LeafShape().fill(color)
             LeafShape().stroke(color, style: StrokeStyle(lineWidth: size * 0.022, lineCap: .round))
         }
-        // A forma ocupa ~75% do quadrado (como no ícone); amplia para preencher o tamanho pedido.
+        // The shape fills ~75% of the square (as in the icon); scales up to fill the requested size.
         .scaleEffect(1.3)
         .frame(width: size, height: size)
         .accessibilityHidden(true)
     }
 }
 
-/// A folha do ícone (scripts/make_icon.swift), num quadrado unitário: ponta em cima à direita, pé em baixo à esquerda.
+/// The icon's leaf (scripts/make_icon.swift), in a unit square: tip at the top right, stem at the bottom left.
 struct LeafShape: Shape {
     func path(in rect: CGRect) -> Path {
         let s = min(rect.width, rect.height)
-        // Mesma geometria do ícone, numa grelha de 1024 com a folha a ocupar a área útil de 824.
+        // Same geometry as the icon, on a 1024 grid with the leaf filling the 824 usable area.
         let k = s / 824
         let L = 235 * k, W = 132 * k
         var leaf = Path()
@@ -155,7 +155,7 @@ struct LeafShape: Shape {
         leaf.addCurve(to: CGPoint(x: L, y: 0), control1: CGPoint(x: -L * 0.55, y: W * 1.25), control2: CGPoint(x: L * 0.45, y: W * 0.95))
         leaf.addCurve(to: CGPoint(x: -L, y: 0), control1: CGPoint(x: L * 0.45, y: -W * 0.95), control2: CGPoint(x: -L * 0.55, y: -W * 1.25))
         leaf.closeSubpath()
-        // Pé, como um segmento fino (o traço é desenhado por quem usa a forma).
+        // Stem, as a thin segment (the stroke is drawn by whoever uses the shape).
         leaf.move(to: CGPoint(x: -L + 20 * k, y: 0))
         leaf.addLine(to: CGPoint(x: -L - 85 * k, y: 0))
         let t = CGAffineTransform(translationX: rect.midX, y: rect.midY).rotated(by: -.pi / 4)
@@ -163,7 +163,7 @@ struct LeafShape: Shape {
     }
 }
 
-/// Botão principal: cápsula cor de tinta (marfim no modo escuro).
+/// Main button: ink-colored capsule (ivory in dark mode).
 struct BigActionButton: View {
     let title: String
     var disabled = false
@@ -202,7 +202,7 @@ struct ScanningView: View {
                 .frame(maxWidth: 560)
                 .padding(.top, 8)
             if let onCancel {
-                Button("Parar", action: onCancel).buttonStyle(.bordered).padding(.top, 20)
+                Button("Stop", action: onCancel).buttonStyle(.bordered).padding(.top, 20)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -224,21 +224,25 @@ struct DoneView: View {
             Text(message).font(.title3).foregroundStyle(.secondary).multilineTextAlignment(.center).padding(.top, 10)
             if failedCount > 0 {
                 VStack(spacing: 8) {
-                    Text("\(Fmt.count(failedCount, "item não foi removido", "itens não foram removidos")): em uso ou protegidos.")
+                    Text("\(failedSummary): in use or protected.")
                         .font(.callout).foregroundStyle(.secondary)
                     if let onRetryAdmin {
-                        Button("Tentar com privilégios de administrador", action: onRetryAdmin).buttonStyle(.bordered)
+                        Button("Try with administrator privileges", action: onRetryAdmin).buttonStyle(.bordered)
                     }
                 }
                 .padding(.top, 16)
             }
-            Button("Voltar", action: onBack).buttonStyle(.bordered).controlSize(.large).padding(.top, 28)
+            Button("Back", action: onBack).buttonStyle(.bordered).controlSize(.large).padding(.top, 28)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
+
+    private var failedSummary: String {
+        Fmt.count(failedCount, String(localized: "item was not removed"), String(localized: "items were not removed"))
+    }
 }
 
-/// Barra inferior com total selecionado e botão principal.
+/// Bottom bar with the selected total and the main button.
 struct ActionFooter: View {
     let summary: String
     let buttonTitle: String

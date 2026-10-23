@@ -8,26 +8,26 @@ struct DashboardView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            ModuleHeader(module: .dashboard, subtitle: "\(Host.current().localizedName ?? "Mac"), ligado há \(stats.uptimeText)")
+            ModuleHeader(module: .dashboard, subtitle: String(localized: "\(Host.current().localizedName ?? "Mac"), up for \(stats.uptimeText)"))
             ScrollView {
                 VStack(spacing: 16) {
                     HStack(spacing: 16) {
-                        gaugeCard(title: "Disco", value: stats.diskUsedFraction, icon: "internaldrive",
-                                  lines: ["\(Fmt.bytes(stats.diskFree)) livres", "de \(Fmt.bytes(stats.diskTotal))"]) {
-                            Button("Libertar espaço") { state.selection = .systemJunk }.buttonStyle(.bordered)
+                        gaugeCard(title: String(localized: "Disk"), value: stats.diskUsedFraction, icon: "internaldrive",
+                                  lines: [String(localized: "\(Fmt.bytes(stats.diskFree)) free"), String(localized: "of \(Fmt.bytes(stats.diskTotal))")]) {
+                            Button("Free up space") { state.selection = .systemJunk }.buttonStyle(.bordered)
                         }
-                        gaugeCard(title: "Memória", value: stats.memoryFraction, icon: "memorychip",
-                                  lines: ["\(Fmt.bytes(stats.memoryUsed)) usados", "de \(Fmt.bytes(stats.memoryTotal)) · swap \(Fmt.bytes(stats.swapUsed))"]) {
-                            Button("Ver processos") {
+                        gaugeCard(title: String(localized: "Memory"), value: stats.memoryFraction, icon: "memorychip",
+                                  lines: [String(localized: "\(Fmt.bytes(stats.memoryUsed)) used"), String(localized: "of \(Fmt.bytes(stats.memoryTotal)) · swap \(Fmt.bytes(stats.swapUsed))")]) {
+                            Button("View processes") {
                                 state.optimization.tab = .heavy
                                 state.optimization.sortByMemory = true
                                 state.selection = .optimization
                             }
                             .buttonStyle(.bordered)
                         }
-                        gaugeCard(title: "Processador", value: stats.cpu, icon: "cpu",
-                                  lines: ["Temperatura: \(stats.thermalText)", "\(ProcessInfo.processInfo.activeProcessorCount) núcleos"]) {
-                            Button("Ver processos") {
+                        gaugeCard(title: String(localized: "Processor"), value: stats.cpu, icon: "cpu",
+                                  lines: [String(localized: "Temperature: \(stats.thermalText)"), String(localized: "\(ProcessInfo.processInfo.activeProcessorCount) cores")]) {
+                            Button("View processes") {
                                 state.optimization.tab = .heavy
                                 state.selection = .optimization
                             }.buttonStyle(.bordered)
@@ -37,7 +37,7 @@ struct DashboardView: View {
                     HStack(spacing: 16) {
                         GlassPanel {
                             VStack(alignment: .leading, spacing: 10) {
-                                Label("Carga do processador", systemImage: "waveform.path.ecg").font(.headline)
+                                Label("Processor load", systemImage: "waveform.path.ecg").font(.headline)
                                 Sparkline(values: stats.cpuHistory).frame(height: 90)
                                 HStack {
                                     Label(SystemStats.speed(stats.netDown), systemImage: "arrow.down")
@@ -58,7 +58,7 @@ struct DashboardView: View {
             }
         }
         .task { await refreshSecurity() }
-        // Ao voltar das Definições (ex.: depois de ligar a Firewall), atualiza o estado.
+        // When coming back from Settings (e.g. after turning on the Firewall), refreshes the state.
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
             Task { await refreshSecurity() }
         }
@@ -87,18 +87,18 @@ struct DashboardView: View {
     private var batteryCard: some View {
         GlassPanel {
             VStack(alignment: .leading, spacing: 10) {
-                Label("Bateria", systemImage: batteryIcon).font(.headline)
+                Label("Battery", systemImage: batteryIcon).font(.headline)
                 if let b = stats.battery {
                     HStack(alignment: .firstTextBaseline) {
                         Text("\(b.percent)%").font(Theme.display(34)).monospacedDigit()
-                        Text(b.charging ? "a carregar" : (b.pluggedIn ? "ligado à corrente" : b.minutesRemaining.map { "\($0 / 60) h \($0 % 60) min restantes" } ?? "em bateria"))
+                        Text(batteryState(b))
                             .foregroundStyle(.secondary)
                     }
-                    if let h = b.health { row("Saúde", Fmt.percent(h)) }
-                    if let c = b.cycleCount { row("Ciclos", "\(c)") }
-                    if let cond = b.condition { row("Estado", cond == "Good" ? "Bom" : cond) }
+                    if let h = b.health { row(String(localized: "Health"), Fmt.percent(h)) }
+                    if let c = b.cycleCount { row(String(localized: "Cycles"), "\(c)") }
+                    if let cond = b.condition { row(String(localized: "Condition"), cond == "Good" ? String(localized: "Good") : cond) }
                 } else {
-                    Text("Sem bateria").foregroundStyle(.secondary)
+                    Text("No battery").foregroundStyle(.secondary)
                 }
                 Spacer(minLength: 0)
             }
@@ -106,6 +106,13 @@ struct DashboardView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
         }
         .frame(maxWidth: 320)
+    }
+
+    private func batteryState(_ b: BatteryInfo) -> String {
+        if b.charging { return String(localized: "charging") }
+        if b.pluggedIn { return String(localized: "plugged in") }
+        if let m = b.minutesRemaining { return String(localized: "\(m / 60) h \(m % 60) min remaining") }
+        return String(localized: "on battery")
     }
 
     private var batteryIcon: String {
@@ -128,9 +135,9 @@ struct DashboardView: View {
         GlassPanel {
             VStack(alignment: .leading, spacing: 12) {
                 HStack {
-                    Label("Proteções do macOS", systemImage: "lock.shield").font(.headline)
+                    Label("macOS protections", systemImage: "lock.shield").font(.headline)
                     if let s = security {
-                        Text(s.disabledCount == 0 ? "Todas ativas" : "\(s.activeCount) de \(s.items.count) ativas")
+                        Text(s.disabledCount == 0 ? "All on" : "\(s.activeCount) of \(s.items.count) on")
                             .font(.caption.bold())
                             .padding(.horizontal, 8).padding(.vertical, 3)
                             .background((s.disabledCount == 0 ? Theme.leaf : Theme.amber).opacity(0.25), in: Capsule())
@@ -139,7 +146,7 @@ struct DashboardView: View {
                     Button {
                         Task { await refreshSecurity() }
                     } label: {
-                        if checkingSecurity { ProgressView().controlSize(.small) } else { Label("Atualizar", systemImage: "arrow.clockwise") }
+                        if checkingSecurity { ProgressView().controlSize(.small) } else { Label("Refresh", systemImage: "arrow.clockwise") }
                     }
                     .buttonStyle(.bordered)
                     .disabled(checkingSecurity)
@@ -149,7 +156,7 @@ struct DashboardView: View {
                 }
                 HStack(spacing: 6) {
                     if let xp = security?.xprotectVersion { Text("XProtect \(xp)") }
-                    if let date = security?.checked { Text("· verificado \(Fmt.relative(date))") }
+                    if let date = security?.checked { Text("· checked \(Fmt.relative(date))") }
                 }
                 .font(.caption).foregroundStyle(.secondary)
             }
@@ -165,14 +172,14 @@ struct DashboardView: View {
                     .foregroundStyle(on == nil ? Color.secondary : (on! ? Theme.leaf : Theme.amber))
                 VStack(alignment: .leading, spacing: 1) {
                     Text(item.title).font(.callout.bold())
-                    Text(on == nil ? "A verificar…" : (on! ? "Ativo" : "Desativado")).font(.caption)
+                    Text(on == nil ? "Checking…" : (on! ? "On" : "Off")).font(.caption)
                         .foregroundStyle(on == false ? Theme.amber : Color.secondary)
                 }
             }
             Text(item.detail).font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
             if on == false {
                 if let url = item.settingsURL {
-                    Button("Ativar nas Definições…") { SystemProtection.openSettings(url) }
+                    Button("Turn on in Settings…") { SystemProtection.openSettings(url) }
                         .buttonStyle(.bordered).controlSize(.small)
                 } else if let how = item.howToEnable {
                     Text(how).font(.caption2).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)

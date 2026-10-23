@@ -30,17 +30,23 @@ struct PluginFile: Identifiable {
 }
 
 enum ExtensionCategory: String, CaseIterable, Identifiable {
-    case safari = "Safari"
-    case browsers = "Outros navegadores"
-    case share = "Partilha"
-    case finder = "Finder"
-    case widgets = "Widgets"
-    case quicklook = "Quick Look"
-    case spotlight = "Spotlight"
-    case prefPanes = "Painéis de preferências"
-    case plugins = "Plug-ins da Internet"
-    case other = "Outras"
+    case safari, browsers, share, finder, widgets, quicklook, spotlight, prefPanes, plugins, other
     var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .safari: "Safari"
+        case .browsers: String(localized: "Other browsers")
+        case .share: String(localized: "Sharing")
+        case .finder: "Finder"
+        case .widgets: String(localized: "Widgets")
+        case .quicklook: "Quick Look"
+        case .spotlight: "Spotlight"
+        case .prefPanes: String(localized: "Preference panes")
+        case .plugins: String(localized: "Internet plug-ins")
+        case .other: String(localized: "Other")
+        }
+    }
 
     var icon: String {
         switch self {
@@ -114,14 +120,14 @@ enum ExtensionService {
 
     static func pluginFiles() -> [ExtensionCategory: [PluginFile]] {
         let dirs: [(String, ExtensionCategory, String)] = [
-            ("/Library/PreferencePanes", .prefPanes, "Painel de preferências"),
-            ("~/Library/PreferencePanes", .prefPanes, "Painel de preferências"),
+            ("/Library/PreferencePanes", .prefPanes, String(localized: "Preference pane")),
+            ("~/Library/PreferencePanes", .prefPanes, String(localized: "Preference pane")),
             ("/Library/Internet Plug-Ins", .plugins, "Plug-in"),
             ("~/Library/Internet Plug-Ins", .plugins, "Plug-in"),
-            ("/Library/Spotlight", .spotlight, "Importador do Spotlight"),
-            ("~/Library/Spotlight", .spotlight, "Importador do Spotlight"),
-            ("/Library/QuickLook", .quicklook, "Gerador Quick Look"),
-            ("~/Library/QuickLook", .quicklook, "Gerador Quick Look"),
+            ("/Library/Spotlight", .spotlight, String(localized: "Spotlight importer")),
+            ("~/Library/Spotlight", .spotlight, String(localized: "Spotlight importer")),
+            ("/Library/QuickLook", .quicklook, String(localized: "Quick Look generator")),
+            ("~/Library/QuickLook", .quicklook, String(localized: "Quick Look generator")),
         ]
         var result: [ExtensionCategory: [PluginFile]] = [:]
         for (path, cat, kind) in dirs {
@@ -181,7 +187,8 @@ enum BrowserExtensions {
     private static func localized(_ name: String, dir: URL, manifest: [String: Any]) -> String {
         guard name.hasPrefix("__MSG_"), name.hasSuffix("__") else { return name }
         let key = String(name.dropFirst(6).dropLast(2)).lowercased()
-        let locales = [manifest["default_locale"] as? String, "pt_PT", "pt_BR", "pt", "en", "en_US"].compactMap { $0 }
+        let app = Bundle.main.preferredLocalizations.first?.replacingOccurrences(of: "-", with: "_")
+        let locales = [app, manifest["default_locale"] as? String, "en", "en_US"].compactMap { $0 }
         for loc in locales {
             guard let data = try? Data(contentsOf: dir.appendingPathComponent("_locales/\(loc)/messages.json")),
                   let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { continue }

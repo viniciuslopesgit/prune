@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Anel de percentagem (usado no Painel e na barra de menus).
+/// Percentage ring (used in the Dashboard and the menu bar).
 struct RingGauge: View {
     let value: Double
     var lineWidth: CGFloat = 10

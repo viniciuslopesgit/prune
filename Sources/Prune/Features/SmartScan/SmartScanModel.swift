@@ -1,7 +1,7 @@
 import Foundation
 import Observation
 
-/// Análise Inteligente: limpeza + estado das proteções num só clique.
+/// Smart Scan: cleanup + protection status in a single click.
 @MainActor
 @Observable
 final class SmartScanModel {
@@ -21,14 +21,14 @@ final class SmartScanModel {
         phase = .scanning
         let reporter = ProgressReporter { [weak self] in self?.progressText = $0 }
 
-        step = "Limpeza"
+        step = String(localized: "Cleanup")
         let junk = await Task.detached {
             await SystemJunkScanner.scan(reporter) + TrashScanner.scan(reporter)
         }.value
         self.junk = junk.filter { $0.selectedSize > 0 }
 
-        step = "Proteção"
-        progressText = "A verificar as proteções do macOS…"
+        step = String(localized: "Protection")
+        progressText = String(localized: "Checking macOS protections…")
         security = await SystemProtection.status()
 
         runCleanup = !self.junk.isEmpty
@@ -41,7 +41,7 @@ final class SmartScanModel {
         phase = .running
         cleanReport = CleanReport()
         if runCleanup {
-            step = "A limpar…"
+            step = String(localized: "Cleaning…")
             for cat in junk {
                 let items = cat.items.filter(\.selected)
                 progressText = cat.name

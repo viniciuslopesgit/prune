@@ -10,12 +10,12 @@ struct UninstallerView: View {
         @Bindable var model = state.uninstaller
         VStack(spacing: 0) {
             ModuleHeader(module: .uninstaller, subtitle: model.loaded ? "\(Fmt.count(model.apps.count, "app", "apps")) · \(Fmt.bytes(model.apps.reduce(0) { $0 + $1.size }))" : nil) {
-                TextField("Procurar", text: $model.search).textFieldStyle(.roundedBorder).frame(width: 200)
+                TextField("Search", text: $model.search).textFieldStyle(.roundedBorder).frame(width: 200)
                 Button { Task { await model.load() } } label: { Image(systemName: "arrow.clockwise") }.buttonStyle(.bordered)
             }
             Picker("", selection: $model.filter) {
                 ForEach(UninstallerModel.Filter.allCases) { f in
-                    Text(f == .leftovers && !model.orphans.isEmpty ? "\(f.rawValue) (\(model.orphans.count))" : f.rawValue).tag(f)
+                    Text(f == .leftovers && !model.orphans.isEmpty ? "\(f.title) (\(model.orphans.count))" : f.title).tag(f)
                 }
             }
             .pickerStyle(.segmented).labelsHidden().padding(.horizontal, 32).padding(.bottom, 10)
@@ -26,7 +26,7 @@ struct UninstallerView: View {
             }
 
             if model.loading {
-                ScanningView(module: .uninstaller, title: "A procurar aplicações…", detail: "")
+                ScanningView(module: .uninstaller, title: String(localized: "Looking for applications…"), detail: "")
             } else if model.filter == .leftovers {
                 orphans(model)
             } else {
@@ -37,9 +37,9 @@ struct UninstallerView: View {
                 .padding(.horizontal, 32).padding(.bottom, 14)
                 if !model.checked.isEmpty {
                     ActionFooter(summary: "\(Fmt.count(model.checked.count, "app", "apps")) · \(Fmt.bytes(model.checked.reduce(0) { $0 + $1.size }))",
-                                 buttonTitle: "Desinstalar", disabled: model.working) { confirmBatch = true }
-                        .confirm("Desinstalar \(Fmt.count(model.checked.count, "app", "apps"))?", isPresented: $confirmBatch,
-                                 message: "As apps e os ficheiros de suporte são removidos.", button: "Desinstalar") {
+                                 buttonTitle: String(localized: "Uninstall"), disabled: model.working) { confirmBatch = true }
+                        .confirm(String(localized: "Uninstall \(Fmt.count(model.checked.count, "app", "apps"))?"), isPresented: $confirmBatch,
+                                 message: String(localized: "The apps and their support files are removed."), button: String(localized: "Uninstall")) {
                             Task { await model.uninstall(Array(model.checked), leftoversFor: [:]) }
                         }
                 }
@@ -60,7 +60,7 @@ struct UninstallerView: View {
                         Text(app.name).lineLimit(1)
                         if app.isAppStore { Pill(text: "App Store") }
                     }
-                    Text("Usada \(Fmt.relative(app.lastUsed))").font(.caption).foregroundStyle(.secondary)
+                    Text("Used \(Fmt.relative(app.lastUsed))").font(.caption).foregroundStyle(.secondary)
                 }
                 Spacer()
                 SizeLabel(bytes: app.size).font(.callout)
@@ -84,7 +84,7 @@ struct UninstallerView: View {
                     FileIcon(url: app.url, size: 64)
                     VStack(alignment: .leading, spacing: 3) {
                         Text(app.name).font(.title2.bold())
-                        Text("Versão \(app.version) · \(app.vendor)").foregroundStyle(.secondary)
+                        Text("Version \(app.version) · \(app.vendor)").foregroundStyle(.secondary)
                         Text(app.bundleID).font(.caption).foregroundStyle(.tertiary)
                     }
                     Spacer()
@@ -95,7 +95,7 @@ struct UninstallerView: View {
                     ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else {
                     List {
-                        Section("Aplicação") {
+                        Section("Application") {
                             HStack {
                                 FileIcon(url: app.url, size: 22)
                                 Text(app.url.lastPathComponent)
@@ -105,7 +105,7 @@ struct UninstallerView: View {
                             }
                             .listRowBackground(Color.clear)
                         }
-                        Section("Ficheiros de suporte (\(model.leftovers.count))") {
+                        Section("Support files (\(model.leftovers.count))") {
                             ForEach($model.leftovers) { $item in
                                 HStack {
                                     CheckBox(state: item.selected) { item.selected.toggle() }
@@ -129,25 +129,25 @@ struct UninstallerView: View {
                     let extra = model.leftovers.filter(\.selected).reduce(0) { $0 + $1.size }
                     Text("Total: \(Fmt.bytes(app.size + extra))").font(.headline)
                     Spacer()
-                    Button("Repor") { confirmReset = true }
+                    Button("Reset") { confirmReset = true }
                         .buttonStyle(.bordered).disabled(model.leftovers.filter(\.selected).isEmpty || model.working)
-                        .help("Apaga preferências e dados. A app fica como nova.")
-                    Button("Desinstalar") { confirmUninstall = true }
+                        .help("Deletes preferences and data. The app is like new.")
+                    Button("Uninstall") { confirmUninstall = true }
                         .buttonStyle(.borderedProminent).tint(.red.opacity(0.7)).disabled(model.working)
                 }
                 .padding(14)
             }
-            .confirm("Desinstalar \(app.name)?", isPresented: $confirmUninstall,
-                     message: "A app e os ficheiros de suporte selecionados são removidos.", button: "Desinstalar") {
+            .confirm(String(localized: "Uninstall \(app.name)?"), isPresented: $confirmUninstall,
+                     message: String(localized: "The app and the selected support files are removed."), button: String(localized: "Uninstall")) {
                 Task { await model.uninstall([app], leftoversFor: [app: model.leftovers]) }
             }
-            .confirm("Repor \(app.name)?", isPresented: $confirmReset,
-                     message: "As preferências e os dados são apagados. A app continua instalada.", button: "Repor") {
+            .confirm(String(localized: "Reset \(app.name)?"), isPresented: $confirmReset,
+                     message: String(localized: "Preferences and data are deleted. The app stays installed."), button: String(localized: "Reset")) {
                 Task { await model.reset(app) }
             }
         } else {
-            EmptyStateView(icon: "xmark.app", title: "Escolha uma aplicação",
-                           message: "Veja todos os ficheiros da app e remova-a por completo.")
+            EmptyStateView(icon: "xmark.app", title: String(localized: "Choose an application"),
+                           message: String(localized: "See all of the app's files and remove it completely."))
         }
     }
 
@@ -156,7 +156,7 @@ struct UninstallerView: View {
         @Bindable var model = model
         GlassPanel {
             if model.orphans.isEmpty {
-                EmptyStateView(icon: "checkmark.circle", title: "Sem restos de apps removidas")
+                EmptyStateView(icon: "checkmark.circle", title: String(localized: "No leftovers from removed apps"))
             } else {
                 List {
                     Section {
@@ -175,7 +175,7 @@ struct UninstallerView: View {
                             .listRowBackground(Color.clear)
                         }
                     } header: {
-                        Text("Ficheiros de apps que já não estão instaladas. Reveja antes de remover.")
+                        Text("Files from apps that are no longer installed. Review before removing.")
                     }
                 }
                 .scrollContentBackground(.hidden)
@@ -183,7 +183,7 @@ struct UninstallerView: View {
         }
         .padding(.horizontal, 32).padding(.bottom, 14)
         ActionFooter(summary: "\(Fmt.bytes(model.orphans.filter(\.selected).reduce(0) { $0 + $1.size }))",
-                     buttonTitle: "Remover", disabled: !model.orphans.contains(where: \.selected) || model.working) {
+                     buttonTitle: String(localized: "Remove"), disabled: !model.orphans.contains(where: \.selected) || model.working) {
             Task { await model.removeOrphans() }
         }
     }

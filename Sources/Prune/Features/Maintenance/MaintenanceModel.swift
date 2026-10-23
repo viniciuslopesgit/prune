@@ -14,7 +14,7 @@ final class MaintenanceModel {
     private let defaults = UserDefaults.standard
 
     init() {
-        // Por defeito só tarefas que não pedem palavra-passe.
+        // By default, only tasks that do not ask for a password.
         selected = Set(recommended.filter { !$0.requiresAdmin }.map(\.id))
     }
 
@@ -36,7 +36,7 @@ final class MaintenanceModel {
 
         for t in tasks where !t.requiresAdmin {
             if let bundle = t.requiresClosed, !NSRunningApplication.runningApplications(withBundleIdentifier: bundle).isEmpty {
-                states[t.id] = .failed("Feche a app primeiro")
+                states[t.id] = .failed(String(localized: "Quit the app first"))
                 continue
             }
             let r = await Shell.zsh(t.command)
@@ -45,18 +45,18 @@ final class MaintenanceModel {
 
         let admin = tasks.filter(\.requiresAdmin)
         if !admin.isEmpty {
-            // Um único pedido de palavra-passe para todas as tarefas de administrador.
+            // A single password prompt for every administrator task.
             let script = admin.map { "(\($0.command)) >/dev/null 2>&1; echo \"\($0.id):$?\"" }.joined(separator: "; ")
             let r = await Shell.admin(script)
             if !r.ok && r.out.isEmpty {
-                for t in admin { states[t.id] = .failed(r.err.contains("-128") ? "Cancelado" : "Sem autorização") }
+                for t in admin { states[t.id] = .failed(r.err.contains("-128") ? String(localized: "Cancelled") : String(localized: "Not authorized")) }
             } else {
                 var codes: [String: String] = [:]
                 for line in r.out.split(separator: "\n") {
                     let p = line.split(separator: ":")
                     if p.count == 2 { codes[String(p[0])] = String(p[1]) }
                 }
-                for t in admin { finish(t, ok: codes[t.id] == "0", error: "Código \(codes[t.id] ?? "?")") }
+                for t in admin { finish(t, ok: codes[t.id] == "0", error: String(localized: "Code \(codes[t.id] ?? "?")")) }
             }
         }
         running = false

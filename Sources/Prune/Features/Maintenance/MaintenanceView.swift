@@ -6,7 +6,7 @@ struct MaintenanceView: View {
     var body: some View {
         @Bindable var model = state.maintenance
         VStack(spacing: 0) {
-            ModuleHeader(module: .maintenance, subtitle: "Tarefas para manter o macOS estável")
+            ModuleHeader(module: .maintenance, subtitle: String(localized: "Tasks to keep macOS stable"))
             HStack(spacing: 14) {
                 GlassPanel {
                     List {
@@ -21,10 +21,10 @@ struct MaintenanceView: View {
                                         Text(t.title)
                                         if t.requiresAdmin {
                                             Image(systemName: "lock.fill").font(.caption2).foregroundStyle(.secondary)
-                                                .help("Pede a palavra-passe de administrador")
+                                                .help("Asks for the administrator password")
                                         }
                                     }
-                                    Text("Última execução: \(Fmt.relative(model.lastRun(t.id)))").font(.caption).foregroundStyle(.secondary)
+                                    Text("Last run: \(Fmt.relative(model.lastRun(t.id)))").font(.caption).foregroundStyle(.secondary)
                                 }
                                 Spacer()
                                 stateIcon(model.states[t.id])
@@ -48,10 +48,10 @@ struct MaintenanceView: View {
                             Text(t.title).font(.title.bold())
                             Text(t.description).font(.title3).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
                             if t.requiresAdmin {
-                                Label("Requer a palavra-passe de administrador", systemImage: "lock").font(.callout).foregroundStyle(.secondary)
+                                Label("Requires the administrator password", systemImage: "lock").font(.callout).foregroundStyle(.secondary)
                             }
                             if t.recommendedDays > 0 {
-                                Label("Recomendado a cada \(Fmt.count(t.recommendedDays, "dia", "dias"))", systemImage: "calendar").font(.callout).foregroundStyle(.secondary)
+                                Label("Recommended every \(Fmt.count(t.recommendedDays, String(localized: "day"), String(localized: "days")))", systemImage: "calendar").font(.callout).foregroundStyle(.secondary)
                             }
                             if case .failed(let e) = model.states[t.id] {
                                 Label(e, systemImage: "xmark.octagon").foregroundStyle(Theme.amber)
@@ -64,9 +64,10 @@ struct MaintenanceView: View {
                 }
             }
             .padding(.horizontal, 32).padding(.bottom, 14)
-            ActionFooter(summary: Fmt.count(model.selected.count, "tarefa selecionada", "tarefas selecionadas"), buttonTitle: model.running ? "A executar…" : "Executar",
+            ActionFooter(summary: Fmt.count(model.selected.count, String(localized: "task selected"), String(localized: "tasks selected")),
+                         buttonTitle: model.running ? String(localized: "Running…") : String(localized: "Run"),
                          disabled: model.selected.isEmpty || model.running,
-                         secondary: ("Recomendadas", { model.selected = Set(model.recommended.filter { !$0.requiresAdmin }.map(\.id)) })) {
+                         secondary: (String(localized: "Recommended"), { model.selected = Set(model.recommended.filter { !$0.requiresAdmin }.map(\.id)) })) {
                 Task { await model.run(model.selected) }
             }
         }

@@ -1,7 +1,16 @@
 import AppKit
 
 struct AppUpdate: Identifiable {
-    enum Source: String { case sparkle = "Site do programador", homebrew = "Homebrew", homebrewFormula = "Homebrew (CLI)" }
+    enum Source: String {
+        case sparkle, homebrew, homebrewFormula
+        var title: String {
+            switch self {
+            case .sparkle: String(localized: "Developer's website")
+            case .homebrew: "Homebrew"
+            case .homebrewFormula: "Homebrew (CLI)"
+            }
+        }
+    }
     var id: String { source.rawValue + name }
     let name: String
     let current: String
@@ -14,7 +23,7 @@ struct AppUpdate: Identifiable {
     var selected = true
 }
 
-/// Lê appcasts Sparkle (usados pela maioria das apps fora da App Store).
+/// Reads Sparkle appcasts (used by most apps outside the App Store).
 final class AppcastParser: NSObject, XMLParserDelegate {
     struct Item { var short: String?; var build: String?; var url: String?; var notes: String?; var channel: String?; var minOS: String? }
     private var items: [Item] = []
@@ -58,7 +67,7 @@ final class AppcastParser: NSObject, XMLParserDelegate {
 }
 
 enum Version {
-    /// Compara versões numericamente ("1.10.2" > "1.9").
+    /// Compares versions numerically ("1.10.2" > "1.9").
     static func isNewer(_ a: String, than b: String) -> Bool {
         let pa = numbers(a), pb = numbers(b)
         guard !pa.isEmpty, !pb.isEmpty else { return false }
@@ -81,7 +90,7 @@ enum UpdateService {
             for app in apps {
                 guard let feed = app.feedURL, let url = URL(string: feed), url.scheme?.hasPrefix("http") == true else { continue }
                 group.addTask {
-                    progress.report("A verificar \(app.name)…")
+                    progress.report(String(localized: "Checking \(app.name)…"))
                     var req = URLRequest(url: url, timeoutInterval: 15)
                     req.setValue("Prune/1.0 Sparkle", forHTTPHeaderField: "User-Agent")
                     guard let (data, _) = try? await URLSession.shared.data(for: req) else { return nil }
@@ -90,7 +99,7 @@ enum UpdateService {
                     let items = AppcastParser.parse(data).filter { item in
                         item.channel == nil && (item.minOS.map { !Version.isNewer($0, than: osString) } ?? true)
                     }
-                    // Escolhe a versão mais recente do appcast.
+                    // Picks the most recent version in the appcast.
                     let best = items.max { a, b in
                         let va = a.build ?? a.short ?? "", vb = b.build ?? b.short ?? ""
                         return Version.isNewer(vb, than: va)

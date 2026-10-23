@@ -41,22 +41,22 @@ final class ExtensionsModel {
     func toggle(_ ext: SystemExtension) async {
         let ok = await ExtensionService.setEnabled(ext, !ext.enabled)
         if ok, let i = system.firstIndex(where: { $0.id == ext.id }) { system[i].enabled.toggle() }
-        if !ok { message = "Não foi possível alterar \(ext.name)." }
+        if !ok { message = String(localized: "Could not change \(ext.name).") }
     }
 
     func remove(_ ext: BrowserExtension) async {
         let bundleIDs = PrivacyScanner.browserBundleIDs.filter { ext.browser.hasPrefix($0.value) }.map(\.key)
         if bundleIDs.contains(where: { !NSRunningApplication.runningApplications(withBundleIdentifier: $0).isEmpty }) {
-            message = "Feche o \(ext.browser) para remover a extensão."
+            message = String(localized: "Quit \(ext.browser) to remove the extension.")
             return
         }
         let r = await Cleaner.remove(urls: [ext.url], mode: .trash)
-        if r.failed.isEmpty { browser.removeAll { $0.id == ext.id } } else { message = "Não foi possível remover \(ext.name)." }
+        if r.failed.isEmpty { browser.removeAll { $0.id == ext.id } } else { message = String(localized: "Could not remove \(ext.name).") }
     }
 
     func remove(_ file: PluginFile, category: ExtensionCategory) async {
         var r = await Cleaner.remove(urls: [file.url], mode: .trash)
         if !r.failed.isEmpty { r = await Cleaner.retryAsAdmin([file.url], mode: .trash) }
-        if r.failed.isEmpty { files[category]?.removeAll { $0.id == file.id } } else { message = "Não foi possível remover \(file.url.lastPathComponent)." }
+        if r.failed.isEmpty { files[category]?.removeAll { $0.id == file.id } } else { message = String(localized: "Could not remove \(file.url.lastPathComponent).") }
     }
 }

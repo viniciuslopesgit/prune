@@ -1,6 +1,6 @@
 import Foundation
 
-/// Um item que pode ser limpo (ficheiro, pasta ou ação personalizada).
+/// An item that can be cleaned (file, folder or custom action).
 struct CleanItem: Identifiable {
     let id = UUID()
     var url: URL
@@ -8,7 +8,7 @@ struct CleanItem: Identifiable {
     var size: Int64
     var selected: Bool
     var detail: String?
-    /// Ação alternativa à remoção (ex.: limpar histórico numa base SQLite).
+    /// Alternative action to removal (e.g. clearing history in an SQLite database).
     var customAction: (@Sendable () async -> Bool)?
 
     init(url: URL, name: String? = nil, size: Int64, selected: Bool = true, detail: String? = nil,

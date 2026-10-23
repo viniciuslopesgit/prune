@@ -1,6 +1,6 @@
 import Foundation
 
-/// Impede que a app apague pastas críticas do sistema ou do utilizador.
+/// Stops the app from deleting critical system or user folders.
 enum SafetyGuard {
     private static let protectedExact: Set<String> = {
         let h = home.path
@@ -35,14 +35,14 @@ enum SafetyGuard {
     static func canDelete(_ url: URL) -> Bool {
         let path = url.standardizedFileURL.path
         guard !path.isEmpty else { return false }
-        // Verifica o caminho tal como foi pedido e com a pasta-mãe resolvida (/var, /tmp e /etc são
-        // ligações para /private/…). O último componente não é resolvido: apagar uma ligação não toca no destino.
+        // Checks the path as requested and with the parent folder resolved (/var, /tmp and /etc are
+        // links to /private/…). The last component is not resolved: deleting a link does not touch its target.
         let parent = url.standardizedFileURL.deletingLastPathComponent().path
         let resolved = URL(fileURLWithPath: realPath(parent) ?? parent).appendingPathComponent(url.lastPathComponent).path
         return [path, resolved].allSatisfy(isAllowed)
     }
 
-    /// `realpath(3)`: ao contrário de `resolvingSymlinksInPath()`, mantém o prefixo /private.
+    /// `realpath(3)`: unlike `resolvingSymlinksInPath()`, keeps the /private prefix.
     private static func realPath(_ path: String) -> String? {
         guard let resolved = realpath(path, nil) else { return nil }
         defer { free(resolved) }

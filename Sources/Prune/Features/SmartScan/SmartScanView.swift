@@ -11,23 +11,23 @@ struct SmartScanView: View {
                 ModuleHeader(module: .smartScan)
                 HeroView(
                     module: .smartScan,
-                    headline: "Bem-vindo ao Prune",
-                    message: "Lixo para limpar e estado das proteções do macOS, num clique.",
-                    features: [("externaldrive.badge.xmark", "Caches, registos e Lixo"),
-                               ("checkmark.shield", "Estado das proteções do macOS")]
+                    headline: String(localized: "Welcome to Prune"),
+                    message: String(localized: "Junk to clean and the state of macOS protections, in one click."),
+                    features: [("externaldrive.badge.xmark", String(localized: "Caches, logs and Trash")),
+                               ("checkmark.shield", String(localized: "State of macOS protections"))]
                 ) {
                     Task { await model.scan() }
                 }
             case .scanning:
-                ScanningView(module: .smartScan, title: "A analisar: \(model.step)", detail: model.progressText)
+                ScanningView(module: .smartScan, title: String(localized: "Scanning: \(model.step)"), detail: model.progressText)
             case .running:
                 ScanningView(module: .smartScan, title: model.step, detail: model.progressText)
             case .results:
-                ModuleHeader(module: .smartScan, subtitle: "Análise concluída")
+                ModuleHeader(module: .smartScan, subtitle: String(localized: "Scan complete"))
                 results(model)
             case .done:
                 DoneView(
-                    module: .smartScan, title: "O seu Mac está em forma",
+                    module: .smartScan, title: String(localized: "Your Mac is in shape"),
                     message: summary(model),
                     failedCount: model.cleanReport.failed.count,
                     onBack: { model.phase = .idle }
@@ -38,8 +38,8 @@ struct SmartScanView: View {
 
     private func summary(_ m: SmartScanModel) -> String {
         var parts: [String] = []
-        if m.runCleanup { parts.append("\(Fmt.bytes(m.cleanReport.freed)) de lixo removido") }
-        return parts.isEmpty ? "Nada a fazer." : parts.joined(separator: " · ")
+        if m.runCleanup { parts.append(String(localized: "\(Fmt.bytes(m.cleanReport.freed)) of junk removed")) }
+        return parts.isEmpty ? String(localized: "Nothing to do.") : parts.joined(separator: " · ")
     }
 
     @ViewBuilder
@@ -47,16 +47,16 @@ struct SmartScanView: View {
         @Bindable var model = model
         HStack(spacing: 16) {
             ResultCard(
-                icon: "externaldrive.badge.xmark", title: "Limpeza",
-                value: Fmt.bytes(model.junkSize), caption: model.junk.isEmpty ? "Nada a limpar" : "para limpar",
+                icon: "externaldrive.badge.xmark", title: String(localized: "Cleanup"),
+                value: Fmt.bytes(model.junkSize), caption: model.junk.isEmpty ? String(localized: "Nothing to clean") : String(localized: "to clean"),
                 enabled: $model.runCleanup,
                 review: { state.selection = .systemJunk }
             )
-            // Proteção: só informação (estado das proteções do macOS), sem ações a executar.
+            // Protection: information only (state of macOS protections), with no actions to run.
             ResultCard(
-                icon: model.security.disabledCount == 0 ? "checkmark.shield" : "exclamationmark.shield", title: "Proteção",
-                value: model.security.disabledCount == 0 ? "Tudo ativo" : "\(Fmt.count(model.security.disabledCount, "desativada", "desativadas"))",
-                caption: "\(model.security.activeCount) de \(model.security.items.count) proteções ativas",
+                icon: model.security.disabledCount == 0 ? "checkmark.shield" : "exclamationmark.shield", title: String(localized: "Protection"),
+                value: model.security.disabledCount == 0 ? String(localized: "All on") : Fmt.count(model.security.disabledCount, String(localized: "protection off"), String(localized: "protections off")),
+                caption: String(localized: "\(model.security.activeCount) of \(model.security.items.count) protections on"),
                 enabled: nil,
                 review: { state.selection = .dashboard }
             )
@@ -65,10 +65,10 @@ struct SmartScanView: View {
         .frame(maxHeight: .infinity)
 
         HStack(spacing: 14) {
-            BigActionButton(title: "Limpar", disabled: !model.runCleanup) {
+            BigActionButton(title: String(localized: "Clean"), disabled: !model.runCleanup) {
                 Task { await model.run() }
             }
-            Button("Cancelar") { model.phase = .idle }.buttonStyle(.bordered).controlSize(.large)
+            Button("Cancel") { model.phase = .idle }.buttonStyle(.bordered).controlSize(.large)
             Spacer()
         }
         .padding(.horizontal, 32)
@@ -81,7 +81,7 @@ private struct ResultCard: View {
     let title: String
     let value: String
     let caption: String
-    /// nil = cartão só informativo (sem interruptor).
+    /// nil = information-only card (no switch).
     var enabled: Binding<Bool>?
     let review: () -> Void
 
@@ -96,7 +96,7 @@ private struct ResultCard: View {
             Spacer()
             Text(value).font(Theme.display(38)).monospacedDigit().minimumScaleFactor(0.5).lineLimit(1)
             Text(caption).foregroundStyle(.secondary)
-            Button("Ver detalhes", action: review).buttonStyle(.bordered)
+            Button("View details", action: review).buttonStyle(.bordered)
         }
         .padding(20)
         .frame(maxWidth: .infinity, minHeight: 260, maxHeight: 300)

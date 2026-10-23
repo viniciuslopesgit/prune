@@ -22,7 +22,7 @@ enum AppScanner {
         [URL(fileURLWithPath: "/Applications"), URL.home("Applications"), URL(fileURLWithPath: "/Applications/Utilities")]
     }
 
-    /// Lista as apps instaladas pelo utilizador (exclui as apps do sistema da Apple).
+    /// Lists the apps installed by the user (excludes Apple's system apps).
     static func installedApps(includeApple: Bool = false, computeSizes: Bool = true) -> [AppInfo] {
         var urls: [URL] = []
         for folder in appFolders {
@@ -30,7 +30,7 @@ enum AppScanner {
                 if child.pathExtension == "app" {
                     urls.append(child)
                 } else if child.isDirectory, !child.isPackage, folder.lastPathComponent == "Applications" {
-                    // Apps dentro de subpastas (ex.: /Applications/Adobe Photoshop/…)
+                    // Apps inside subfolders (e.g. /Applications/Adobe Photoshop/…)
                     urls += FS.children(child).filter { $0.pathExtension == "app" }
                 }
             }
@@ -41,7 +41,7 @@ enum AppScanner {
         let lastUsedDates = lastUsed()
         var apps: [AppInfo] = []
         for (url, size) in zip(urls, sizes) {
-            // Os dados do Spotlight e do plist de cada app são libertados antes da seguinte.
+            // Each app's Spotlight data and plist are freed before the next one.
             autoreleasepool {
                 guard let info = BundleInfo.plist(url), let id = info["CFBundleIdentifier"] as? String else { return }
                 if !includeApple && id.hasPrefix("com.apple.") { return }
@@ -61,8 +61,8 @@ enum AppScanner {
         return apps.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
     }
 
-    /// Datas de última utilização de todas as apps numa só consulta ao Spotlight
-    /// (criar um NSMetadataItem por app é lento e deixa ~30 MB de dados temporários).
+    /// Last-used dates of every app in a single Spotlight query
+    /// (creating an NSMetadataItem per app is slow and leaves ~30 MB of temporary data).
     static func lastUsed() -> [String: Date] {
         let r = Shell.runSync("/usr/bin/mdfind", ["-attr", "kMDItemLastUsedDate", "kMDItemContentType == 'com.apple.application-bundle'"])
         let f = DateFormatter()
@@ -98,7 +98,7 @@ enum AppScanner {
         URL(fileURLWithPath: p.hasPrefix("~") ? home.path + p.dropFirst() : p)
     }
 
-    /// Ficheiros de suporte que a app espalhou pelo sistema.
+    /// Support files the app has spread across the system.
     static func leftovers(for app: AppInfo) -> [CleanItem] {
         let id = app.bundleID.lowercased()
         let names = Set([app.name, app.url.deletingPathExtension().lastPathComponent]
@@ -122,16 +122,16 @@ enum AppScanner {
         }.sorted { $0.size > $1.size }
     }
 
-    /// Restos de apps que já foram removidas (pastas com nome de bundle ID sem app correspondente).
+    /// Leftovers of apps that have been removed (folders named after a bundle ID with no matching app).
     static func orphans(installedIDs: Set<String>) -> [CleanItem] {
         var locations = ["~/Library/Application Support", "~/Library/Caches", "~/Library/Preferences",
                          "~/Library/Saved Application State", "~/Library/HTTPStorages",
                          "~/Library/WebKit", "~/Library/Logs"]
-        // Esta análise corre sozinha ao abrir o Desinstalador. Ler dentro dos contentores de outras apps
-        // faz o macOS pedir autorização, por isso só os incluímos com Acesso Total ao Disco.
+        // This scan runs on its own when the Uninstaller opens. Reading inside other apps' containers
+        // makes macOS ask for authorization, so they are only included with Full Disk Access.
         if Permissions.hasFullDiskAccess { locations.append("~/Library/Containers") }
         let installed = installedIDs.map { $0.lowercased() }
-        // Programadores com alguma app instalada (ex.: com.adobe) — os seus ficheiros não são tratados como órfãos.
+        // Developers with an app installed (e.g. com.adobe) — their files are not treated as orphans.
         let vendors = Set(installed.compactMap { id -> String? in
             let p = id.split(separator: ".")
             return p.count >= 2 ? "\(p[0]).\(p[1])" : nil
@@ -149,7 +149,7 @@ enum AppScanner {
                 if systemPrefixes.contains(where: lower.hasPrefix) || lower == ownBundleID { continue }
                 let parts = lower.split(separator: ".")
                 if parts.count >= 2, vendors.contains("\(parts[0]).\(parts[1])") { continue }
-                // Ignora identificadores que pertencem (por prefixo) a apps ou componentes instalados.
+                // Ignores identifiers that belong (by prefix) to installed apps or components.
                 let related = installed.contains { lower.hasPrefix($0) || $0.hasPrefix(lower) || sharedVendorPrefix(lower, $0) }
                 if !related { urls.append(entry) }
             }
@@ -161,20 +161,20 @@ enum AppScanner {
         }.sorted { $0.size > $1.size }
     }
 
-    /// Domínios do macOS que não pertencem a nenhuma app (impressão, iCloud, grupos partilhados…).
+    /// macOS domains that belong to no app (printing, iCloud, shared groups…).
     private static let systemPrefixes = ["com.apple.", "apple.", "group.", "systemgroup.", "org.cups.", "com.openssh."]
     private static let ownBundleID = Bundle.main.bundleIdentifier?.lowercased() ?? "app.prune.prune"
 
-    /// Mesmo programador e produto (ex.: com.foo.app e com.foo.app-helper).
+    /// Same developer and product (e.g. com.foo.app and com.foo.app-helper).
     private static func sharedVendorPrefix(_ a: String, _ b: String) -> Bool {
         let pa = a.split(separator: "."), pb = b.split(separator: ".")
         guard pa.count >= 3, pb.count >= 3 else { return false }
         return pa[0] == pb[0] && pa[1] == pb[1] && (pa[2].hasPrefix(pb[2]) || pb[2].hasPrefix(pa[2]))
     }
 
-    /// Todos os bundle IDs de apps no sistema (via Spotlight), para evitar falsos órfãos.
+    /// Every app bundle ID on the system (via Spotlight), to avoid false orphans.
     static func allSystemBundleIDs() async -> Set<String> {
-        // O Spotlight já indexa o identificador: não é preciso abrir cada app.
+        // Spotlight already indexes the identifier: there is no need to open each app.
         let r = await Shell.run("/usr/bin/mdfind", ["-attr", "kMDItemCFBundleIdentifier", "kMDItemContentType == 'com.apple.application-bundle'"])
         var ids = Set<String>()
         for line in r.out.split(separator: "\n") {

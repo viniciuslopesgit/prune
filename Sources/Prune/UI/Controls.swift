@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct CheckBox: View {
-    let state: Bool?  // nil = misto
+    let state: Bool?  // nil = mixed
     let action: () -> Void
     var body: some View {
         Button(action: action) {
@@ -33,7 +33,7 @@ struct RevealButton: View {
     var body: some View {
         Button { FS.reveal(url) } label: { Image(systemName: "magnifyingglass") }
             .buttonStyle(.borderless)
-            .help("Mostrar no Finder")
+            .help("Show in Finder")
     }
 }
 

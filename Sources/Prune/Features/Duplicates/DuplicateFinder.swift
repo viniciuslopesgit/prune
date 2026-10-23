@@ -31,7 +31,7 @@ enum DuplicateFinder {
             let keySet = Set(keys)
             FS.forEach(e) { url in
                 n += 1
-                if n % 1000 == 0 { progress.report("A listar ficheiros… \(n.formatted())") }
+                if n % 1000 == 0 { progress.report(String(localized: "Listing files… \(n.formatted())")) }
                 guard let rv = try? url.resourceValues(forKeys: keySet), rv.isRegularFile == true, rv.isSymbolicLink != true,
                       let size = rv.fileSize, Int64(size) >= minSize else { return true }
                 guard seen.insert(url.resolvingSymlinksInPath().path).inserted else { return true }
@@ -42,20 +42,20 @@ enum DuplicateFinder {
         seen = []
         let candidates = bySize.values.filter { $0.count > 1 }
         bySize = [:]
-        // Um único buffer de leitura reutilizado para todos os ficheiros.
+        // A single read buffer reused for every file.
         let buffer = UnsafeMutableRawBufferPointer.allocate(byteCount: hashChunk, alignment: 16)
         defer { buffer.deallocate() }
         var groups: [DupGroup] = []
         var done = 0
         for files in candidates {
             done += 1
-            progress.report("A comparar conteúdo… \(done)/\(candidates.count)")
-            // 1.º passo: hash dos primeiros 64 KB; 2.º passo: hash completo.
+            progress.report(String(localized: "Comparing contents… \(done)/\(candidates.count)"))
+            // 1st pass: hash of the first 64 KB; 2nd pass: full hash.
             let partial = Dictionary(grouping: files) { hash($0.url, limit: 65_536, buffer: buffer) ?? UUID().uuidString }
             for (_, sub) in partial where sub.count > 1 {
                 let full = sub.first!.size <= 65_536 ? ["": sub] : Dictionary(grouping: sub) { hash($0.url, limit: nil, buffer: buffer) ?? UUID().uuidString }
                 for (_, same) in full where same.count > 1 {
-                    // O mais antigo fica em primeiro lugar (é o que se mantém por defeito).
+                    // The oldest comes first (it is the one kept by default).
                     let sorted = same.sorted { ($0.created ?? .distantFuture) < ($1.created ?? .distantFuture) }
                     groups.append(DupGroup(files: sorted, similar: false))
                 }
@@ -66,13 +66,13 @@ enum DuplicateFinder {
 
     static let hashChunk = 1_048_576
 
-    /// SHA-256 do ficheiro (ou dos primeiros `limit` bytes), lido com `read(2)` para um buffer fixo:
-    /// não cria objetos `Data` por bloco, por isso a memória não cresce com o tamanho dos ficheiros.
+    /// SHA-256 of the file (or of its first `limit` bytes), read with `read(2)` into a fixed buffer:
+    /// it creates no `Data` objects per block, so memory does not grow with file size.
     static func hash(_ url: URL, limit: Int?, buffer: UnsafeMutableRawBufferPointer) -> String? {
         let fd = open(url.path, O_RDONLY)
         guard fd >= 0 else { return nil }
         defer { close(fd) }
-        _ = fcntl(fd, F_NOCACHE, 1)  // não encher a cache de ficheiros do sistema
+        _ = fcntl(fd, F_NOCACHE, 1)  // do not fill the system's file cache
         var hasher = SHA256()
         var total = 0
         while true {
@@ -86,8 +86,8 @@ enum DuplicateFinder {
         return hasher.finalize().map { String(format: "%02x", $0) }.joined()
     }
 
-    /// Resultado das fotografias semelhantes: os grupos e quantas imagens o Vision não conseguiu analisar
-    /// (ficheiro danificado, formato não suportado, ou Vision indisponível neste Mac).
+    /// Result of the similar photos scan: the groups and how many images Vision could not analyze
+    /// (damaged file, unsupported format, or Vision unavailable on this Mac).
     struct SimilarPhotos {
         var groups: [DupGroup] = []
         var analysed = 0
@@ -95,7 +95,7 @@ enum DuplicateFinder {
         var firstError: String?
     }
 
-    /// Fotografias semelhantes (não idênticas) com o Vision.
+    /// Similar (not identical) photos, using Vision.
     static func similarPhotos(in roots: [URL], threshold: Float, progress: ProgressReporter) -> SimilarPhotos {
         let exts: Set<String> = ["jpg", "jpeg", "png", "heic", "heif", "tiff", "tif", "webp", "gif", "bmp"]
         var images: [DupFile] = []
@@ -113,8 +113,8 @@ enum DuplicateFinder {
         var prints: [(DupFile, VNFeaturePrintObservation)] = []
         var result = SimilarPhotos()
         for (i, img) in images.enumerated() {
-            progress.report("A analisar fotografias… \(i + 1)/\(images.count)")
-            // Cada imagem é descodificada e libertada antes da seguinte.
+            progress.report(String(localized: "Analyzing photos… \(i + 1)/\(images.count)"))
+            // Each image is decoded and freed before the next one.
             autoreleasepool {
                 let req = VNGenerateImageFeaturePrintRequest()
                 let handler = VNImageRequestHandler(url: img.url, options: [:])
@@ -124,7 +124,7 @@ enum DuplicateFinder {
                         prints.append((img, obs))
                     } else {
                         result.unreadable += 1
-                        result.firstError = result.firstError ?? "sem resultado do Vision"
+                        result.firstError = result.firstError ?? String(localized: "no result from Vision")
                     }
                 } catch {
                     result.unreadable += 1
@@ -133,11 +133,11 @@ enum DuplicateFinder {
             }
         }
         result.analysed = prints.count
-        // Agrupa com union-find.
+        // Groups with union-find.
         var parent = Array(0..<prints.count)
         func find(_ x: Int) -> Int { var x = x; while parent[x] != x { parent[x] = parent[parent[x]]; x = parent[x] }; return x }
         for i in 0..<prints.count {
-            if i % 50 == 0 { progress.report("A comparar fotografias… \(i)/\(prints.count)") }
+            if i % 50 == 0 { progress.report(String(localized: "Comparing photos… \(i)/\(prints.count)")) }
             for j in (i + 1)..<prints.count {
                 var d: Float = 0
                 if (try? prints[i].1.computeDistance(&d, to: prints[j].1)) != nil, d < threshold {

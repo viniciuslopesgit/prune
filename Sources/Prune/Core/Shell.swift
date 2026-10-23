@@ -7,7 +7,7 @@ struct ShellResult {
     var ok: Bool { status == 0 }
 }
 
-/// Executa comandos externos sem bloquear a interface.
+/// Runs external commands without blocking the interface.
 enum Shell {
     @discardableResult
     static func run(_ launchPath: String, _ args: [String] = [], env: [String: String]? = nil) async -> ShellResult {
@@ -52,17 +52,17 @@ enum Shell {
         )
     }
 
-    /// Executa um script zsh como o utilizador atual.
+    /// Runs a zsh script as the current user.
     @discardableResult
     static func zsh(_ script: String) async -> ShellResult {
         await run("/bin/zsh", ["-c", script])
     }
 
-    /// Executa um script com privilégios de administrador (o macOS pede a palavra-passe).
+    /// Runs a script with administrator privileges (macOS asks for the password).
     ///
-    /// Corre dentro do próprio processo (NSAppleScript), numa thread dedicada. Nota: o macOS recente
-    /// (testado no 27) não memoriza esta autorização — pede a palavra-passe em cada execução.
-    /// `without altering line endings` mantém as quebras de linha em `\n`.
+    /// Runs inside the process itself (NSAppleScript), on a dedicated thread. Note: recent macOS
+    /// (tested on 27) does not remember this authorization — it asks for the password on every run.
+    /// `without altering line endings` keeps line breaks as `\n`.
     @discardableResult
     static func admin(_ script: String) async -> ShellResult {
         let apple = "do shell script \"\(appleScriptEscape(script))\" with administrator privileges without altering line endings"
@@ -73,7 +73,7 @@ enum Shell {
         await run("/usr/bin/osascript", ["-e", source])
     }
 
-    /// Aspas simples seguras para shell.
+    /// Shell-safe single quotes.
     static func quote(_ s: String) -> String {
         "'" + s.replacingOccurrences(of: "'", with: "'\\''") + "'"
     }

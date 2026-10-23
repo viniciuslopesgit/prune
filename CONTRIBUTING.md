@@ -1,43 +1,43 @@
-# Contribuir
+# Contributing
 
-Obrigado pelo interesse. O Prune apaga ficheiros, por isso a prioridade é que nunca apague o que não deve. Antes de velocidade ou funcionalidades novas.
+Thank you for your interest. Prune deletes files, so the priority is that it never deletes what it should not. Before speed or new features.
 
-## Ramos
+## Branches
 
-- **`dev`**: onde se trabalha. Os Pull Requests vão para aqui.
-- **`main`**: só a versão estável, com o necessário para a compilar. Atualizado automaticamente; não aceita Pull Requests diretos.
+- **`dev`**: where the work happens. Pull Requests go here.
+- **`main`**: only the stable version, with what is needed to build it. Updated automatically; does not accept direct Pull Requests.
 
-## Preparar
+## Setup
 
-Requer macOS 14 ou mais recente e as Command Line Tools do Xcode (`xcode-select --install`), ou o Xcode.
+Requires macOS 14 or later and the Xcode Command Line Tools (`xcode-select --install`), or Xcode.
 
 ```bash
 git clone -b dev https://github.com/viniciuslopesgit/prune.git
 cd prune
-./scripts/setup_hooks.sh   # verificação antes de cada commit e de cada push
-./scripts/test.sh          # testes de unidade
-./scripts/check.sh         # verificação rápida (a mesma do hook pre-commit)
+./scripts/setup_hooks.sh   # check before each commit and each push
+./scripts/test.sh          # unit tests
+./scripts/check.sh         # quick check (the same as the pre-commit hook)
 ```
 
-## Regras para alterações
+## Rules for changes
 
-1. **Testes no mesmo Pull Request.** Funcionalidade nova ou alterada traz testes em `Tests/PruneTests`. Uma correção traz um teste que falhava antes dela. Um ficheiro novo em `Sources/` sem testes bloqueia o commit.
-2. **Tudo o que apaga passa pelo `SafetyGuard.canDelete`.** Nunca chamar `FileManager.removeItem`, `trashItem` ou `rm` diretamente sobre caminhos que não passaram por lá.
-3. **Testar operações destrutivas só em pastas descartáveis** (`TempDir` nos testes). Nunca no seu `~`, no Lixo verdadeiro ou em `/Applications`.
-4. **Verificar o que não pode mudar**, além do que muda: o destino de uma ligação continua intacto, uma pasta protegida continua lá.
-5. **Ações destrutivas ou com privilégios pedem confirmação** e mostram o que vai acontecer.
-6. **Sem dependências novas** sem discutir primeiro numa issue (licença compatível com GPL-3.0, manutenção, necessidade real).
-7. **Privacidade:** nada sai do Mac sem consentimento; a telemetria nunca inclui caminhos, nomes de ficheiros ou de apps.
-8. **Código, textos, commits e CHANGELOG em português de Portugal.**
+1. **Tests in the same Pull Request.** A new or changed feature comes with tests in `Tests/PruneTests`. A fix comes with a test that failed before it. A new file in `Sources/` without tests blocks the commit.
+2. **Everything that deletes goes through `SafetyGuard.canDelete`.** Never call `FileManager.removeItem`, `trashItem` or `rm` directly on paths that have not gone through it.
+3. **Test destructive operations only in disposable folders** (`TempDir` in the tests). Never in your `~`, the real Trash or `/Applications`.
+4. **Check what must not change**, as well as what changes: a link's target stays intact, a protected folder is still there.
+5. **Destructive or privileged actions ask for confirmation** and show what is going to happen.
+6. **No new dependencies** without discussing them first in an issue (GPL-3.0-compatible license, maintenance, real need).
+7. **Privacy:** nothing leaves the Mac without consent; telemetry never includes paths, file names or app names.
+8. **Code, comments, commits and CHANGELOG in English.** Interface texts are written in English with `String(localized:)` or as SwiftUI literals, and each one gets its translation in `Resources/pt-PT.lproj/Localizable.strings` (`scripts/check_localization.py` checks it).
 
-O CI corre `./scripts/check.sh --full` em macOS 14 e 15 em cada Pull Request para o `dev`, e tem de passar.
+CI runs `./scripts/check.sh --full` on macOS 14 and 15 on every Pull Request to `dev`, and it must pass.
 
-## Reportar erros
+## Reporting bugs
 
-Abra uma issue com a versão do Prune e do macOS, Apple silicon ou Intel, os passos para reproduzir, e o que esperava. Erros que podem apagar dados recebem a etiqueta `bug` e bloqueiam a promoção da versão a estável.
+Open an issue with the Prune and macOS versions, Apple silicon or Intel, the steps to reproduce, and what you expected. Bugs that can delete data get the `bug` label and block the version from being promoted to stable.
 
-Vulnerabilidades: **não** use issues públicas, veja [SECURITY.md](SECURITY.md).
+Vulnerabilities: do **not** use public issues, see [SECURITY.md](SECURITY.md).
 
-## Publicação
+## Publishing
 
-O maintainer publica com `./scripts/ship.sh` (beta) e o `./scripts/stable.sh` promove para o `main` quando os [critérios de lançamento](https://github.com/viniciuslopesgit/prune/blob/dev/docs/RELEASE_CRITERIA.md) são cumpridos.
+The maintainer publishes with `./scripts/ship.sh` (beta) and `./scripts/stable.sh` promotes to `main` when the [release criteria](https://github.com/viniciuslopesgit/prune/blob/dev/docs/RELEASE_CRITERIA.md) are met.

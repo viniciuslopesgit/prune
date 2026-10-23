@@ -32,9 +32,9 @@ final class AppState {
         privacy.analyticsName = Module.privacy.rawValue
     }
 
-    /// Liberta os resultados que ocupam mais memória (árvore da Lente de Espaço, duplicados,
-    /// ficheiros grandes, caches de imagens). Chamado quando a janela fecha — a app continua
-    /// na barra de menus — ou quando o macOS avisa que a memória está a acabar.
+    /// Frees the results that take up the most memory (Space Lens tree, duplicates,
+    /// large files, image caches). Called when the window closes — the app stays
+    /// in the menu bar — or when macOS warns that memory is running low.
     func releaseHeavyResults() {
         if !spaceLens.scanning { spaceLens.reset() }
         if !duplicates.scanning { duplicates.reset() }

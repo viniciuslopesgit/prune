@@ -6,11 +6,11 @@ struct OptimizationView: View {
     var body: some View {
         @Bindable var model = state.optimization
         VStack(spacing: 0) {
-            ModuleHeader(module: .optimization, subtitle: "O que arranca com o Mac e o que consome recursos") {
-                Button { Task { await model.load() } } label: { Label("Atualizar", systemImage: "arrow.clockwise") }.buttonStyle(.bordered)
+            ModuleHeader(module: .optimization, subtitle: String(localized: "What starts with your Mac and what uses resources")) {
+                Button { Task { await model.load() } } label: { Label("Refresh", systemImage: "arrow.clockwise") }.buttonStyle(.bordered)
             }
             Picker("", selection: $model.tab) {
-                ForEach(OptimizationModel.Tab.allCases) { Label($0.rawValue, systemImage: $0.icon).tag($0) }
+                ForEach(OptimizationModel.Tab.allCases) { Label($0.title, systemImage: $0.icon).tag($0) }
             }
             .pickerStyle(.segmented).labelsHidden()
             .padding(.horizontal, 32).padding(.bottom, 12)
@@ -47,13 +47,13 @@ struct OptimizationView: View {
             if model.loadingLoginItems && model.loginItems.isEmpty {
                 VStack(spacing: 10) {
                     ProgressView()
-                    Text("A carregar… Se o macOS pedir acesso ao \"System Events\", aceite.")
+                    Text("Loading… If macOS asks for access to \"System Events\", accept.")
                         .font(.callout).foregroundStyle(.secondary).multilineTextAlignment(.center)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity).padding()
             } else if model.loginItems.isEmpty {
-                EmptyStateView(icon: "person.badge.key", title: "Sem itens de início de sessão",
-                               message: "Nenhuma app abre automaticamente. Se esperava ver alguma, autorize o acesso ao \"System Events\".")
+                EmptyStateView(icon: "person.badge.key", title: String(localized: "No login items"),
+                               message: String(localized: "No app opens automatically. If you expected to see one, allow access to \"System Events\"."))
             } else {
                 List(model.loginItems) { item in
                     HStack(spacing: 10) {
@@ -63,7 +63,7 @@ struct OptimizationView: View {
                             Text(item.path).font(.caption).foregroundStyle(.secondary).lineLimit(1).truncationMode(.middle)
                         }
                         Spacer()
-                        Button("Remover") { Task { await model.remove(item) } }.buttonStyle(.bordered)
+                        Button("Remove") { Task { await model.remove(item) } }.buttonStyle(.bordered)
                     }
                     .listRowBackground(Color.clear)
                 }
@@ -71,9 +71,9 @@ struct OptimizationView: View {
             }
             Divider().opacity(0.3)
             HStack {
-                Text("Os itens em segundo plano do macOS estão nas Definições do Sistema.").font(.caption).foregroundStyle(.secondary)
+                Text("macOS background items are in System Settings.").font(.caption).foregroundStyle(.secondary)
                 Spacer()
-                Button("Abrir Definições") { Permissions.openLoginItemsSettings() }.buttonStyle(.bordered)
+                Button("Open Settings") { Permissions.openLoginItemsSettings() }.buttonStyle(.bordered)
             }
             .padding(12)
         }
@@ -86,9 +86,9 @@ struct OptimizationView: View {
                 VStack(alignment: .leading, spacing: 2) {
                     HStack(spacing: 6) {
                         Text(item.ownerName).font(.headline)
-                        Pill(text: item.domain.rawValue)
-                        if item.programMissing { Pill(text: "Órfão", color: Theme.amber) }
-                        if item.loaded && !item.disabled { Pill(text: "Ativo", color: Theme.leaf) }
+                        Pill(text: item.domain.title)
+                        if item.programMissing { Pill(text: String(localized: "Orphaned"), color: Theme.amber) }
+                        if item.loaded && !item.disabled { Pill(text: String(localized: "Active"), color: Theme.leaf) }
                     }
                     Text(item.label).font(.caption).foregroundStyle(.secondary)
                     if let p = item.program {
@@ -98,10 +98,10 @@ struct OptimizationView: View {
                 Spacer()
                 Toggle("", isOn: Binding(get: { !item.disabled }, set: { _ in Task { await model.toggle(item) } }))
                     .toggleStyle(.switch).labelsHidden()
-                    .help(item.disabled ? "Ativar" : "Desativar")
+                    .help(item.disabled ? "Enable" : "Disable")
                 Menu {
-                    Button("Mostrar no Finder") { FS.reveal(item.url) }
-                    Button("Remover", role: .destructive) { Task { await model.remove(item) } }
+                    Button("Show in Finder") { FS.reveal(item.url) }
+                    Button("Remove", role: .destructive) { Task { await model.remove(item) } }
                 } label: { Image(systemName: "ellipsis.circle") }
                     .menuStyle(.borderlessButton).frame(width: 30)
             }
@@ -110,7 +110,7 @@ struct OptimizationView: View {
         }
         .scrollContentBackground(.hidden)
         .overlay {
-            if model.launchItems.isEmpty { EmptyStateView(icon: "bolt.slash", title: "Sem agentes de arranque de terceiros") }
+            if model.launchItems.isEmpty { EmptyStateView(icon: "bolt.slash", title: String(localized: "No third-party launch agents")) }
         }
     }
 
@@ -118,13 +118,13 @@ struct OptimizationView: View {
         @Bindable var model = model
         return VStack(spacing: 0) {
             HStack {
-                Picker("Ordenar por", selection: $model.sortByMemory) {
-                    Text("Processador").tag(false)
-                    Text("Memória").tag(true)
+                Picker("Sort by", selection: $model.sortByMemory) {
+                    Text("Processor").tag(false)
+                    Text("Memory").tag(true)
                 }
                 .pickerStyle(.segmented).frame(width: 260)
                 Spacer()
-                Text("Atualizado a cada 3 s").font(.caption).foregroundStyle(.secondary)
+                Text("Updated every 3 s").font(.caption).foregroundStyle(.secondary)
             }
             .padding(12)
             List(model.topProcesses) { p in
@@ -137,7 +137,7 @@ struct OptimizationView: View {
                     }
                     Spacer()
                     Text(String(format: "%.1f%%", p.cpu)).monospacedDigit().frame(width: 70, alignment: .trailing)
-                    // Só métricas: o macOS gere a memória sozinho, por isso o Prune não fecha apps para a "libertar".
+                    // Metrics only: macOS manages memory on its own, so Prune does not quit apps to "free" it.
                     Text(Fmt.bytes(p.memory)).monospacedDigit().foregroundStyle(.secondary).frame(width: 90, alignment: .trailing)
                 }
                 .listRowBackground(Color.clear)

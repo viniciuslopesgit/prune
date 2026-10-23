@@ -23,7 +23,7 @@ final class SpaceLensModel {
         target = url
         scanning = true
         marked = []
-        progressText = "A iniciar…"
+        progressText = String(localized: "Starting…")
         let reporter = ProgressReporter { [weak self] in self?.progressText = $0 }
         let scanner = SpaceScanner(progress: reporter)
         self.scanner = scanner
@@ -49,7 +49,7 @@ final class SpaceLensModel {
     var markedSize: Int64 { marked.reduce(0) { $0 + $1.size } }
 
     func removeMarked() async {
-        // Um item dentro de uma pasta também marcada já sai com a pasta.
+        // An item inside a folder that is also marked already goes with the folder.
         let nodes = marked.filter { node in
             var p = node.parent
             while let cur = p { if marked.contains(cur) { return false }; p = cur.parent }
@@ -63,8 +63,8 @@ final class SpaceLensModel {
             while let cur = p { cur.size -= n.size; p = cur.parent }
         }
         marked = []
-        message = "\(Fmt.bytes(r.freed)) libertados." + (r.failed.isEmpty ? "" : " \(Fmt.count(r.failed.count, "item não foi removido", "itens não foram removidos")).")
-        // Força atualização da vista.
+        message = Fmt.freedMessage(r.freed, failed: r.failed.count)
+        // Forces the view to refresh.
         let c = current
         current = nil
         current = c

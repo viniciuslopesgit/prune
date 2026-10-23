@@ -1,7 +1,7 @@
 import Foundation
 
 enum Cleaner {
-    /// Remove itens. Os que falham por permissões podem depois ser repetidos com `retryAsAdmin`.
+    /// Removes items. Those that fail because of permissions can then be retried with `retryAsAdmin`.
     static func remove(_ items: [CleanItem], mode: DeleteMode) async -> CleanReport {
         var report = CleanReport()
         for item in items {
@@ -52,7 +52,7 @@ enum Cleaner {
             }
             return true
         } catch {
-            // Pastas com conteúdo parcialmente protegido: apaga o que for possível.
+            // Folders with partially protected content: deletes what it can.
             if mode == .permanent, url.isDirectory {
                 for child in FS.children(url) { _ = removeSync(child, mode: .permanent) }
                 return (try? FileManager.default.removeItem(at: url)) != nil
@@ -65,14 +65,14 @@ enum Cleaner {
         (try? FileManager.default.destinationOfSymbolicLink(atPath: url.path)) != nil
     }
 
-    /// Repete a remoção com privilégios de administrador (pede a palavra-passe uma vez).
+    /// Retries the removal with administrator privileges (asks for the password once).
     static func retryAsAdmin(_ urls: [URL], mode: DeleteMode) async -> CleanReport {
         let safe = urls.filter { SafetyGuard.canDelete($0) }
         guard !safe.isEmpty else { return CleanReport(failed: urls) }
         let sizes = FS.sizes(of: safe)
         let script: String
         if mode == .trash {
-            // Move para o Lixo do utilizador, mantendo nomes únicos.
+            // Moves to the user's Trash, keeping names unique.
             let trash = home.appendingPathComponent(".Trash").path
             script = safe.map { url in
                 let dest = trash + "/" + url.lastPathComponent + " " + String(UUID().uuidString.prefix(6))

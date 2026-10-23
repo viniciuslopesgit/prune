@@ -15,7 +15,7 @@ struct ContentView: View {
                     if section == .none {
                         ForEach(modules) { row($0) }
                     } else {
-                        Section(section.rawValue) {
+                        Section(section.title) {
                             ForEach(modules) { row($0) }
                         }
                     }
@@ -31,10 +31,10 @@ struct ContentView: View {
                         HStack(alignment: .top, spacing: 8) {
                             Image(systemName: access == .needsRelaunch ? "arrow.clockwise.circle" : "lock.open.trianglebadge.exclamationmark")
                             VStack(alignment: .leading, spacing: 2) {
-                                Text(access == .needsRelaunch ? "Reabra o Prune" : "Acesso Total ao Disco").font(.caption.bold())
+                                Text(access == .needsRelaunch ? "Reopen Prune" : "Full Disk Access").font(.caption.bold())
                                 Text(access == .needsRelaunch
-                                     ? "Permissão ativa. Reabra o Prune para a aplicar."
-                                     : "Necessário para analisar Safari, Mail e pastas protegidas.").font(.caption2)
+                                     ? "Permission granted. Reopen Prune to apply it."
+                                     : "Needed to scan Safari, Mail and protected folders.").font(.caption2)
                                     .foregroundStyle(.secondary)
                             }
                         }
@@ -47,7 +47,7 @@ struct ContentView: View {
                 }
             }
         } detail: {
-            // Fixa o conteúdo ao tamanho real da coluna (o fundo não deve ditar a altura).
+            // Pins the content to the column's real size (the background must not dictate the height).
             GeometryReader { geo in
                 detail(for: state.selection)
                     .id(state.selection)
@@ -61,8 +61,8 @@ struct ContentView: View {
         .sheet(isPresented: $showFDA, onDismiss: { Task { access = await Permissions.accessState() } }) {
             FullDiskAccessView(initialState: access)
         }
-        // No primeiro arranque pergunta pelas estatísticas; o assistente de acesso ao disco vem a seguir
-        // (só pode haver uma folha de cada vez).
+        // On first launch, asks about statistics; the disk access assistant comes next
+        // (only one sheet can be shown at a time).
         .sheet(isPresented: $showConsent, onDismiss: { Task { await checkAccessAtLaunch() } }) {
             AnalyticsConsentView()
         }
@@ -78,9 +78,9 @@ struct ContentView: View {
         }
     }
 
-    /// Logo a seguir a uma atualização, o macOS pode ainda não reconhecer a app nova durante um
-    /// instante. Por isso volta a verificar durante alguns segundos antes de mostrar o assistente,
-    /// e distingue "sem permissão" de "permissão ativa mas a app tem de ser reaberta".
+    /// Right after an update, macOS may not recognize the new app for a moment.
+    /// So it checks again for a few seconds before showing the assistant,
+    /// and tells "no permission" apart from "permission granted but the app must be reopened".
     private func checkAccessAtLaunch() async {
         var inProcess = Permissions.hasFullDiskAccess
         for _ in 0..<6 where !inProcess {
@@ -88,7 +88,7 @@ struct ContentView: View {
             inProcess = Permissions.hasFullDiskAccess
         }
         access = inProcess ? .granted : (await Permissions.hasFullDiskAccessFresh() ? .needsRelaunch : .denied)
-        Permissions.log("arranque: acesso=\(access) versão=\(Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "?")")
+        Permissions.log("launch: access=\(access) version=\(Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "?")")
         switch access {
         case .granted: break
         case .needsRelaunch: showFDA = true
@@ -131,33 +131,33 @@ struct ContentView: View {
         case .systemJunk:
             CleanupModuleView(
                 model: state.systemJunk, module: m,
-                headline: "Liberte espaço no disco",
-                message: "Caches, registos e ficheiros temporários acumulam-se com o uso. O Prune encontra-os e remove-os com segurança.",
-                features: [("shippingbox", "Caches de apps e do sistema"), ("doc.text", "Registos e relatórios de falhas"),
-                           ("hammer", "Xcode e gestores de pacotes"), ("wrench.and.screwdriver", "Preferências e itens de arranque danificados")]
+                headline: String(localized: "Free up disk space"),
+                message: String(localized: "Caches, logs and temporary files pile up with use. Prune finds them and removes them safely."),
+                features: [("shippingbox", String(localized: "App and system caches")), ("doc.text", String(localized: "Logs and crash reports")),
+                           ("hammer", String(localized: "Xcode and package managers")), ("wrench.and.screwdriver", String(localized: "Broken preferences and login items"))]
             )
         case .mailAttachments:
             CleanupModuleView(
                 model: state.mail, module: m,
-                headline: "Recupere espaço do Mail",
-                message: "Remova cópias locais de anexos. As mensagens no servidor ficam intactas.",
-                features: [("paperclip", "Anexos abertos"), ("envelope", "Cópias locais nas caixas de correio")]
+                headline: String(localized: "Reclaim space from Mail"),
+                message: String(localized: "Remove local copies of attachments. Messages on the server stay intact."),
+                features: [("paperclip", String(localized: "Opened attachments")), ("envelope", String(localized: "Local copies in mailboxes"))]
             )
         case .trashBins:
             CleanupModuleView(
                 model: state.trash, module: m,
-                headline: "Esvazie todos os Lixos",
-                message: "O Lixo do Mac e dos discos externos, de uma vez.",
-                features: [("trash", "Lixo do utilizador"), ("externaldrive", "Lixo de discos externos")],
-                cleanTitle: "Esvaziar"
+                headline: String(localized: "Empty all Trash bins"),
+                message: String(localized: "The Trash of your Mac and of external drives, in one go."),
+                features: [("trash", String(localized: "User Trash")), ("externaldrive", String(localized: "External drive Trash"))],
+                cleanTitle: String(localized: "Empty")
             )
         case .privacy:
             CleanupModuleView(
                 model: state.privacy, module: m,
-                headline: "Apague o seu rasto digital",
-                message: "Histórico, cookies, caches e itens recentes. Palavras-passe e marcadores ficam intactos.",
-                features: [("safari", "Safari, Chrome, Firefox, Edge, Brave, Opera, Arc…"), ("clock", "Documentos e apps recentes"),
-                           ("eye", "Miniaturas do Quick Look")]
+                headline: String(localized: "Erase your digital footprint"),
+                message: String(localized: "History, cookies, caches and recent items. Passwords and bookmarks stay intact."),
+                features: [("safari", String(localized: "Safari, Chrome, Firefox, Edge, Brave, Opera, Arc…")), ("clock", String(localized: "Recent documents and apps")),
+                           ("eye", String(localized: "Quick Look thumbnails"))]
             )
         case .optimization: OptimizationView()
         case .maintenance: MaintenanceView()
