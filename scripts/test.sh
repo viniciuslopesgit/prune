@@ -1,6 +1,7 @@
 #!/bin/zsh
 # Runs the unit tests (Tests/PruneTests). Extra arguments go to `swift test`
 # (e.g. ./scripts/test.sh --filter ShredderTests).
+# Penetration tests, in an isolated environment: ./scripts/pentest.sh
 set -e
 cd "$(dirname "$0")/.."
 
@@ -12,6 +13,11 @@ if [[ "$(xcode-select -p 2>/dev/null)" == *CommandLineTools* ]]; then
            -Xlinker -F -Xlinker "$DEV/Frameworks"
            -Xlinker -rpath -Xlinker "$DEV/Frameworks"
            -Xlinker -rpath -Xlinker "$DEV/usr/lib")
+fi
+
+# BUILD_ONLY=1: only builds the tests (scripts/pentest.sh then runs them inside its sandbox).
+if [ "${BUILD_ONLY:-0}" = 1 ]; then
+    exec swift build --build-tests "${FLAGS[@]}" "$@"
 fi
 
 # Serially: some tests change the shared Settings (ignored folders).

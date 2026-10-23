@@ -2,6 +2,20 @@
 
 Notable changes in each version. Format [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions [SemVer](https://semver.org/).
 
+## [1.6.4] - 2026-10-23
+
+Security fixes found by a penetration test of Prune. Folder protection could be bypassed by writing a path in a different case, and the Shredder could destroy a copy of a file outside the folder you chose. Update if you use Prune.
+
+### Fixed
+- Folder protection: a path written in another case (such as `~/documents` or `/SYSTEM`) is now recognised as the protected folder it points to. Before, it could get past the list. The same goes for the folders you ignore in Settings.
+- Removing as administrator: if a folder is swapped for a link between the check and the removal, Prune now refuses to delete, instead of deleting where the link points.
+- Shredder: a file with other hard links (copies that share the same data, as in pnpm's `node_modules`) is no longer overwritten. Only its name in the chosen folder is deleted, and the other copies keep their contents.
+- Uninstaller: an app with a malformed identifier can no longer preselect other apps' files. Leftovers now match the app's identifier exactly.
+- Updates: download and "What's new" links are only opened when they are secure web addresses (https). A link to a local file or to another app is ignored.
+
+### Changed
+- Every check now runs penetration tests in an isolated environment, with no network, that can only write in its own temporary folder.
+
 ## [1.6.3] - 2026-10-23
 
 The website is easier to find in search engines and looks better when shared: links to it now show a preview image and description. The app does not change.
@@ -233,6 +247,7 @@ First public version.
 
 - First version: Smart Scan, Dashboard, cleanup, privacy, optimization, maintenance, uninstaller, updater, extensions, Space Lens, large files, duplicates and shredder.
 
+[1.6.4]: https://github.com/viniciuslopesgit/prune/releases/tag/v1.6.4
 [1.6.3]: https://github.com/viniciuslopesgit/prune/releases/tag/v1.6.3
 [1.6.2]: https://github.com/viniciuslopesgit/prune/releases/tag/v1.6.2
 [1.6.1]: https://github.com/viniciuslopesgit/prune/releases/tag/v1.6.1

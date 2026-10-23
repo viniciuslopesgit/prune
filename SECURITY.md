@@ -48,5 +48,6 @@ The fix comes out as a patch, with `### Fixed` in the CHANGELOG, which automatic
 - The administrator password is only asked for when it is needed, and only for paths that went through the protection list.
 - Telemetry off until there is consent, without names of files, folders or apps.
 - No third-party dependencies.
+- Penetration tests in every check (`scripts/pentest.sh`, on the dev branch): attacks on what deletes, runs as administrator or opens links, run in a sandbox with no network that can only write in its own temporary folder.
 
 Known and still unresolved risks are in the [risk register](https://github.com/viniciuslopesgit/prune/blob/dev/docs/RISK_REGISTER.md).

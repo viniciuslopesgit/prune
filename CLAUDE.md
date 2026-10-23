@@ -30,6 +30,7 @@ No change is committed or installed without passing the quality gate (`scripts/c
 - For each bug fix, a test that failed before the fix.
 - The coverage minimums in `scripts/check.sh` (`MIN_COVERAGE`) only go up. New files that delete or choose files go into the list.
 - Every new interface text gets its Portuguese translation in the same commit.
+- Code that deletes, runs as administrator or runs a shell only in the files allowed by `scripts/pentest.sh`; each new attack surface gets an attack test in `Tests/PruneTests/SecurityTests.swift`.
 - Never use `git commit --no-verify` or `git push --no-verify`.
 
 ## Commands
@@ -37,6 +38,7 @@ No change is committed or installed without passing the quality gate (`scripts/c
 ```bash
 ./scripts/test.sh                        # unit tests (--filter ShredderTests for one group)
 ./scripts/check.sh                       # quick check (the pre-commit hook runs this)
+./scripts/pentest.sh                     # penetration tests in a sandbox (no network, writes only in its temp folder)
 ./scripts/check.sh --full                # + version/CHANGELOG, universal signed app and self-test
 ./scripts/check_localization.py          # every interface text translated, no unused translations
 ./scripts/bump_version.sh patch|minor|major     # new version + CHANGELOG section

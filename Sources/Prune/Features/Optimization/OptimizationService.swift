@@ -152,7 +152,8 @@ enum OptimizationService {
             return Cleaner.removeSync(item.url, mode: .trash)
         }
         let domain = item.domain == .daemon ? "system" : "gui/\(Shell.uid)"
-        let r = await Shell.admin("launchctl bootout \(domain) \(Shell.quote(item.url.path)) 2>/dev/null; rm -f \(Shell.quote(item.url.path))")
+        let path = Shell.quote(item.url.path)
+        let r = await Shell.admin("/bin/launchctl bootout \(domain) \(path) 2>/dev/null; /bin/rm -f -- \(path)")
         return r.ok
     }
 

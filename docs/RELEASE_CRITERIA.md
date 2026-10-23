@@ -48,6 +48,7 @@ The README's "Download the latest version" link points to **Latest**, which is a
 | Q6 | Unit tests, 100% passing, serially | B | `.build/check-tests.log` |
 | Q7 | Minimum line coverage of the files that delete or choose what is deleted (`MIN_COVERAGE`) | B | `llvm-cov` report |
 | Q8 | Every interface text has a translation and every translation is used, with the same placeholders (`scripts/check_localization.py`) | B | Check output |
+| Q9 | Penetration tests in an isolated environment (`scripts/pentest.sh`): the sandbox is first proven to block the network, osascript and writes outside its folder; deleting, administrator and shell calls only in reviewed files; the `Security` suite passes inside it | B | `.build/pentest.log` |
 
 ### 3.2 Before each beta (`check.sh --full`, `ship.sh`, pre-push hook)
 
@@ -109,7 +110,7 @@ These rules apply to all code that removes, moves, overwrites or runs as adminis
 | Exception to a criterion (e.g. urgent security fix without the 24 h) | Maintainer: `STABLE_SOAK_HOURS=0 ./scripts/stable.sh --apply` | Reason written in the Pull Request and a line in the CHANGELOG |
 | Accepted risk | Maintainer | Entry in the [risk register](RISK_REGISTER.md), with date and reason |
 
-**There is never an exception** for Q5–Q7, R3–R5, S3, S8 or S9. These are the checks that stop a version that deletes wrongly from reaching anyone.
+**There is never an exception** for Q5–Q7, Q9, R3–R5, S3, S8 or S9. These are the checks that stop a version that deletes wrongly from reaching anyone.
 
 ### Regressions and withdrawing a version
 
@@ -142,7 +143,7 @@ Prune's numbering is already past 1.0.0 (there are published `v1.x` tags, which 
 |---|---|---|---|
 | G1 | Every automatic gate (section 3) met | Yes | Promotion Pull Request |
 | G2 | Each scan's rules with tests and ≥ 80% coverage in the scanners (R1) | Yes | `MIN_COVERAGE` includes the scanners |
-| G3 | Removal as administrator without a race between checking and deleting (R2) | Yes | Test that swaps the parent folder for a link |
+| G3 | Removal as administrator without a race between checking and deleting (R2) | Yes (1.6.4) | `SecurityTests`: the parent and grandparent folders swapped for links after the check |
 | G4 | Confirmation on every destructive and privileged action (R4) | Yes | Review of the views; list in section 4 |
 | G5 | Distribution without asking to disable quarantine: Developer ID and notarization, **or** an accepted risk recorded with a documented alternative (e.g. building from source) (R3) | Yes | `spctl -a -vv` accepts the app, or an entry in the risk register |
 | G6 | `main` branch protection on GitHub: Pull Request only, no force-push (R10) | Yes | Repository settings |

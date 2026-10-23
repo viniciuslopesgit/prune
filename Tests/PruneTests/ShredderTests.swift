@@ -8,13 +8,16 @@ struct ShredderTests {
     func shredsFileAndItsData(size: Int) throws {
         let tmp = try TempDir()
         let f = try tmp.file("secret.bin", noise(size, seed: 1))
-        // A hard link shares the data: if the file were only unlinked, the contents would stay here.
-        let hard = tmp.path("hard-link")
-        try FileManager.default.linkItem(at: f, to: hard)
+        // A descriptor opened before keeps reaching the same data after the name is gone (without being
+        // a second name, which the Shredder would leave alone): if the file were only unlinked, the
+        // contents would still be readable here.
+        let probe = try FileHandle(forReadingFrom: f)
+        defer { try? probe.close() }
 
         #expect(Shredder.shredSync(f, passes: 1))
         #expect(!exists(f))
-        let left = try Data(contentsOf: hard)
+        try probe.seek(toOffset: 0)
+        let left = try probe.readToEnd() ?? Data()
         #expect(left.isEmpty, "the original contents are still on disk")
     }
 
@@ -40,12 +43,12 @@ struct ShredderTests {
         let folder = try tmp.dir("folder")
         let a = try tmp.file("folder/a.txt", "a")
         try tmp.file("folder/sub/b.txt", "b")
-        let hard = tmp.path("copy-a")
-        try FileManager.default.linkItem(at: a, to: hard)
+        let probe = try FileHandle(forReadingFrom: a)
+        defer { try? probe.close() }
 
         #expect(Shredder.shredSync(folder, passes: 1))
         #expect(!exists(folder))
-        #expect(try Data(contentsOf: hard).isEmpty)
+        #expect(try probe.readToEnd() ?? Data() == Data())
     }
 
     @Test("A symbolic link inside the folder never overwrites the file outside")

@@ -7,7 +7,9 @@ final class TempDir {
     let url: URL
 
     init() throws {
-        url = FileManager.default.temporaryDirectory
+        // scripts/pentest.sh points this at its isolated folder (the only place its sandbox lets them write).
+        let base = ProcessInfo.processInfo.environment["PRUNE_TEST_TMP"].map { URL(fileURLWithPath: $0, isDirectory: true) }
+        url = (base ?? FileManager.default.temporaryDirectory)
             .appendingPathComponent("prune-tests-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
     }

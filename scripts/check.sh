@@ -2,7 +2,7 @@
 # Quality gate: everything that must pass before a commit or a deploy.
 #
 #   ./scripts/check.sh          quick (before each commit): scripts, secrets, translations, new tests,
-#                               warning-free build, unit tests and minimum coverage
+#                               warning-free build, unit tests, minimum coverage and isolated pentest
 #   ./scripts/check.sh --full   all of the above plus (before push/deploy): version and CHANGELOG,
 #                               universal, signed build/Prune.app, and the app's self-test
 #
@@ -27,7 +27,7 @@ done
 typeset -A MIN_COVERAGE=(
     Core/SafetyGuard.swift 95
     Features/Shredder/Shredder.swift 95
-    Core/Cleaning/Cleaner.swift 75
+    Core/Cleaning/Cleaner.swift 90
     Core/Cleaning/CleanItem.swift 90
     Core/FileSystem.swift 70
     Features/Duplicates/DuplicateFinder.swift 85
@@ -165,6 +165,11 @@ for file min in ${(kv)MIN_COVERAGE}; do
 done
 [ $LOW = 0 ] || fail "Coverage below the minimum."
 ok "${#MIN_COVERAGE} critical files above the minimum"
+
+step "Penetration tests (isolated)"
+# Attacks on deleting, administrator scripts and links, inside a sandbox with no network that only
+# writes in its own temporary folder (scripts/pentest.sh). Reuses the build of the unit tests.
+./scripts/pentest.sh --skip-build || fail "The penetration tests failed."
 
 if [ $FULL = 1 ]; then
     step "Version and CHANGELOG"

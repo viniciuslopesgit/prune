@@ -43,11 +43,20 @@ enum Shredder {
     }
 
     /// Overwrites the contents: alternating 0x00/0xFF passes, the last one with random data.
+    ///
+    /// The file is opened without following links (`O_NOFOLLOW`) and checked on the open descriptor, so
+    /// it cannot be swapped for a link to another file between the check and the write. A file with
+    /// other hard links shares its contents with names elsewhere (possibly outside what was chosen):
+    /// it is not overwritten, only its name here is deleted, and the other names keep their data.
     private static func overwrite(_ url: URL, passes: Int) -> Bool {
-        guard let attrs = try? FileManager.default.attributesOfItem(atPath: url.path),
-              let size = (attrs[.size] as? NSNumber)?.intValue,
-              let handle = try? FileHandle(forUpdating: url) else { return false }
+        let fd = open(url.path, O_WRONLY | O_NOFOLLOW | O_CLOEXEC)
+        guard fd >= 0 else { return false }
+        let handle = FileHandle(fileDescriptor: fd, closeOnDealloc: true)
         defer { try? handle.close() }
+        var st = stat()
+        guard fstat(fd, &st) == 0, st.st_mode & S_IFMT == S_IFREG else { return false }
+        if st.st_nlink > 1 { return true }
+        let size = Int(st.st_size)
         let passes = max(1, passes)
         let chunk = 1_048_576
         var buffer = [UInt8](repeating: 0, count: chunk)

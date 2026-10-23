@@ -100,19 +100,14 @@ enum AppScanner {
 
     /// Support files the app has spread across the system.
     static func leftovers(for app: AppInfo) -> [CleanItem] {
-        let id = app.bundleID.lowercased()
         let names = Set([app.name, app.url.deletingPathExtension().lastPathComponent]
             .map { $0.lowercased() }
             .flatMap { [$0, $0.replacingOccurrences(of: " ", with: "")] }
             .filter { $0.count >= 4 })
         var found: [URL] = []
         for loc in leftoverLocations {
-            for entry in FS.children(expand(loc)) {
-                let n = entry.lastPathComponent.lowercased()
-                let stem = (n as NSString).deletingPathExtension
-                let byID = n.contains(id) || stem.hasSuffix("." + id)
-                let byName = names.contains(stem) || names.contains(n)
-                if byID || byName { found.append(entry) }
+            for entry in FS.children(expand(loc)) where isLeftover(entry.lastPathComponent, bundleID: app.bundleID, names: names) {
+                found.append(entry)
             }
         }
         found = found.filter { SafetyGuard.canDelete($0) }
@@ -120,6 +115,21 @@ enum AppScanner {
         return zip(found, sizes).map { url, size in
             CleanItem(url: url, size: max(size, 1), selected: true, detail: url.deletingLastPathComponent().displayPath)
         }.sorted { $0.size > $1.size }
+    }
+
+    /// Whether a file or folder name belongs to the app: its bundle ID as whole dot-separated parts
+    /// ("com.foo.app.plist", "TEAMID.com.foo.app", "group.com.foo.app.shared") or its name.
+    ///
+    /// The bundle ID comes from the app's own Info.plist, which anyone can write. Matching it as any
+    /// substring let an app with the ID "e" or "com" preselect almost everything in ~/Library for deletion.
+    /// So it must look like a real bundle ID (at least two parts) and only matches at part boundaries.
+    static func isLeftover(_ entryName: String, bundleID: String, names: Set<String>) -> Bool {
+        let n = entryName.lowercased()
+        let stem = (n as NSString).deletingPathExtension
+        if names.contains(stem) || names.contains(n) { return true }
+        let id = bundleID.lowercased()
+        guard id.range(of: #"^[a-z0-9_-]+(\.[a-z0-9_-]+)+$"#, options: .regularExpression) != nil else { return false }
+        return n == id || n.hasPrefix(id + ".") || n.hasSuffix("." + id) || n.contains("." + id + ".")
     }
 
     /// Leftovers of apps that have been removed (folders named after a bundle ID with no matching app).

@@ -84,6 +84,13 @@ enum Version {
 }
 
 enum UpdateService {
+    /// A link from an appcast, only if it is https. The appcast comes from the network (sometimes over
+    /// plain http) and its links are opened with NSWorkspace: a file:// link or another app's scheme
+    /// would open or run something local instead of a download page.
+    static func webURL(_ string: String?) -> URL? {
+        guard let string, let url = URL(string: string), url.scheme?.lowercased() == "https", url.host?.isEmpty == false else { return nil }
+        return url
+    }
 
     static func sparkleUpdates(_ apps: [AppInfo], progress: ProgressReporter) async -> [AppUpdate] {
         await withTaskGroup(of: AppUpdate?.self) { group in
@@ -121,7 +128,7 @@ enum UpdateService {
                     guard newer else { return nil }
                     return AppUpdate(
                         name: app.name, current: app.version, latest: best.short ?? best.build ?? "?", source: .sparkle,
-                        appURL: app.url, downloadURL: best.url.flatMap(URL.init(string:)), notesURL: best.notes.flatMap(URL.init(string:))
+                        appURL: app.url, downloadURL: webURL(best.url), notesURL: webURL(best.notes)
                     )
                 }
             }

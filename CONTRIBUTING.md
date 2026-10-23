@@ -17,12 +17,13 @@ cd prune
 ./scripts/setup_hooks.sh   # check before each commit and each push
 ./scripts/test.sh          # unit tests
 ./scripts/check.sh         # quick check (the same as the pre-commit hook)
+./scripts/pentest.sh       # penetration tests, in an isolated environment
 ```
 
 ## Rules for changes
 
 1. **Tests in the same Pull Request.** A new or changed feature comes with tests in `Tests/PruneTests`. A fix comes with a test that failed before it. A new file in `Sources/` without tests blocks the commit.
-2. **Everything that deletes goes through `SafetyGuard.canDelete`.** Never call `FileManager.removeItem`, `trashItem` or `rm` directly on paths that have not gone through it.
+2. **Everything that deletes goes through `SafetyGuard.canDelete`.** Never call `FileManager.removeItem`, `trashItem` or `rm` directly on paths that have not gone through it. Code that deletes, runs as administrator or runs a shell only lives in the files listed in `scripts/pentest.sh`; a new place needs its own attack test in `Tests/PruneTests/SecurityTests.swift`.
 3. **Test destructive operations only in disposable folders** (`TempDir` in the tests). Never in your `~`, the real Trash or `/Applications`.
 4. **Check what must not change**, as well as what changes: a link's target stays intact, a protected folder is still there.
 5. **Destructive or privileged actions ask for confirmation** and show what is going to happen.

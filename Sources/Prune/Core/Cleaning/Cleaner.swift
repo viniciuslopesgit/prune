@@ -70,22 +70,41 @@ enum Cleaner {
         let safe = urls.filter { SafetyGuard.canDelete($0) }
         guard !safe.isEmpty else { return CleanReport(failed: urls) }
         let sizes = FS.sizes(of: safe)
-        let script: String
-        if mode == .trash {
-            // Moves to the user's Trash, keeping names unique.
-            let trash = home.appendingPathComponent(".Trash").path
-            script = safe.map { url in
-                let dest = trash + "/" + url.lastPathComponent + " " + String(UUID().uuidString.prefix(6))
-                return "mv -f \(Shell.quote(url.path)) \(Shell.quote(dest)) && chown -R \(Shell.uid) \(Shell.quote(dest))"
-            }.joined(separator: "; ")
-        } else {
-            script = "rm -rf " + safe.map { Shell.quote($0.path) }.joined(separator: " ")
-        }
-        _ = await Shell.admin(script)
+        _ = await Shell.admin(adminScript(safe, mode: mode))
         var r = CleanReport()
         for (url, size) in zip(safe, sizes) {
             if url.exists { r.failed.append(url) } else { r.freed += size; r.removed += 1 }
         }
         return r
+    }
+
+    /// The script `retryAsAdmin` runs as root, one subshell per item.
+    ///
+    /// Root must not follow a link that someone puts in place after `SafetyGuard` checked the path:
+    /// each subshell enters the item's real parent folder (`cd -P`), confirms it is still the folder that
+    /// was checked and only then acts on `./name`. From then on the folder is held by the shell itself,
+    /// so swapping one of its parents for a link changes nothing. The item itself is never followed:
+    /// `rm -r` and `mv` act on a link, not on its target, and `chown -h` likewise.
+    /// Items whose parent cannot be resolved, or that the guard refuses once resolved, are left out.
+    static func adminScript(_ urls: [URL], mode: DeleteMode,
+                            trash: URL = home.appendingPathComponent(".Trash"), uid: uid_t = Shell.uid) -> String {
+        let trashPath = SafetyGuard.realPath(trash.path) ?? trash.path
+        return urls.compactMap { url -> String? in
+            let name = url.lastPathComponent
+            guard !name.isEmpty, name != ".", name != "..",
+                  let parent = SafetyGuard.realPath(url.deletingLastPathComponent().path),
+                  SafetyGuard.canDelete(URL(fileURLWithPath: parent).appendingPathComponent(name)) else { return nil }
+            let enter = "cd -P -- \(Shell.quote(parent)) && [ \"$(pwd -P)\" = \(Shell.quote(parent)) ]"
+            let item = Shell.quote("./" + name)
+            switch mode {
+            case .permanent:
+                return "(\(enter) && /bin/rm -rf -- \(item))"
+            case .trash:
+                // Moves to the user's Trash (a real folder, not a link), keeping names unique.
+                let dest = Shell.quote(trashPath + "/" + name + " " + String(UUID().uuidString.prefix(6)))
+                let trashOK = "[ -d \(Shell.quote(trashPath)) ] && [ ! -L \(Shell.quote(trashPath)) ]"
+                return "(\(enter) && \(trashOK) && /bin/mv -- \(item) \(dest) && /usr/sbin/chown -hR \(uid) \(dest))"
+            }
+        }.joined(separator: "; ")
     }
 }

@@ -60,7 +60,8 @@ final class AppSettings {
     }
 
     func isIgnored(_ path: String) -> Bool {
-        ignoredPaths.contains { path == $0 || path.hasPrefix($0 + "/") }
+        let p = SafetyGuard.key(path)
+        return ignoredPaths.contains { let i = SafetyGuard.key($0); return p == i || p.hasPrefix(i + "/") }
     }
 
     var launchAtLogin: Bool {

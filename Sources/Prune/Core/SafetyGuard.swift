@@ -23,14 +23,21 @@ enum SafetyGuard {
         ] {
             s.insert(h + "/" + sub)
         }
-        return s
+        return Set(s.map(key))
     }()
 
     private static let protectedPrefixes: [String] = [
         "/System/", "/usr/bin/", "/usr/sbin/", "/usr/lib/", "/usr/libexec/", "/usr/share/", "/bin/",
         "/sbin/", "/private/var/db/", "/Library/Apple/", home.path + "/Library/Keychains/",
         home.path + "/Library/Mobile Documents/",
-    ]
+    ].map(key)
+
+    /// APFS and HFS+ volumes are case-insensitive by default and accept any Unicode normalization:
+    /// "/SYSTEM" or "~/documents" are the same folder as "/System" and "~/Documents". Paths are
+    /// compared in this form, so a spelling variant cannot get past the list.
+    static func key(_ path: String) -> String {
+        path.precomposedStringWithCanonicalMapping.lowercased()
+    }
 
     static func canDelete(_ url: URL) -> Bool {
         let path = url.standardizedFileURL.path
@@ -43,16 +50,18 @@ enum SafetyGuard {
     }
 
     /// `realpath(3)`: unlike `resolvingSymlinksInPath()`, keeps the /private prefix.
-    private static func realPath(_ path: String) -> String? {
+    static func realPath(_ path: String) -> String? {
         guard let resolved = realpath(path, nil) else { return nil }
         defer { free(resolved) }
         return String(cString: resolved)
     }
 
     private static func isAllowed(_ path: String) -> Bool {
-        if protectedExact.contains(path) { return false }
-        if protectedPrefixes.contains(where: { path.hasPrefix($0) }) { return false }
-        if path.hasPrefix(Bundle.main.bundlePath) { return false }
+        let k = key(path)
+        if protectedExact.contains(k) { return false }
+        if protectedPrefixes.contains(where: { k.hasPrefix($0) }) { return false }
+        let bundle = key(Bundle.main.bundlePath)
+        if k == bundle || k.hasPrefix(bundle + "/") { return false }
         return !AppSettings.shared.isIgnored(path)
     }
 }
