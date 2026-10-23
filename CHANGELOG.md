@@ -2,6 +2,13 @@
 
 Notable changes in each version. Format [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions [SemVer](https://semver.org/).
 
+## [1.4.7] - 2026-10-23
+
+A security alert from GitHub's code scanning resolved in the release tooling. The app does not change.
+
+### Changed
+- The release tooling no longer slows down on a CHANGELOG with many blank lines (GitHub code scanning alert).
+
 ## [1.4.6] - 2026-10-23
 
 The self-test no longer crashes on macOS 14.
@@ -184,6 +191,7 @@ First public version.
 
 - First version: Smart Scan, Dashboard, cleanup, privacy, optimization, maintenance, uninstaller, updater, extensions, Space Lens, large files, duplicates and shredder.
 
+[1.4.7]: https://github.com/viniciuslopesgit/prune/releases/tag/v1.4.7
 [1.4.6]: https://github.com/viniciuslopesgit/prune/releases/tag/v1.4.6
 [1.4.5]: https://github.com/viniciuslopesgit/prune/releases/tag/v1.4.5
 [1.4.4]: https://github.com/viniciuslopesgit/prune/releases/tag/v1.4.4

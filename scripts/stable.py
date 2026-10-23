@@ -66,7 +66,9 @@ def changelog_sections(text):
 
 def has_fixes(section):
     # "Corrigido" is the heading of the sections written before the project moved to English (up to 1.3.3).
-    return re.search(r"^### (?:Fixed|Corrigido)\s*$\n(?:\s*\n)*- \S", section or "", re.M) is not None
+    # Only spaces and tabs inside a line ([ \t], not \s, which also matches newlines): with \s the blank
+    # lines could be split in many ways and the search took exponential time (CodeQL py/redos).
+    return re.search(r"^### (?:Fixed|Corrigido)[ \t]*\n(?:[ \t]*\n)*- \S", section or "", re.M) is not None
 
 
 def mentions(issue_text, version):

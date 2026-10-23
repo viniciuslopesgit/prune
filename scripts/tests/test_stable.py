@@ -48,6 +48,14 @@ class ParsingTests(unittest.TestCase):
         self.assertFalse(has_fixes("### Fixed\n\n### Changed\n- x\n"), "an empty section does not count")
         self.assertFalse(has_fixes("### Added\n- Fixed the text.\n"))
         self.assertFalse(has_fixes(None))
+        self.assertTrue(has_fixes("### Fixed  \n \t\n\n- Something.\n"), "spaces on the heading and blank lines")
+
+    def test_has_fixes_runs_in_linear_time(self):
+        # Many blank lines and no list item: took more than 5 min with the old regex (CodeQL py/redos).
+        import time
+        start = time.monotonic()
+        self.assertFalse(has_fixes("### Fixed" + " \n" * 50_000 + "x"))
+        self.assertLess(time.monotonic() - start, 1.0)
 
     def test_mentions(self):
         self.assertTrue(mentions("Crash in v1.2.6 when cleaning", "1.2.6"))
