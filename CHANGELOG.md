@@ -2,6 +2,13 @@
 
 Notable changes in each version. Format [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions [SemVer](https://semver.org/).
 
+## [1.6.2] - 2026-10-23
+
+The website now explains better why macOS asks before opening Prune the first time, and how to check the app for yourself. The app does not change.
+
+### Changed
+- The website's answer on why macOS blocks Prune explains that it is an open-source project without Apple notarization, and how to read the code, check your download and build the app yourself.
+
 ## [1.6.1] - 2026-10-23
 
 The website now looks like the app: the same ivory and ink colours, the sage leaf, wide titles and rounded panels, with a scan ring around the Prune icon. The app does not change.
@@ -215,6 +222,7 @@ First public version.
 
 - First version: Smart Scan, Dashboard, cleanup, privacy, optimization, maintenance, uninstaller, updater, extensions, Space Lens, large files, duplicates and shredder.
 
+[1.6.2]: https://github.com/viniciuslopesgit/prune/releases/tag/v1.6.2
 [1.6.1]: https://github.com/viniciuslopesgit/prune/releases/tag/v1.6.1
 [1.6.0]: https://github.com/viniciuslopesgit/prune/releases/tag/v1.6.0
 [1.5.0]: https://github.com/viniciuslopesgit/prune/releases/tag/v1.5.0

@@ -81,7 +81,14 @@
 <section id="faq" aria-labelledby="q-h">
   <h2 id="q-h">Perguntas</h2>
   <details><summary>Porque é que o macOS bloqueia o Prune da primeira vez?</summary>
-    <p>O Prune não está registado na Apple. Autorize-o uma vez em Definições do Sistema, Privacidade e Segurança, Abrir mesmo assim, ou execute no Terminal:</p>
+    <p>O Prune é um projeto gratuito e de código aberto, feito por programadores independentes, não por uma empresa. Para abrir sem aviso, uma app para Mac tem de ser notarizada pela Apple, o que exige uma conta paga de Apple Developer. O Prune ainda não é notarizado, por isso o macOS não consegue confirmar quem o fez e pergunta-lhe primeiro.</p>
+    <p>É um aviso de que o programador é desconhecido, não um sinal de que algo está errado com a app. Como o código é aberto, não precisa de acreditar só na nossa palavra:</p>
+    <ul>
+      <li>Leia cada linha do <a href="https://github.com/viniciuslopesgit/prune">código no GitHub</a>.</li>
+      <li>Confirme que o seu download é o que publicámos: cada versão lista os checksums em <code>SHA256SUMS</code>, e <code>shasum -a 256 Prune-*.dmg</code> mostra o seu.</li>
+      <li>Compile a app com <code>./scripts/build_app.sh</code>.</li>
+    </ul>
+    <p>Para a abrir, vá a Definições do Sistema, Privacidade e Segurança e clique em Abrir mesmo assim. Só precisa de o fazer uma vez. Ou execute no Terminal:</p>
     <pre><code>xattr -dr com.apple.quarantine /Applications/Prune.app</code></pre></details>
   <details><summary>Porque precisa de Acesso Total ao Disco?</summary>
     <p>Caches, registos e dados dos browsers estão em pastas que o macOS protege. Sem acesso, o Prune não os consegue ver nem limpar.</p></details>

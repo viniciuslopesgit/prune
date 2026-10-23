@@ -136,3 +136,7 @@ footer span:last-child { display: flex; gap: 20px; }
   .safety { margin-top: 0; }
   ol.steps { margin-bottom: 80px; }
 }
+details ul { margin: 12px 0 0; padding-left: 1.2em; color: var(--muted); max-width: 62ch; }
+details li { margin-bottom: .4em; }
+details li::marker { color: var(--leaf); }
+details :not(pre) > code { font-size: .88em; background: var(--inset); padding: 1px 6px; border-radius: 5px; }
