@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Treemap "squarified": área proporcional ao tamanho.
+/// "Squarified" treemap: area proportional to size.
 struct TreemapView: View {
     let node: DiskNode
     let marked: Set<DiskNode>
@@ -8,7 +8,7 @@ struct TreemapView: View {
     let onOpen: (DiskNode) -> Void
 
     private static let palette: [Color] = [
-        // Tons de jardim: salva, oliva, trigo, casca, ardósia, pedra.
+        // Garden tones: sage, olive, wheat, bark, slate, stone.
         Color(hex: 0x5E7A4F), Color(hex: 0xC9A66B), Color(hex: 0x4F6B70), Color(hex: 0x8FAE7C),
         Color(hex: 0x9C7A54), Color(hex: 0x7D8A5A), Color(hex: 0xA89F86), Color(hex: 0x6E6A60),
     ]

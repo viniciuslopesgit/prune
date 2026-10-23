@@ -1,8 +1,8 @@
 import AppKit
 import Observation
 
-/// Modelo genérico usado pelos módulos de limpeza baseados em categorias
-/// (Lixo do Sistema, Anexos do Mail, Lixo, Privacidade).
+/// Generic model used by the category-based cleanup modules
+/// (System Junk, Mail Attachments, Trash Bins, Privacy).
 @MainActor
 @Observable
 final class CleanupModel {
@@ -14,9 +14,9 @@ final class CleanupModel {
     var progressText = ""
     var report = CleanReport()
     var lastScan: Date?
-    /// Apps que devem estar fechadas antes da limpeza (bundle IDs → nome).
+    /// Apps that must be closed before cleaning (bundle IDs → name).
     var appsToClose: [String: String] = [:]
-    /// Nome do módulo nas estatísticas (ex.: "systemJunk").
+    /// Module name in the statistics (e.g. "systemJunk").
     var analyticsName = ""
 
     private let scanner: @Sendable (ProgressReporter) async -> [CleanCategory]
@@ -37,7 +37,7 @@ final class CleanupModel {
 
     func scan() async {
         phase = .scanning
-        progressText = "A preparar…"
+        progressText = String(localized: "Preparing…")
         let reporter = ProgressReporter { [weak self] t in self?.progressText = t }
         let scanner = self.scanner
         let result = await Task.detached(priority: .userInitiated) { await scanner(reporter) }.value
@@ -56,7 +56,7 @@ final class CleanupModel {
         for cat in categories {
             let items = cat.items.filter(\.selected)
             guard !items.isEmpty else { continue }
-            progressText = "A limpar \(cat.name)…"
+            progressText = String(localized: "Cleaning \(cat.name)…")
             let r = await Task.detached { await Cleaner.remove(items, mode: mode) }.value
             total.merge(r)
         }
@@ -90,7 +90,7 @@ final class CleanupModel {
         report = CleanReport()
     }
 
-    // MARK: Seleção
+    // MARK: Selection
 
     func toggleCategory(_ id: String) {
         guard let i = categories.firstIndex(where: { $0.id == id }) else { return }
@@ -110,7 +110,7 @@ final class CleanupModel {
         }
     }
 
-    /// Apps abertas que impedem a limpeza.
+    /// Open apps that block the cleanup.
     var runningBlockers: [NSRunningApplication] {
         NSWorkspace.shared.runningApplications.filter {
             guard let id = $0.bundleIdentifier else { return false }

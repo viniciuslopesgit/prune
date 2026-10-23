@@ -1,16 +1,16 @@
 import Foundation
 
-/// Nó da árvore da Lente de Espaço. Para poupar memória guarda só o nome:
-/// o caminho completo é reconstruído a partir dos pais quando é preciso.
+/// A node of the Space Lens tree. To save memory it only keeps the name:
+/// the full path is rebuilt from the parents when needed.
 final class DiskNode: Identifiable, Hashable {
     let name: String
     let isDirectory: Bool
-    /// Nó agregado ("itens mais pequenos") — não pode ser apagado nem aberto.
+    /// Aggregate node ("smaller items") — cannot be deleted or opened.
     let isAggregate: Bool
     var size: Int64
     var children: [DiskNode]
     weak var parent: DiskNode?
-    /// Só a raiz guarda o URL.
+    /// Only the root keeps the URL.
     private let rootURL: URL?
 
     init(name: String, isDirectory: Bool, size: Int64, children: [DiskNode] = [], isAggregate: Bool = false, rootURL: URL? = nil) {
@@ -42,11 +42,11 @@ final class DiskNode: Identifiable, Hashable {
     }
 }
 
-/// Analisa uma pasta e constrói a árvore de tamanhos.
+/// Scans a folder and builds the size tree.
 final class SpaceScanner: @unchecked Sendable {
-    /// Pastas mais pequenas do que isto ficam na árvore, mas sem o conteúdo detalhado.
+    /// Folders smaller than this stay in the tree, but without their detailed contents.
     static let detailThreshold: Int64 = 1_000_000
-    /// Número máximo de filhos guardados por pasta; os restantes são agregados.
+    /// Maximum number of children kept per folder; the rest are aggregated.
     static let maxChildren = 50
 
     private let progress: ProgressReporter
@@ -73,8 +73,8 @@ final class SpaceScanner: @unchecked Sendable {
                         children: Self.trim(children), rootURL: url)
     }
 
-    /// Cada nó é processado na sua própria autorelease pool: os URLs e atributos temporários
-    /// de uma pasta são libertados assim que ela termina, em vez de no fim da análise.
+    /// Each node is processed in its own autorelease pool: a folder's temporary URLs and attributes
+    /// are freed as soon as it finishes, instead of at the end of the scan.
     private func node(for url: URL) -> DiskNode? {
         autoreleasepool { makeNode(url) }
     }
@@ -88,7 +88,7 @@ final class SpaceScanner: @unchecked Sendable {
             tick(url)
             return DiskNode(name: name, isDirectory: false, size: Int64(rv.totalFileAllocatedSize ?? rv.fileAllocatedSize ?? 0))
         }
-        // Não atravessa outros volumes montados.
+        // Does not cross into other mounted volumes.
         if let v = rv.volumeIdentifier as? NSObject, let root = rootVolume, !v.isEqual(root) { return nil }
         if url.path == "/System/Volumes" || url.path == "/Volumes" { return nil }
         if rv.isPackage == true {
@@ -102,23 +102,23 @@ final class SpaceScanner: @unchecked Sendable {
             if let n = node(for: e) { children.append(n) }
         }
         let total = children.reduce(0) { $0 + $1.size }
-        // Pastas pequenas não justificam guardar centenas de nós que nunca serão vistos.
+        // Small folders do not justify keeping hundreds of nodes that will never be seen.
         let kept = total < Self.detailThreshold ? [] : Self.trim(children)
         return DiskNode(name: name, isDirectory: true, size: total, children: kept)
     }
 
     private func tick(_ url: URL) {
         lock.lock(); count += 1; let c = count; lock.unlock()
-        if c % 500 == 0 { progress.report("\(c.formatted()) itens analisados · \(url.deletingLastPathComponent().displayPath)") }
+        if c % 500 == 0 { progress.report(String(localized: "\(c.formatted()) items scanned · \(url.deletingLastPathComponent().displayPath)")) }
     }
 
-    /// Mantém os maiores itens; agrega os restantes num só nó.
+    /// Keeps the largest items; aggregates the rest into a single node.
     private static func trim(_ nodes: [DiskNode]) -> [DiskNode] {
         guard nodes.count > maxChildren else { return nodes.sorted { $0.size > $1.size } }
         let sorted = nodes.sorted { $0.size > $1.size }
         var result = Array(sorted.prefix(maxChildren))
         let rest = sorted.dropFirst(maxChildren)
-        result.append(DiskNode(name: "\(Fmt.count(rest.count, "item mais pequeno", "itens mais pequenos"))", isDirectory: false,
+        result.append(DiskNode(name: Fmt.count(rest.count, String(localized: "smaller item"), String(localized: "smaller items")), isDirectory: false,
                                size: rest.reduce(0) { $0 + $1.size }, isAggregate: true))
         return result
     }

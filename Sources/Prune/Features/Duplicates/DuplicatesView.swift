@@ -9,31 +9,31 @@ struct DuplicatesView: View {
         @Bindable var model = state.duplicates
         VStack(spacing: 0) {
             if model.scanning {
-                ScanningView(module: .duplicates, title: model.mode == .exact ? "A procurar duplicados…" : "A comparar fotografias…", detail: model.progressText)
+                ScanningView(module: .duplicates, title: model.mode == .exact ? String(localized: "Looking for duplicates…") : String(localized: "Comparing photos…"), detail: model.progressText)
             } else if !model.scanned {
                 ModuleHeader(module: .duplicates)
                 setup(model)
             } else {
-                ModuleHeader(module: .duplicates, subtitle: model.groups.isEmpty ? "Sem duplicados" : "\(Fmt.count(model.groups.count, "grupo", "grupos")) · \(Fmt.bytes(model.wasted)) em cópias") {
-                    Button("Nova análise") { model.scanned = false }.buttonStyle(.bordered)
+                ModuleHeader(module: .duplicates, subtitle: model.groups.isEmpty ? String(localized: "No duplicates") : String(localized: "\(Fmt.count(model.groups.count, String(localized: "group"), String(localized: "groups"))) · \(Fmt.bytes(model.wasted)) in copies")) {
+                    Button("New scan") { model.scanned = false }.buttonStyle(.bordered)
                 }
                 if let msg = model.message {
                     StatusBanner(text: msg, icon: "checkmark.circle", actionTitle: "OK") { model.message = nil }
                         .padding(.horizontal, 32).padding(.bottom, 8)
                 }
                 if model.groups.isEmpty {
-                    EmptyStateView(icon: "checkmark.circle", title: "Sem duplicados", message: "Nenhuma cópia nas pastas escolhidas.")
+                    EmptyStateView(icon: "checkmark.circle", title: String(localized: "No duplicates"), message: String(localized: "No copies in the chosen folders."))
                 } else {
                     HStack(spacing: 14) {
                         GlassPanel { groupList(model) }.frame(width: 340)
                         GlassPanel { groupDetail(model) }
                     }
                     .padding(.horizontal, 32).padding(.bottom, 14)
-                    ActionFooter(summary: "\(Fmt.bytes(model.markedSize)) selecionados", buttonTitle: "Remover",
+                    ActionFooter(summary: String(localized: "\(Fmt.bytes(model.markedSize)) selected"), buttonTitle: String(localized: "Remove"),
                                  disabled: model.marked.isEmpty,
-                                 secondary: model.mode == .exact ? ("Seleção automática", { model.autoSelect() }) : nil) { confirm = true }
-                        .confirm("Remover \(Fmt.count(model.marked.count, "cópia", "cópias"))?", isPresented: $confirm,
-                                 message: "Fica sempre pelo menos uma cópia de cada ficheiro.", button: "Remover") {
+                                 secondary: model.mode == .exact ? (String(localized: "Auto select"), { model.autoSelect() }) : nil) { confirm = true }
+                        .confirm(String(localized: "Remove \(Fmt.count(model.marked.count, String(localized: "copy"), String(localized: "copies")))?"), isPresented: $confirm,
+                                 message: String(localized: "At least one copy of each file is always kept."), button: String(localized: "Remove")) {
                             Task { await model.removeMarked() }
                         }
                 }
@@ -46,12 +46,12 @@ struct DuplicatesView: View {
         return VStack(spacing: 20) {
             ModuleArtwork(module: .duplicates).frame(width: 200, height: 200)
             Picker("", selection: $model.mode) {
-                ForEach(DuplicatesModel.Mode.allCases) { Text($0.rawValue).tag($0) }
+                ForEach(DuplicatesModel.Mode.allCases) { Text($0.title).tag($0) }
             }
             .pickerStyle(.segmented).labelsHidden().frame(width: 380)
             Text(model.mode == .exact
-                 ? "Ficheiros com conteúdo idêntico, mesmo com nomes diferentes."
-                 : "Fotografias parecidas: sequências, edições e capturas repetidas.")
+                 ? "Files with identical contents, even with different names."
+                 : "Look-alike photos: bursts, edits and repeated screenshots.")
                 .foregroundStyle(.secondary)
             GlassPanel {
                 VStack(alignment: .leading, spacing: 6) {
@@ -63,21 +63,21 @@ struct DuplicatesView: View {
                             Button { model.roots.removeAll { $0 == url } } label: { Image(systemName: "minus.circle") }.buttonStyle(.borderless)
                         }
                     }
-                    Button { addFolder(model) } label: { Label("Adicionar pasta", systemImage: "plus") }.buttonStyle(.borderless)
+                    Button { addFolder(model) } label: { Label("Add folder", systemImage: "plus") }.buttonStyle(.borderless)
                 }
                 .padding(14)
             }
             .frame(width: 460)
             if model.mode == .exact {
-                Stepper("Ignorar ficheiros com menos de \(model.minKB) KB", value: $model.minKB, in: 0...10_000, step: 50).frame(width: 380)
+                Stepper("Ignore files smaller than \(model.minKB) KB", value: $model.minKB, in: 0...10_000, step: 50).frame(width: 380)
             } else {
                 HStack {
-                    Text("Semelhança")
-                    Slider(value: $model.similarity, in: 0.2...0.8) { Text("") } minimumValueLabel: { Text("Estrita") } maximumValueLabel: { Text("Ampla") }
+                    Text("Similarity")
+                    Slider(value: $model.similarity, in: 0.2...0.8) { Text("") } minimumValueLabel: { Text("Strict") } maximumValueLabel: { Text("Loose") }
                 }
                 .frame(width: 420)
             }
-            BigActionButton(title: "Analisar", disabled: model.roots.isEmpty) { Task { await model.scan() } }
+            BigActionButton(title: String(localized: "Scan"), disabled: model.roots.isEmpty) { Task { await model.scan() } }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
@@ -102,7 +102,7 @@ struct DuplicatesView: View {
                     }
                     VStack(alignment: .leading, spacing: 1) {
                         Text(first.url.lastPathComponent).lineLimit(1).truncationMode(.middle)
-                        Text(Fmt.count(g.files.count, "cópia", "cópias")).font(.caption).foregroundStyle(.secondary)
+                        Text(Fmt.count(g.files.count, String(localized: "copy"), String(localized: "copies"))).font(.caption).foregroundStyle(.secondary)
                     }
                 }
                 Spacer()
@@ -151,7 +151,7 @@ struct DuplicatesView: View {
                 .padding(14)
             }
         } else {
-            EmptyStateView(icon: "square.on.square", title: "Escolha um grupo")
+            EmptyStateView(icon: "square.on.square", title: String(localized: "Choose a group"))
         }
     }
 }

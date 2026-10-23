@@ -1,6 +1,6 @@
 import Foundation
 
-/// Envia mensagens de progresso para a interface sem a sobrecarregar.
+/// Sends progress messages to the interface without flooding it.
 final class ProgressReporter: @unchecked Sendable {
     private let lock = NSLock()
     private var last = Date.distantPast

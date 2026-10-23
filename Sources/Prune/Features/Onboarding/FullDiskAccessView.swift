@@ -1,7 +1,7 @@
 import SwiftUI
 
-/// Assistente de Acesso Total ao Disco. Com esta permissão o macOS deixa de pedir autorização
-/// pasta a pasta (Documentos, Secretária, Transferências, dados de outras apps, Mail, Safari…).
+/// Full Disk Access assistant. With this permission, macOS stops asking for authorization
+/// folder by folder (Documents, Desktop, Downloads, other apps' data, Mail, Safari…).
 struct FullDiskAccessView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var state: Permissions.AccessState
@@ -26,26 +26,26 @@ struct FullDiskAccessView: View {
 
             if state == .denied {
                 VStack(alignment: .leading, spacing: 12) {
-                    step(1, "Abra as Definições do Sistema.") {
-                        Button("Abrir Definições") { Permissions.openFullDiskAccessSettings() }
+                    step(1, String(localized: "Open System Settings.")) {
+                        Button("Open Settings") { Permissions.openFullDiskAccessSettings() }
                     }
-                    step(2, "Ative o Prune na lista. Se não aparecer, arraste a app para lá.") {
-                        Button("Mostrar a app no Finder") { FS.reveal(Bundle.main.bundleURL) }
+                    step(2, String(localized: "Turn on Prune in the list. If it is not there, drag the app into it.")) {
+                        Button("Show the app in Finder") { FS.reveal(Bundle.main.bundleURL) }
                     }
-                    step(3, "Volte ao Prune. A permissão é detetada automaticamente.") {
+                    step(3, String(localized: "Come back to Prune. The permission is detected automatically.")) {
                         EmptyView()
                     }
                 }
                 .padding(14)
                 .background(Theme.inset, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
 
-                Text("Nada é apagado sem a sua confirmação.")
+                Text("Nothing is deleted without your confirmation.")
                     .font(.caption).foregroundStyle(.secondary)
             }
 
             HStack {
                 if state == .denied {
-                    Button("Não voltar a mostrar") {
+                    Button("Don't show again") {
                         AppSettings.shared.fdaOnboardingDismissed = true
                         dismiss()
                     }
@@ -54,14 +54,14 @@ struct FullDiskAccessView: View {
                 Spacer()
                 switch state {
                 case .granted:
-                    Button("Continuar") { dismiss() }.buttonStyle(.borderedProminent).keyboardShortcut(.defaultAction)
+                    Button("Continue") { dismiss() }.buttonStyle(.borderedProminent).keyboardShortcut(.defaultAction)
                 case .needsRelaunch:
-                    Button("Mais tarde") { dismiss() }
-                    Button("Reabrir Prune") { Permissions.relaunch() }
+                    Button("Later") { dismiss() }
+                    Button("Reopen Prune") { Permissions.relaunch() }
                         .buttonStyle(.borderedProminent).keyboardShortcut(.defaultAction)
                 case .denied:
-                    Button("Agora não") { dismiss() }
-                    Button(checking ? "A verificar…" : "Verificar") { Task { await refresh() } }
+                    Button("Not now") { dismiss() }
+                    Button(checking ? "Checking…" : "Check") { Task { await refresh() } }
                         .buttonStyle(.borderedProminent)
                         .disabled(checking)
                 }
@@ -69,8 +69,8 @@ struct FullDiskAccessView: View {
         }
         .padding(26)
         .frame(width: 560)
-        // Deteta a permissão quando o utilizador volta das Definições do Sistema, sem mexer no botão
-        // (antes verificava a cada 1,5 s e o botão alternava sozinho para "A verificar…").
+        // Detects the permission when the user comes back from System Settings, without touching the button
+        // (it used to check every 1.5 s and the button flipped to "Checking…" on its own).
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
             guard state != .granted else { return }
             Task { state = await Permissions.accessState() }
@@ -87,21 +87,21 @@ struct FullDiskAccessView: View {
 
     private var title: String {
         switch state {
-        case .granted: "Acesso Total ao Disco ativo"
-        case .needsRelaunch: "Falta reabrir o Prune"
-        case .denied: "Dê acesso total ao disco"
+        case .granted: String(localized: "Full Disk Access granted")
+        case .needsRelaunch: String(localized: "Prune needs to be reopened")
+        case .denied: String(localized: "Give Prune full disk access")
         }
     }
 
     private var subtitle: String {
         switch state {
-        case .granted: "O Prune já não pede autorização pasta a pasta."
-        case .needsRelaunch: "A permissão está ativa. O macOS aplica-a quando reabrir a app."
-        case .denied: "Sem esta permissão, o macOS pede autorização para cada pasta protegida."
+        case .granted: String(localized: "Prune no longer asks for authorization folder by folder.")
+        case .needsRelaunch: String(localized: "The permission is granted. macOS applies it when you reopen the app.")
+        case .denied: String(localized: "Without this permission, macOS asks for authorization for each protected folder.")
         }
     }
 
-    /// Verificação pedida pelo utilizador (botão "Verificar").
+    /// Check requested by the user ("Check" button).
     private func refresh() async {
         checking = true
         state = await Permissions.accessState()

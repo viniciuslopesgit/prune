@@ -13,7 +13,7 @@ struct BatteryInfo {
     var condition: String?
 }
 
-/// Monitor do sistema: CPU, memória, disco, rede e bateria.
+/// System monitor: CPU, memory, disk, network and battery.
 @MainActor
 @Observable
 final class SystemStats {
@@ -96,7 +96,7 @@ final class SystemStats {
         let compressed = Int64(stats.compressor_page_count) * page
         let purgeable = Int64(stats.purgeable_count) * page
         let speculative = Int64(stats.speculative_count) * page
-        // Semelhante à "Memória usada" do Monitor de Atividade.
+        // Similar to Activity Monitor's "Memory Used".
         let appMemory = Int64(stats.internal_page_count) * page - purgeable
         memoryUsed = max(appMemory + wired + compressed, active + wired + compressed - speculative)
         memoryUsed = min(memoryUsed, memoryTotal)
@@ -188,10 +188,10 @@ final class SystemStats {
 
     var thermalText: String {
         switch thermal {
-        case .nominal: "Normal"
-        case .fair: "Morno"
-        case .serious: "Quente"
-        case .critical: "Crítico"
+        case .nominal: String(localized: "Normal")
+        case .fair: String(localized: "Warm")
+        case .serious: String(localized: "Hot")
+        case .critical: String(localized: "Critical")
         @unknown default: "—"
         }
     }

@@ -11,7 +11,7 @@ struct MenuBarLabel: View {
         .onAppear { WindowOpener.shared.action = openWindow }
     }
 
-    /// A folha da marca como imagem "template", para a barra de menus a pintar de claro/escuro.
+    /// The brand's leaf as a "template" image, so the menu bar can paint it light/dark.
     @MainActor private static let leafTemplate: NSImage = {
         let renderer = ImageRenderer(content: LeafMark(size: 16, color: .black))
         renderer.scale = 2
@@ -33,12 +33,12 @@ struct MenuBarView: View {
                 LeafMark(size: 22)
                 Text("Prune").font(Theme.display(14))
                 Spacer()
-                Text("Ligado há \(stats.uptimeText)").font(.caption).foregroundStyle(.secondary)
+                Text("Up for \(stats.uptimeText)").font(.caption).foregroundStyle(.secondary)
             }
 
             HStack(spacing: 10) {
-                tile("Disco", value: stats.diskUsedFraction, caption: "\(Fmt.bytes(stats.diskFree)) livres", icon: "internaldrive")
-                tile("Memória", value: stats.memoryFraction, caption: Fmt.bytes(stats.memoryUsed), icon: "memorychip")
+                tile(String(localized: "Disk"), value: stats.diskUsedFraction, caption: String(localized: "\(Fmt.bytes(stats.diskFree)) free"), icon: "internaldrive")
+                tile(String(localized: "Memory"), value: stats.memoryFraction, caption: Fmt.bytes(stats.memoryUsed), icon: "memorychip")
                 tile("CPU", value: stats.cpu, caption: stats.thermalText, icon: "cpu")
             }
 
@@ -58,8 +58,8 @@ struct MenuBarView: View {
                 HStack {
                     Image(systemName: b.charging ? "battery.100.bolt" : "battery.75")
                     Text("\(b.percent)%").monospacedDigit()
-                    if let h = b.health { Text("· saúde \(Fmt.percent(h))").foregroundStyle(.secondary) }
-                    if let c = b.cycleCount { Text("· \(c) ciclos").foregroundStyle(.secondary) }
+                    if let h = b.health { Text("· health \(Fmt.percent(h))").foregroundStyle(.secondary) }
+                    if let c = b.cycleCount { Text("· \(c) cycles").foregroundStyle(.secondary) }
                     Spacer()
                 }
                 .font(.callout)
@@ -67,7 +67,7 @@ struct MenuBarView: View {
 
             if !topApps.isEmpty {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Mais exigentes").font(.caption.bold()).foregroundStyle(.secondary)
+                    Text("Most demanding").font(.caption.bold()).foregroundStyle(.secondary)
                     ForEach(topApps) { p in
                         HStack(spacing: 6) {
                             if let i = p.icon { Image(nsImage: i).resizable().frame(width: 16, height: 16) }
@@ -82,13 +82,13 @@ struct MenuBarView: View {
 
             Divider()
             HStack {
-                Button("Análise Inteligente") {
+                Button("Smart Scan") {
                     state.selection = .smartScan
                     openMain()
                 }
                 Spacer()
-                Button { openMain() } label: { Image(systemName: "macwindow") }.help("Abrir Prune")
-                Button { NSApp.terminate(nil) } label: { Image(systemName: "power") }.help("Sair")
+                Button { openMain() } label: { Image(systemName: "macwindow") }.help("Open Prune")
+                Button { NSApp.terminate(nil) } label: { Image(systemName: "power") }.help("Quit")
             }
             .buttonStyle(.bordered)
         }

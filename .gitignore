@@ -1,10 +1,10 @@
 .DS_Store
 .build/
 build/
-# Chaves do Google Analytics (ver README)
+# Google Analytics keys (see README)
 analytics.env
-# Cache do Python (scripts/stable.py e os testes)
+# Python cache (scripts/stable.py and its tests)
 __pycache__/
 *.pyc
-# Definições pessoais de editores
+# Personal editor settings
 .vscode/

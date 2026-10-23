@@ -4,7 +4,11 @@ import Observation
 @MainActor
 @Observable
 final class DuplicatesModel {
-    enum Mode: String, CaseIterable, Identifiable { case exact = "Duplicados", similar = "Fotografias semelhantes"; var id: String { rawValue } }
+    enum Mode: String, CaseIterable, Identifiable {
+        case exact, similar
+        var id: String { rawValue }
+        var title: String { self == .exact ? String(localized: "Duplicates") : String(localized: "Similar photos") }
+    }
 
     var mode: Mode = .exact
     var roots: [URL] = [URL.home("Downloads"), URL.home("Documents"), URL.home("Desktop"), URL.home("Pictures")].filter(\.exists)
@@ -45,13 +49,14 @@ final class DuplicatesModel {
         scanned = true
     }
 
-    /// Aviso quando o Vision não consegue analisar fotografias: sem ele, "nada encontrado" seria enganador.
+    /// Warning when Vision cannot analyze photos: without it, "nothing found" would be misleading.
     nonisolated static func unreadableMessage(analysed: Int, unreadable: Int, error: String?) -> String? {
         guard unreadable > 0 else { return nil }
         if analysed == 0 {
-            return "Não foi possível analisar as fotografias neste Mac" + (error.map { " (\($0))" } ?? "") + "."
+            return error.map { String(localized: "Could not analyze the photos on this Mac (\($0)).") }
+                ?? String(localized: "Could not analyze the photos on this Mac.")
         }
-        return "\(Fmt.count(unreadable, "fotografia não pôde ser analisada", "fotografias não puderam ser analisadas"))."
+        return Fmt.count(unreadable, String(localized: "photo could not be analyzed"), String(localized: "photos could not be analyzed")) + "."
     }
 
     func reset() {
@@ -61,7 +66,7 @@ final class DuplicatesModel {
         scanned = false
     }
 
-    /// Seleciona todas as cópias exceto a mais antiga de cada grupo.
+    /// Selects every copy except the oldest in each group.
     func autoSelect() {
         marked = Set(groups.filter { !$0.similar }.flatMap { $0.files.dropFirst().map(\.id) })
     }
@@ -71,7 +76,7 @@ final class DuplicatesModel {
     }
 
     func removeMarked() async {
-        // Nunca apaga todas as cópias de um grupo: se estiverem todas marcadas, a primeira fica.
+        // Never deletes every copy in a group: if they are all marked, the first one stays.
         let urls = groups.flatMap { group -> [URL] in
             let files = group.files.allSatisfy { marked.contains($0.id) } ? Array(group.files.dropFirst()) : group.files
             return files.filter { marked.contains($0.id) }.map(\.url)
@@ -81,6 +86,6 @@ final class DuplicatesModel {
         for i in groups.indices { groups[i].files.removeAll { removed.contains($0.id) } }
         groups.removeAll { $0.files.count < 2 }
         marked.subtract(removed)
-        message = "\(Fmt.bytes(r.freed)) libertados." + (r.failed.isEmpty ? "" : " \(Fmt.count(r.failed.count, "ficheiro não foi removido", "ficheiros não foram removidos")).")
+        message = Fmt.freedMessage(r.freed, failed: r.failed.count)
     }
 }

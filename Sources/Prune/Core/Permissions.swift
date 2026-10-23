@@ -1,12 +1,12 @@
 import AppKit
 
-/// Acesso Total ao Disco (necessário para Safari, Mail, etc.).
+/// Full Disk Access (needed for Safari, Mail, etc.).
 enum Permissions {
-    /// Locais protegidos só pelo Acesso Total ao Disco. Sem a permissão, a leitura falha
-    /// com "Operation not permitted" — sem mostrar pedidos ao utilizador (ao contrário de
-    /// Documentos, Secretária ou contentores de outras apps, que perguntam).
-    /// Vários locais, porque mudam entre versões do macOS (no macOS 27 a pasta TCC do
-    /// utilizador deixou de estar acessível).
+    /// Locations protected only by Full Disk Access. Without the permission, reading fails
+    /// with "Operation not permitted" — without showing prompts to the user (unlike
+    /// Documents, Desktop or other apps' containers, which ask).
+    /// Several locations, because they change between macOS versions (in macOS 27 the user's
+    /// TCC folder is no longer accessible).
     static let fullDiskAccessProbes: [(path: String, isDirectory: Bool)] = [
         ("/Library/Application Support/com.apple.TCC/TCC.db", false),
         (home.path + "/Library/Application Support/com.apple.TCC/TCC.db", false),
@@ -20,10 +20,10 @@ enum Permissions {
         fullDiskAccessProbes.contains { probe($0.path, isDirectory: $0.isDirectory) == .readable }
     }
 
-    /// Verifica a permissão num processo novo. O macOS guarda a decisão de acesso durante a vida
-    /// do processo: se a app arrancou antes de a permissão estar ativa (ou mesmo a seguir a uma
-    /// atualização), continua a ver "negado" até ser reaberta. Um processo filho é avaliado de novo
-    /// (com a identidade do Prune), por isso mostra o estado real.
+    /// Checks the permission in a new process. macOS keeps the access decision for the lifetime
+    /// of the process: if the app launched before the permission was granted (or even right after an
+    /// update), it keeps seeing "denied" until it is reopened. A child process is evaluated afresh
+    /// (with Prune's identity), so it shows the real state.
     static func hasFullDiskAccessFresh() async -> Bool {
         let files = fullDiskAccessProbes.filter { !$0.isDirectory }.map(\.path)
         let dirs = fullDiskAccessProbes.filter(\.isDirectory).map(\.path)
@@ -35,7 +35,7 @@ enum Permissions {
 
     enum AccessState: Equatable {
         case granted
-        /// A permissão está ativa, mas este processo ainda não a vê: é preciso reabrir a app.
+        /// The permission is granted, but this process does not see it yet: the app must be reopened.
         case needsRelaunch
         case denied
     }
@@ -45,7 +45,7 @@ enum Permissions {
         return await hasFullDiskAccessFresh() ? .needsRelaunch : .denied
     }
 
-    /// Reabre a app (para aplicar uma permissão acabada de conceder).
+    /// Reopens the app (to apply a permission that was just granted).
     @MainActor
     static func relaunch() {
         let path = Bundle.main.bundlePath
@@ -56,11 +56,11 @@ enum Permissions {
         NSApp.terminate(nil)
     }
 
-    /// Regista o estado da permissão em ~/Library/Logs/Prune/permissoes.log (diagnóstico).
+    /// Logs the permission state to ~/Library/Logs/Prune/permissions.log (diagnostics).
     static func log(_ message: String) {
         let dir = home.appendingPathComponent("Library/Logs/Prune")
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
-        let file = dir.appendingPathComponent("permissoes.log")
+        let file = dir.appendingPathComponent("permissions.log")
         let f = ISO8601DateFormatter()
         f.timeZone = .current
         let line = "\(f.string(from: Date())) pid=\(getpid()) \(message)\n"
@@ -73,7 +73,7 @@ enum Permissions {
         }
     }
 
-    enum ProbeResult: String { case readable = "legível", denied = "negado", missing = "não existe", error = "erro" }
+    enum ProbeResult: String { case readable, denied, missing, error }
 
     static func probe(_ path: String, isDirectory: Bool) -> ProbeResult {
         if isDirectory {

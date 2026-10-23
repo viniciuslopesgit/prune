@@ -1,52 +1,52 @@
-# Segurança
+# Security
 
-O Prune apaga ficheiros e, em algumas tarefas, corre comandos como administrador. Um erro de segurança aqui pode custar dados. Obrigado por ajudar a encontrá-los.
+Prune deletes files and, for some tasks, runs commands as administrator. A security bug here can cost data. Thank you for helping to find them.
 
-## Versões suportadas
+## Supported versions
 
-| Versão | Correções de segurança |
+| Version | Security fixes |
 |---|---|
-| Última estável ([Latest](https://github.com/viniciuslopesgit/prune/releases/latest)) | Sim |
-| Última beta (pré-lançamento) | Sim |
-| Anteriores | Não: atualize para a última estável |
+| Latest stable ([Latest](https://github.com/viniciuslopesgit/prune/releases/latest)) | Yes |
+| Latest beta (pre-release) | Yes |
+| Older | No: update to the latest stable |
 
-## Como reportar
+## How to report
 
-**Não abra uma issue pública** para uma vulnerabilidade.
+**Do not open a public issue** for a vulnerability.
 
-Use **Security ▸ Report a vulnerability** no [repositório](https://github.com/viniciuslopesgit/prune/security). Se essa opção não aparecer, abra uma issue só com o título "Contacto de segurança", sem detalhes, e o maintainer responde com um canal privado.
+Use **Security ▸ Report a vulnerability** in the [repository](https://github.com/viniciuslopesgit/prune/security). If that option does not show, open an issue titled only "Security contact", without details, and the maintainer will reply with a private channel.
 
-Inclua, se puder:
+Include, if you can:
 
-- a versão do Prune e do macOS, e se é Apple silicon ou Intel;
-- os passos para reproduzir, de preferência numa pasta de teste e não em dados reais;
-- o impacto: o que pode ser apagado, lido ou executado, e com que privilégios.
+- the Prune and macOS versions, and whether it is Apple silicon or Intel;
+- the steps to reproduce, preferably in a test folder and not on real data;
+- the impact: what can be deleted, read or run, and with what privileges.
 
-## O que conta como vulnerabilidade
+## What counts as a vulnerability
 
-- Apagar, mover ou sobrescrever algo fora do que o utilizador escolheu: pastas protegidas, o destino de ligações simbólicas, outros volumes.
-- Executar comandos como administrador com caminhos ou argumentos que alguém consiga controlar.
-- Enviar dados para fora do Mac sem consentimento, ou enviar mais do que o [descrito no README](README.md#segurança-e-privacidade).
-- Ler ou expor palavras-passe, cookies ou dados de navegação além do necessário para os limpar.
+- Deleting, moving or overwriting anything outside what the user chose: protected folders, the target of symbolic links, other volumes.
+- Running commands as administrator with paths or arguments that someone can control.
+- Sending data off the Mac without consent, or sending more than [described in the README](README.md#security-and-privacy).
+- Reading or exposing passwords, cookies or browsing data beyond what is needed to clean them.
 
-## Prazos
+## Timelines
 
-Prazos de um projeto com um maintainer, cumpridos tanto quanto possível:
+Timelines of a single-maintainer project, met as far as possible:
 
-| Passo | Prazo |
+| Step | Timeline |
 |---|---|
-| Confirmar a receção | 3 dias |
-| Avaliação inicial e gravidade | 7 dias |
-| Correção de gravidade alta ou crítica | 30 dias |
+| Acknowledge receipt | 3 days |
+| Initial assessment and severity | 7 days |
+| Fix for high or critical severity | 30 days |
 
-A correção sai como patch, com `### Corrigido` no CHANGELOG, o que retira automaticamente as versões afetadas do caminho para estável. Em casos urgentes pode dispensar o período de espera de 24 h, com o motivo registado (ver [critérios de lançamento](docs/RELEASE_CRITERIA.md#5-governação)). Depois da correção publicada, o relatório é divulgado com crédito a quem o enviou, se assim o quiser.
+The fix comes out as a patch, with `### Fixed` in the CHANGELOG, which automatically takes the affected versions off the path to stable. In urgent cases the 24 h waiting period can be waived, with the reason recorded (see the [release criteria](docs/RELEASE_CRITERIA.md#5-governance)). Once the fix is published, the report is disclosed with credit to whoever sent it, if they wish.
 
-## O que o Prune faz para limitar o risco
+## What Prune does to limit the risk
 
-- Lista de pastas protegidas que nunca são apagadas, com os caminhos normalizados e as ligações da pasta-mãe resolvidas.
-- Ficheiros pessoais e apps vão para o Lixo; só caches e registos são apagados diretamente.
-- A palavra-passe de administrador só é pedida quando é precisa, e só para caminhos que passaram pela lista de proteção.
-- Telemetria desligada até haver consentimento, sem nomes de ficheiros, pastas ou apps.
-- Sem dependências de terceiros.
+- A list of protected folders that are never deleted, with normalized paths and parent-folder links resolved.
+- Personal files and apps go to the Trash; only caches and logs are deleted directly.
+- The administrator password is only asked for when it is needed, and only for paths that went through the protection list.
+- Telemetry off until there is consent, without names of files, folders or apps.
+- No third-party dependencies.
 
-Os riscos conhecidos e ainda por resolver estão no [registo de riscos](https://github.com/viniciuslopesgit/prune/blob/dev/docs/RISK_REGISTER.md).
+Known and still unresolved risks are in the [risk register](https://github.com/viniciuslopesgit/prune/blob/dev/docs/RISK_REGISTER.md).

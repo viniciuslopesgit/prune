@@ -1,0 +1,31 @@
+PRUNE
+=====
+
+Install
+-------
+1. Drag Prune to the Applications folder.
+2. Open Prune.
+
+
+First launch
+------------
+Prune is not registered with Apple, so macOS blocks the
+first launch. Allow it once:
+
+  macOS 15 or later
+    System Settings ▸ Privacy & Security ▸ Open Anyway
+
+  macOS 14
+    Right-click Prune ▸ Open ▸ Open
+
+  Terminal (any version)
+    xattr -dr com.apple.quarantine /Applications/Prune.app
+
+
+After opening
+-------------
+Follow the assistant to give Prune Full Disk Access.
+
+The interface follows the language of your Mac (English or Portuguese).
+
+Requirements: macOS 14 or later. Apple silicon and Intel.

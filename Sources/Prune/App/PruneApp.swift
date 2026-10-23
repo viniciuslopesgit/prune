@@ -7,9 +7,14 @@ struct PruneApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var delegate
 
     init() {
-        SelfTest.fdaCheckIfRequested()
-        SelfTest.runIfRequested()
-        MemoryBench.runIfRequested()
+        // The diagnostic tools start only once the main run loop is running. Started from here, their
+        // background scans could touch AppKit (e.g. NSWorkspace) before the main event queue exists,
+        // and on macOS 14 AppKit then stops the app (_NSAssertMainEventQueueIsCurrentEventQueue).
+        DispatchQueue.main.async {
+            SelfTest.fdaCheckIfRequested()
+            SelfTest.runIfRequested()
+            MemoryBench.runIfRequested()
+        }
     }
 
     var body: some Scene {
@@ -41,7 +46,7 @@ struct PruneApp: App {
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationWillFinishLaunching(_ notification: Notification) {
-        // Segue o aspeto do sistema (claro/escuro). PRUNE_APPEARANCE=light|dark força um deles (capturas).
+        // Follows the system appearance (light/dark). PRUNE_APPEARANCE=light|dark forces one of them (screenshots).
         switch ProcessInfo.processInfo.environment["PRUNE_APPEARANCE"] {
         case "light": NSApp.appearance = NSAppearance(named: .aqua)
         case "dark": NSApp.appearance = NSAppearance(named: .darkAqua)
@@ -53,16 +58,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var windowObserver: NSObjectProtocol?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        // Liberta resultados pesados quando a janela principal fecha (a app fica na barra de menus)…
+        // Frees heavy results when the main window closes (the app stays in the menu bar)…
         windowObserver = NotificationCenter.default.addObserver(forName: NSWindow.willCloseNotification, object: nil, queue: .main) { note in
             let closing = note.object as? NSWindow
-            // A notificação chega na fila principal (queue: .main); o Task torna isso explícito.
+            // The notification arrives on the main queue (queue: .main); the Task makes that explicit.
             Task { @MainActor in
                 guard let closing, closing === WindowOpener.shared.mainWindow else { return }
                 AppState.shared.releaseHeavyResults()
             }
         }
-        // …e quando o sistema avisa que a memória está a acabar.
+        // …and when the system warns that memory is running low.
         let source = DispatchSource.makeMemoryPressureSource(eventMask: [.warning, .critical], queue: .main)
         source.setEventHandler { Task { @MainActor in AppState.shared.releaseHeavyResults() } }
         source.resume()
@@ -70,7 +75,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         Task { @MainActor in Analytics.track("app_open") }
 
-        // Abre sempre a janela principal ao iniciar (mesmo que tenha sido fechada na última sessão).
+        // Always opens the main window on launch (even if it was closed in the last session).
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
             Task { @MainActor in
                 if WindowOpener.shared.mainWindow?.isVisible != true { WindowOpener.shared.openMain() }

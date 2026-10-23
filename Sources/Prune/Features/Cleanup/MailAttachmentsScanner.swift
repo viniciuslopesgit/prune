@@ -2,27 +2,27 @@ import Foundation
 
 enum MailAttachmentsScanner {
     static func scan(_ p: ProgressReporter) async -> [CleanCategory] {
-        p.report("A analisar transferências do Mail…", force: true)
+        p.report(String(localized: "Scanning Mail downloads…"), force: true)
         var cats: [CleanCategory] = []
 
         let downloads = [
             URL.home("Library/Containers/com.apple.mail/Data/Library/Mail Downloads"),
             URL.home("Library/Mail Downloads"),
-        ].flatMap { FS.childItems(of: $0, detail: "Anexo aberto a partir do Mail") }
+        ].flatMap { FS.childItems(of: $0, detail: String(localized: "Attachment opened from Mail")) }
         cats.append(CleanCategory(
-            id: "mailDownloads", name: "Anexos abertos", icon: "paperclip",
-            info: "Cópias de anexos abertos no Mail. Os originais ficam nas mensagens.",
+            id: "mailDownloads", name: String(localized: "Opened attachments"), icon: "paperclip",
+            info: String(localized: "Copies of attachments opened in Mail. The originals stay in the messages."),
             items: downloads
         ))
 
-        p.report("A procurar anexos nas caixas de correio…")
+        p.report(String(localized: "Looking for attachments in mailboxes…"))
         var attachments = mailboxAttachments(p)
         attachments.sort { $0.size > $1.size }
         cats.append(CleanCategory(
-            id: "mailAttachments", name: "Anexos nas mensagens", icon: "envelope",
-            info: "Cópias locais. Em contas IMAP, Exchange e iCloud ficam no servidor.",
+            id: "mailAttachments", name: String(localized: "Attachments in messages"), icon: "envelope",
+            info: String(localized: "Local copies. On IMAP, Exchange and iCloud accounts they stay on the server."),
             items: attachments,
-            warning: Permissions.hasFullDiskAccess ? "Em contas POP, os anexos removidos não se recuperam." : "Conceda Acesso Total ao Disco para analisar o Mail."
+            warning: Permissions.hasFullDiskAccess ? String(localized: "On POP accounts, removed attachments cannot be recovered.") : String(localized: "Grant Full Disk Access to scan Mail.")
         ))
         return cats
     }
@@ -39,12 +39,12 @@ enum MailAttachmentsScanner {
             FS.forEach(e) { url in
                 guard url.lastPathComponent == "Attachments", url.isDirectory else { return true }
                 e.skipDescendants()
-                p.report("A analisar \(url.deletingLastPathComponent().lastPathComponent)…")
+                p.report(String(localized: "Scanning \(url.deletingLastPathComponent().lastPathComponent)…"))
                 for msg in FS.children(url) {
                     for file in allFiles(in: msg) {
                         let size = FS.size(of: file)
                         guard size > 0 else { continue }
-                        attachments.append(CleanItem(url: file, size: size, selected: false, detail: "Cópia local, recuperável a partir do servidor"))
+                        attachments.append(CleanItem(url: file, size: size, selected: false, detail: String(localized: "Local copy, recoverable from the server")))
                     }
                 }
                 return true

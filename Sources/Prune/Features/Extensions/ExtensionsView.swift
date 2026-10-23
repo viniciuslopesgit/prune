@@ -6,8 +6,8 @@ struct ExtensionsView: View {
     var body: some View {
         @Bindable var model = state.extensions
         VStack(spacing: 0) {
-            ModuleHeader(module: .extensions, subtitle: "Extensões, plug-ins e widgets") {
-                Toggle("Mostrar do sistema", isOn: $model.showSystem).toggleStyle(.switch)
+            ModuleHeader(module: .extensions, subtitle: String(localized: "Extensions, plug-ins and widgets")) {
+                Toggle("Show system", isOn: $model.showSystem).toggleStyle(.switch)
                 Button { Task { await model.load() } } label: { Image(systemName: "arrow.clockwise") }.buttonStyle(.bordered)
             }
             if let msg = model.message {
@@ -19,7 +19,7 @@ struct ExtensionsView: View {
                     List(ExtensionCategory.allCases) { cat in
                         HStack {
                             Image(systemName: cat.icon).frame(width: 22)
-                            Text(cat.rawValue)
+                            Text(cat.title)
                             Spacer()
                             Text("\(model.count(cat))").foregroundStyle(.secondary).monospacedDigit()
                         }
@@ -51,7 +51,7 @@ struct ExtensionsView: View {
         let cat = model.category
         if cat == .browsers {
             if model.browser.isEmpty {
-                EmptyStateView(icon: "globe", title: "Sem extensões noutros navegadores")
+                EmptyStateView(icon: "globe", title: String(localized: "No extensions in other browsers"))
             } else {
                 List(model.browser) { ext in
                     HStack(spacing: 10) {
@@ -59,13 +59,13 @@ struct ExtensionsView: View {
                         VStack(alignment: .leading, spacing: 2) {
                             HStack {
                                 Text(ext.name).lineLimit(1)
-                                if !ext.fromStore { Pill(text: "Fora da loja", color: Theme.amber) }
+                                if !ext.fromStore { Pill(text: String(localized: "Not from store"), color: Theme.amber) }
                             }
                             Text("\(ext.browser) · v\(ext.version)").font(.caption).foregroundStyle(.secondary)
                         }
                         Spacer()
                         RevealButton(url: ext.url)
-                        Button("Remover") { Task { await model.remove(ext) } }.buttonStyle(.bordered)
+                        Button("Remove") { Task { await model.remove(ext) } }.buttonStyle(.bordered)
                     }
                     .listRowBackground(Color.clear)
                 }
@@ -75,12 +75,12 @@ struct ExtensionsView: View {
             let exts = model.extensions(in: cat)
             let files = model.files[cat] ?? []
             if exts.isEmpty && files.isEmpty {
-                EmptyStateView(icon: cat.icon, title: "Nada instalado nesta categoria",
-                               message: model.showSystem ? nil : "Ative \"Mostrar do sistema\" para incluir as da Apple.")
+                EmptyStateView(icon: cat.icon, title: String(localized: "Nothing installed in this category"),
+                               message: model.showSystem ? nil : String(localized: "Turn on \"Show system\" to include Apple's."))
             } else {
                 List {
                     if !exts.isEmpty {
-                        Section("Extensões de apps") {
+                        Section("App extensions") {
                             ForEach(exts) { ext in
                                 HStack(spacing: 10) {
                                     if let range = ext.path.range(of: ".app/") {
@@ -113,7 +113,7 @@ struct ExtensionsView: View {
                                     Spacer()
                                     SizeLabel(bytes: f.size)
                                     RevealButton(url: f.url)
-                                    Button("Remover") { Task { await model.remove(f, category: cat) } }.buttonStyle(.bordered)
+                                    Button("Remove") { Task { await model.remove(f, category: cat) } }.buttonStyle(.bordered)
                                 }
                                 .listRowBackground(Color.clear)
                             }

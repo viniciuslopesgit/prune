@@ -1,6 +1,6 @@
 import AppKit
 
-/// Estado das proteções integradas do macOS (mostrado no Painel e na Análise Inteligente).
+/// State of macOS's built-in protections (shown in the Dashboard and Smart Scan).
 struct SecurityStatus {
     var sip: Bool?
     var gatekeeper: Bool?
@@ -15,35 +15,35 @@ struct SecurityStatus {
         let title: String
         let detail: String
         let enabled: Bool?
-        /// Painel das Definições onde se ativa (nil = não se ativa pelas Definições).
+        /// Settings pane where it is turned on (nil = cannot be turned on in Settings).
         let settingsURL: String?
-        /// Explicação quando está desativado e não há painel para o ativar.
+        /// Explanation when it is off and there is no pane to turn it on.
         let howToEnable: String?
     }
 
     var items: [Item] {
         [
-            Item(id: "sip", title: "Proteção da integridade (SIP)",
-                 detail: "Impede alterações aos ficheiros do sistema.",
+            Item(id: "sip", title: String(localized: "System Integrity Protection (SIP)"),
+                 detail: String(localized: "Prevents changes to system files."),
                  enabled: sip, settingsURL: nil,
-                 howToEnable: "Ative no modo de recuperação: Terminal ▸ csrutil enable."),
+                 howToEnable: String(localized: "Turn it on in recovery mode: Terminal ▸ csrutil enable.")),
             Item(id: "gatekeeper", title: "Gatekeeper",
-                 detail: "Verifica as apps antes de abrirem.",
+                 detail: String(localized: "Checks apps before they open."),
                  enabled: gatekeeper,
                  settingsURL: "x-apple.systempreferences:com.apple.settings.PrivacySecurity.extension?Security",
                  howToEnable: nil),
             Item(id: "firewall", title: "Firewall",
-                 detail: "Bloqueia ligações de entrada não autorizadas.",
+                 detail: String(localized: "Blocks unauthorized incoming connections."),
                  enabled: firewall,
                  settingsURL: "x-apple.systempreferences:com.apple.Network-Settings.extension?Firewall",
                  howToEnable: nil),
             Item(id: "filevault", title: "FileVault",
-                 detail: "Encripta o disco. Protege os dados em caso de perda ou roubo.",
+                 detail: String(localized: "Encrypts the disk. Protects your data if it is lost or stolen."),
                  enabled: fileVault,
                  settingsURL: "x-apple.systempreferences:com.apple.settings.PrivacySecurity.extension?FileVault",
                  howToEnable: nil),
-            Item(id: "updates", title: "Atualizações de segurança",
-                 detail: "Instala correções de segurança automaticamente.",
+            Item(id: "updates", title: String(localized: "Security updates"),
+                 detail: String(localized: "Installs security fixes automatically."),
                  enabled: securityUpdates,
                  settingsURL: "x-apple.systempreferences:com.apple.Software-Update-Settings.extension",
                  howToEnable: nil),
@@ -73,7 +73,7 @@ enum SystemProtection {
         )
     }
 
-    /// "Instalar respostas de segurança e ficheiros do sistema" (ativo por defeito quando a chave não existe).
+    /// "Install security responses and system files" (on by default when the key does not exist).
     private static func securityUpdatesEnabled() -> Bool {
         let prefs = NSDictionary(contentsOfFile: "/Library/Preferences/com.apple.SoftwareUpdate.plist")
         let critical = prefs?["CriticalUpdateInstall"] as? Bool ?? true

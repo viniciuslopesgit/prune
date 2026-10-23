@@ -1,18 +1,18 @@
 import Foundation
 
-/// Estatísticas de utilização anónimas via Google Analytics 4 (Measurement Protocol).
+/// Anonymous usage statistics via Google Analytics 4 (Measurement Protocol).
 ///
-/// - Só envia com o consentimento explícito do utilizador (Definições ▸ Geral, ou o pedido na barra lateral).
-/// - Só envia nomes de eventos e valores agregados (módulo, número de itens, MB). Nunca caminhos,
-///   nomes de ficheiros, nomes de apps ou qualquer dado do disco.
-/// - O ID de medição e o segredo da API são injetados no Info.plist pelo `scripts/build_app.sh`
-///   (variáveis GA_MEASUREMENT_ID e GA_API_SECRET, ou o ficheiro `analytics.env`, fora do git).
-///   Um build sem eles nunca envia nada.
+/// - Only sends with the user's explicit consent (Settings ▸ General, or the prompt in the sidebar).
+/// - Only sends event names and aggregate values (module, number of items, MB). Never paths,
+///   file names, app names or any data from the disk.
+/// - The measurement ID and API secret are injected into Info.plist by `scripts/build_app.sh`
+///   (GA_MEASUREMENT_ID and GA_API_SECRET variables, or the `analytics.env` file, outside git).
+///   A build without them never sends anything.
 @MainActor
 enum Analytics {
     private static let endpoint = "https://www.google-analytics.com/mp/collect"
     nonisolated static let clientIDKey = "analyticsClientID"
-    /// Identifica a sessão (uma por arranque), para o GA4 contar utilizadores ativos.
+    /// Identifies the session (one per launch), so GA4 can count active users.
     private static let sessionID = String(Int(Date().timeIntervalSince1970))
 
     private static var config: (measurementID: String, apiSecret: String)? {
@@ -22,19 +22,19 @@ enum Analytics {
         return (id, secret)
     }
 
-    /// Texto que explica o que é enviado (Definições e pedido de consentimento).
-    nonisolated static let disclosure = "Secções usadas, espaço libertado (só totais) e versões da app e do macOS, enviados para o Google Analytics. Nunca nomes de ficheiros, pastas ou apps."
+    /// Text explaining what is sent (Settings and consent prompt).
+    nonisolated static let disclosure = String(localized: "Sections used, space freed (totals only) and app and macOS versions, sent to Google Analytics. Never names of files, folders or apps.")
 
-    /// Há chaves neste build (sem elas, a opção nem aparece).
+    /// This build has keys (without them, the option does not even show).
     static var isAvailable: Bool { config != nil }
 
-    /// Ferramentas de diagnóstico (--selftest, --bench, --fdacheck) nunca enviam.
+    /// Diagnostic tools (--selftest, --bench, --fdacheck) never send.
     private static var isToolRun: Bool {
         let args = CommandLine.arguments
         return ["--selftest", "--bench", "--fdacheck"].contains { args.contains($0) }
     }
 
-    /// Identificador aleatório desta instalação. Criado só quando o utilizador aceita; apagado quando recusa.
+    /// Random identifier of this installation. Created only when the user accepts; deleted when they decline.
     private static var clientID: String {
         if let id = UserDefaults.standard.string(forKey: clientIDKey) { return id }
         let id = UUID().uuidString
@@ -67,11 +67,11 @@ enum Analytics {
         req.setValue("application/json", forHTTPHeaderField: "Content-Type")
         req.httpBody = try? JSONSerialization.data(withJSONObject: body)
         req.timeoutInterval = 10
-        // Envio sem esperar resposta; falhas (sem rede, bloqueadores) são ignoradas.
+        // Fire and forget; failures (no network, blockers) are ignored.
         URLSession.shared.dataTask(with: req).resume()
     }
 
-    /// Bytes em MB inteiros (valor agregado, sem detalhe dos ficheiros).
+    /// Bytes in whole MB (aggregate value, without file detail).
     static func mb(_ bytes: Int64) -> Int { Int(bytes / 1_000_000) }
 
     private static var cpuArch: String {

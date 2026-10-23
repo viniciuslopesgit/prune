@@ -1,10 +1,10 @@
 import Foundation
 import Security
 
-/// Destruidor: sobrescreve o conteúdo com dados aleatórios antes de apagar.
+/// Shredder: overwrites the contents with random data before deleting.
 ///
-/// Nota: em SSDs e volumes APFS (cópia-em-escrita, instantâneos), o sistema pode manter
-/// blocos antigos fora do alcance da app. A proteção real nesses discos é o FileVault.
+/// Note: on SSDs and APFS volumes (copy-on-write, snapshots), the system may keep
+/// old blocks out of the app's reach. The real protection on those disks is FileVault.
 enum Shredder {
     static func shred(_ url: URL, passes: Int) async -> Bool {
         await withCheckedContinuation { cont in
@@ -17,7 +17,7 @@ enum Shredder {
     static func shredSync(_ url: URL, passes: Int) -> Bool {
         guard SafetyGuard.canDelete(url) else { return false }
         if isSymlink(url) {
-            // Uma ligação simbólica só é removida: o ficheiro de destino nunca é sobrescrito.
+            // A symbolic link is only removed: the target file is never overwritten.
             return (try? FileManager.default.removeItem(at: url)) != nil
         }
         if url.isDirectory {
@@ -32,7 +32,7 @@ enum Shredder {
         } else {
             guard overwrite(url, passes: passes) else { return false }
         }
-        // Renomeia antes de apagar, para não deixar o nome original nos metadados.
+        // Renames before deleting, so the original name is not left in the metadata.
         let renamed = url.deletingLastPathComponent().appendingPathComponent(UUID().uuidString)
         let target = (try? FileManager.default.moveItem(at: url, to: renamed)) != nil ? renamed : url
         return (try? FileManager.default.removeItem(at: target)) != nil
@@ -42,7 +42,7 @@ enum Shredder {
         (try? url.resourceValues(forKeys: [.isSymbolicLinkKey]))?.isSymbolicLink == true
     }
 
-    /// Sobrescreve o conteúdo: passagens alternadas de 0x00/0xFF e a última com dados aleatórios.
+    /// Overwrites the contents: alternating 0x00/0xFF passes, the last one with random data.
     private static func overwrite(_ url: URL, passes: Int) -> Bool {
         guard let attrs = try? FileManager.default.attributesOfItem(atPath: url.path),
               let size = (attrs[.size] as? NSNumber)?.intValue,
@@ -62,7 +62,7 @@ enum Shredder {
                     } else {
                         buffer.withUnsafeMutableBufferPointer { $0.update(repeating: pass % 2 == 0 ? 0x00 : 0xFF) }
                     }
-                    // Escreve a partir do buffer reutilizado, sem copiar para um Data novo.
+                    // Writes from the reused buffer, without copying into a new Data.
                     try buffer.withUnsafeBytes { raw in
                         try autoreleasepool {
                             try handle.write(contentsOf: Data(bytesNoCopy: UnsafeMutableRawPointer(mutating: raw.baseAddress!), count: n, deallocator: .none))
