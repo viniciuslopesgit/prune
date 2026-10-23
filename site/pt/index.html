@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prune para Mac</title>
+<meta name="description" content="O Prune é um limpador gratuito e de código aberto para Mac: limpe lixo, desinstale apps por completo, proteja a sua privacidade e vigie o seu Mac.">
+<link rel="alternate" hreflang="en" href="../">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700;800&family=Instrument+Sans:wght@400;600&display=swap">
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<a class="skip" href="#main">Saltar para o conteúdo</a>
+<div class="wrap">
+<header class="top">
+  <a class="brand" href="./">Prune</a>
+  <nav aria-label="Principal">
+    <a class="opt" href="#features">Funcionalidades</a>
+    <a class="opt" href="#safety">Segurança</a>
+    <a class="opt" href="#faq">Perguntas</a>
+    <a href="../" hreflang="en" lang="en">English</a>
+  </nav>
+</header>
+<main id="main">
+<div class="hero">
+  <h1>Prune<span>O seu Mac, mais leve. Mais limpo. Mais seguro.</span></h1>
+  <p class="lede">Limpe lixo, desinstale apps por completo, proteja a sua privacidade e vigie o seu Mac, tudo numa app nativa. Gratuito e de código aberto.</p>
+  <div class="cta">
+    <a class="button" href="https://github.com/viniciuslopesgit/prune/releases/latest">Descarregar para macOS</a>
+    <p class="note">macOS 14 ou posterior. Apple silicon e Intel.</p>
+  </div>
+  <figure class="shot"><img src="../screenshot.png" width="2000" height="1177" alt="Análise Inteligente do Prune com o lixo a limpar e o estado das proteções do macOS"></figure>
+</div>
+
+<section id="features" aria-labelledby="f-h">
+  <h2 id="f-h">Tudo o que o seu Mac precisa, num só lugar</h2>
+  <div class="features">
+    <div><h3>Análise Inteligente</h3><p>Lixo a limpar e o estado das proteções do macOS, num clique.</p></div>
+    <div><h3>Painel</h3><p>Disco, memória, CPU, rede, bateria e SIP, Gatekeeper, Firewall, FileVault e XProtect num relance.</p></div>
+    <div><h3>Limpeza</h3><p>Caches, registos, ficheiros temporários, Xcode e gestores de pacotes, ficheiros do iPhone, anexos do Mail e Lixo.</p></div>
+    <div><h3>Privacidade</h3><p>Histórico, cookies e caches do Safari, Chrome, Edge, Brave, Opera, Vivaldi, Arc e Firefox. Palavras-passe e marcadores ficam intactos.</p></div>
+    <div><h3>Aplicações</h3><p>Desinstalação completa, restos de apps removidas, atualizações (Sparkle e Homebrew) e extensões.</p></div>
+    <div><h3>Ficheiros</h3><p>Mapa do disco, ficheiros grandes e antigos, duplicados, fotos semelhantes e destruição segura.</p></div>
+    <div><h3>Sistema</h3><p>Itens de arranque, processos e tarefas de manutenção: DNS, Spotlight, Launch Services e disco.</p></div>
+    <div><h3>Barra de menus</h3><p>CPU, memória, disco, rede e bateria em tempo real.</p></div>
+  </div>
+</section>
+
+<div class="safety" id="safety">
+<section aria-labelledby="h-h">
+  <h2 id="h-h">Como funciona</h2>
+  <ol class="steps">
+    <li><h3>Descarregue e instale</h3><p>Abra o DMG e arraste o Prune para Aplicações.</p></li>
+    <li><h3>Autorize uma vez</h3><p>Abra-o em Privacidade e Segurança e dê Acesso Total ao Disco com o assistente incluído.</p></li>
+    <li><h3>Analise e reveja</h3><p>Clique em Analisar, veja o que foi encontrado e limpe num clique.</p></li>
+  </ol>
+  <h2>Feito para nunca apagar o que não deve</h2>
+  <ul class="ticks">
+    <li>Nada é apagado sem a sua confirmação. Pode rever cada item antes de limpar.</li>
+    <li>As pastas do sistema e as pastas pessoais estão protegidas, seja o que for que selecione.</li>
+    <li>Ficheiros pessoais e apps vão para o Lixo. Caches e registos são apagados diretamente. Pode mudar isto nas Definições.</li>
+    <li>As estatísticas de uso são anónimas e só são enviadas com o seu consentimento. Nunca incluem nomes de ficheiros, pastas ou apps.</li>
+  </ul>
+</section>
+</div>
+
+<section aria-labelledby="r-h">
+  <h2 id="r-h">Requisitos</h2>
+  <dl class="req">
+    <dt>Sistema</dt><dd>macOS 14 Sonoma ou posterior</dd>
+    <dt>Processador</dt><dd>App universal para Apple silicon e Intel</dd>
+    <dt>Idiomas</dt><dd>Inglês e português, conforme o idioma do sistema</dd>
+    <dt>Preço</dt><dd>Gratuito, licença GPL-3.0</dd>
+  </dl>
+</section>
+
+<section id="faq" aria-labelledby="q-h">
+  <h2 id="q-h">Perguntas</h2>
+  <details><summary>Porque é que o macOS bloqueia o Prune da primeira vez?</summary>
+    <p>O Prune não está registado na Apple. Autorize-o uma vez em Definições do Sistema, Privacidade e Segurança, Abrir mesmo assim, ou execute no Terminal:</p>
+    <pre><code>xattr -dr com.apple.quarantine /Applications/Prune.app</code></pre></details>
+  <details><summary>Porque precisa de Acesso Total ao Disco?</summary>
+    <p>Caches, registos e dados dos browsers estão em pastas que o macOS protege. Sem acesso, o Prune não os consegue ver nem limpar.</p></details>
+  <details><summary>Apaga as minhas palavras-passe ou marcadores?</summary>
+    <p>Não. A limpeza de privacidade remove apenas histórico, cookies e caches.</p></details>
+  <details><summary>Posso desfazer uma limpeza?</summary>
+    <p>Ficheiros pessoais e apps vão para o Lixo, de onde os pode recuperar. Caches e registos são removidos diretamente, porque as apps voltam a criá-los.</p></details>
+  <details><summary>Como atualizo?</summary>
+    <p>Descarregue a nova versão e substitua a app em Aplicações. As novidades estão no <a href="https://github.com/viniciuslopesgit/prune/blob/main/CHANGELOG.md">registo de alterações</a>.</p></details>
+  <details><summary>É mesmo gratuito?</summary>
+    <p>Sim. O Prune é de código aberto, com licença GPL-3.0 e o código no GitHub.</p></details>
+</section>
+</main>
+</div>
+<footer><div class="wrap">
+  <span>Prune, gratuito e de código aberto com licença GPL-3.0.</span>
+  <span><a href="https://github.com/viniciuslopesgit/prune">Código no GitHub</a> · <a href="https://github.com/viniciuslopesgit/prune/releases">Todas as versões</a></span>
+</div></footer>
+</body>
+</html>

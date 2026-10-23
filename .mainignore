@@ -18,3 +18,4 @@ scripts/setup_hooks.sh
 scripts/stable.sh
 scripts/stable.py
 .github/workflows/ci.yml
+site/

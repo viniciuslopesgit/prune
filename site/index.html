@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prune for Mac</title>
+<meta name="description" content="Prune is a free, open-source Mac cleaner: clean junk, uninstall apps completely, protect your privacy and keep an eye on your Mac.">
+<link rel="alternate" hreflang="pt-PT" href="pt/">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700;800&family=Instrument+Sans:wght@400;600&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<div class="wrap">
+<header class="top">
+  <a class="brand" href="./">Prune</a>
+  <nav aria-label="Main">
+    <a class="opt" href="#features">Features</a>
+    <a class="opt" href="#safety">Safety</a>
+    <a class="opt" href="#faq">FAQ</a>
+    <a href="pt/" hreflang="pt-PT" lang="pt-PT">Português</a>
+  </nav>
+</header>
+<main id="main">
+<div class="hero">
+  <h1>Prune<span>Your Mac, lighter. Cleaner. Safer.</span></h1>
+  <p class="lede">Clean junk, uninstall apps completely, protect your privacy and keep an eye on your Mac, all in one native app. Free and open source.</p>
+  <div class="cta">
+    <a class="button" href="https://github.com/viniciuslopesgit/prune/releases/latest">Download for macOS</a>
+    <p class="note">macOS 14 or later. Apple silicon and Intel.</p>
+  </div>
+  <figure class="shot"><img src="screenshot.png" width="2000" height="1177" alt="Prune Smart Scan showing junk to clean and the state of macOS protections"></figure>
+</div>
+
+<section id="features" aria-labelledby="f-h">
+  <h2 id="f-h">Everything your Mac needs, in one place</h2>
+  <div class="features">
+    <div><h3>Smart Scan</h3><p>Junk to clean and the state of macOS protections, in one click.</p></div>
+    <div><h3>Dashboard</h3><p>Disk, memory, CPU, network, battery, and SIP, Gatekeeper, Firewall, FileVault and XProtect at a glance.</p></div>
+    <div><h3>Cleanup</h3><p>Caches, logs, temporary files, Xcode and package managers, iPhone files, Mail attachments and the Trash.</p></div>
+    <div><h3>Privacy</h3><p>History, cookies and caches of Safari, Chrome, Edge, Brave, Opera, Vivaldi, Arc and Firefox. Passwords and bookmarks stay intact.</p></div>
+    <div><h3>Applications</h3><p>Uninstall apps completely, find leftovers of removed apps, check updates (Sparkle and Homebrew) and manage extensions.</p></div>
+    <div><h3>Files</h3><p>Disk map, large and old files, duplicates, similar photos and secure shredding.</p></div>
+    <div><h3>System</h3><p>Login items, processes and maintenance tasks: DNS, Spotlight, Launch Services and disk.</p></div>
+    <div><h3>Menu bar</h3><p>CPU, memory, disk, network and battery in real time.</p></div>
+  </div>
+</section>
+
+<div class="safety" id="safety">
+<section aria-labelledby="h-h">
+  <h2 id="h-h">How it works</h2>
+  <ol class="steps">
+    <li><h3>Download and install</h3><p>Open the DMG and drag Prune to Applications.</p></li>
+    <li><h3>Allow it once</h3><p>Open it from Privacy &amp; Security and grant Full Disk Access with the built-in assistant.</p></li>
+    <li><h3>Scan and review</h3><p>Click Scan, look through what was found, and clean in one click.</p></li>
+  </ol>
+  <h2>Built to never delete the wrong thing</h2>
+  <ul class="ticks">
+    <li>Nothing is deleted without your confirmation. You can review each item before cleaning.</li>
+    <li>System folders and personal folders are protected, whatever you select.</li>
+    <li>Personal files and apps go to the Trash. Caches and logs are deleted directly. You can change this in Settings.</li>
+    <li>Usage statistics are anonymous and only sent with your consent. They never include names of files, folders or apps.</li>
+  </ul>
+</section>
+</div>
+
+<section aria-labelledby="r-h">
+  <h2 id="r-h">Requirements</h2>
+  <dl class="req">
+    <dt>System</dt><dd>macOS 14 Sonoma or later</dd>
+    <dt>Processor</dt><dd>Universal app for Apple silicon and Intel</dd>
+    <dt>Languages</dt><dd>English and Portuguese, following your system language</dd>
+    <dt>Price</dt><dd>Free, GPL-3.0 licence</dd>
+  </dl>
+</section>
+
+<section id="faq" aria-labelledby="q-h">
+  <h2 id="q-h">Questions</h2>
+  <details><summary>Why does macOS block Prune the first time?</summary>
+    <p>Prune is not registered with Apple. Allow it once in System Settings, Privacy &amp; Security, Open Anyway, or run this in Terminal:</p>
+    <pre><code>xattr -dr com.apple.quarantine /Applications/Prune.app</code></pre></details>
+  <details><summary>Why does it need Full Disk Access?</summary>
+    <p>Caches, logs and browser data live in folders macOS protects. Without access, Prune cannot see or clean them.</p></details>
+  <details><summary>Will it delete my passwords or bookmarks?</summary>
+    <p>No. Privacy cleaning removes history, cookies and caches only.</p></details>
+  <details><summary>Can I undo a cleanup?</summary>
+    <p>Personal files and apps go to the Trash, so you can restore them from there. Caches and logs are removed directly, as apps rebuild them.</p></details>
+  <details><summary>How do I update?</summary>
+    <p>Download the new version and replace the app in Applications. What's new is in the <a href="https://github.com/viniciuslopesgit/prune/blob/main/CHANGELOG.md">changelog</a>.</p></details>
+  <details><summary>Is it really free?</summary>
+    <p>Yes. Prune is open source under the GPL-3.0 licence, with the code on GitHub.</p></details>
+</section>
+</main>
+</div>
+<footer><div class="wrap">
+  <span>Prune, free and open source under GPL-3.0.</span>
+  <span><a href="https://github.com/viniciuslopesgit/prune">Source code on GitHub</a> · <a href="https://github.com/viniciuslopesgit/prune/releases">All releases</a></span>
+</div></footer>
+</body>
+</html>

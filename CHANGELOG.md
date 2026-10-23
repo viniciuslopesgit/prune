@@ -2,6 +2,13 @@
 
 Notable changes in each version. Format [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions [SemVer](https://semver.org/).
 
+## [1.5.0] - 2026-10-23
+
+Prune now has its own website, in English and Portuguese, with the features, how it keeps your files safe, the requirements and answers to common questions. The app does not change.
+
+### Added
+- A website for Prune (`site/` folder) with a download button for the latest version, light and dark mode, and a Portuguese version.
+
 ## [1.4.7] - 2026-10-23
 
 A security alert from GitHub's code scanning resolved in the release tooling. The app does not change.
@@ -191,6 +198,7 @@ First public version.
 
 - First version: Smart Scan, Dashboard, cleanup, privacy, optimization, maintenance, uninstaller, updater, extensions, Space Lens, large files, duplicates and shredder.
 
+[1.5.0]: https://github.com/viniciuslopesgit/prune/releases/tag/v1.5.0
 [1.4.7]: https://github.com/viniciuslopesgit/prune/releases/tag/v1.4.7
 [1.4.6]: https://github.com/viniciuslopesgit/prune/releases/tag/v1.4.6
 [1.4.5]: https://github.com/viniciuslopesgit/prune/releases/tag/v1.4.5
