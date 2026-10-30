@@ -144,11 +144,12 @@ enum BrowserExtensions {
         var result: [BrowserExtension] = []
         for b in PrivacyScanner.chromiumBrowsers {
             let base = URL.home(b.support)
-            for profile in FS.children(base) where profile.lastPathComponent == "Default" || profile.lastPathComponent.hasPrefix("Profile ") {
+            // A profile or an extension folder that is a link would offer the folder it points to for removal.
+            for profile in FS.children(base) where (profile.lastPathComponent == "Default" || profile.lastPathComponent.hasPrefix("Profile ")) && !FS.isLink(profile) {
                 let prefs = (try? Data(contentsOf: profile.appendingPathComponent("Preferences")))
                     .flatMap { try? JSONSerialization.jsonObject(with: $0) as? [String: Any] }
                 let settings = ((prefs?["extensions"] as? [String: Any])?["settings"] as? [String: Any]) ?? [:]
-                for extDir in FS.children(profile.appendingPathComponent("Extensions")) where extDir.isDirectory {
+                for extDir in FS.children(profile.appendingPathComponent("Extensions")) where extDir.isDirectory && !FS.isLink(extDir) {
                     guard let versionDir = FS.children(extDir).filter(\.isDirectory).sorted(by: { $0.path > $1.path }).first,
                           let data = try? Data(contentsOf: versionDir.appendingPathComponent("manifest.json")),
                           let manifest = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { continue }
@@ -167,21 +168,33 @@ enum BrowserExtensions {
         }
         // Firefox
         let ffBase = URL.home("Library/Application Support/Firefox/Profiles")
-        for profile in FS.children(ffBase) {
+        for profile in FS.children(ffBase) where !FS.isLink(profile) {
             guard let data = try? Data(contentsOf: profile.appendingPathComponent("extensions.json")),
                   let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
                   let addons = json["addons"] as? [[String: Any]] else { continue }
             for a in addons where (a["type"] as? String) == "extension" && (a["location"] as? String) == "app-profile" {
-                guard let path = a["path"] as? String else { continue }
+                guard let path = a["path"] as? String, let url = firefoxExtensionURL(path, profile: profile) else { continue }
                 let name = ((a["defaultLocale"] as? [String: Any])?["name"] as? String) ?? (a["id"] as? String ?? "?")
                 let perms = ((a["userPermissions"] as? [String: Any])?["origins"] as? [String]) ?? []
                 result.append(BrowserExtension(
-                    url: URL(fileURLWithPath: path), name: name, identifier: a["id"] as? String ?? "",
+                    url: url, name: name, identifier: a["id"] as? String ?? "",
                     browser: "Firefox", version: a["version"] as? String ?? "", permissions: perms, fromStore: a["signedState"] as? Int == 2
                 ))
             }
         }
         return result.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+    }
+
+    /// The path in extensions.json comes from a file anyone can write in the profile, and removing the
+    /// extension sends it to the Trash. So it is only accepted as a direct child of that profile's own
+    /// `extensions` folder (resolved), and never as a link.
+    static func firefoxExtensionURL(_ path: String, profile: URL) -> URL? {
+        let url = URL(fileURLWithPath: path).standardizedFileURL
+        let folder = profile.appendingPathComponent("extensions").path
+        guard path.hasPrefix("/"), !FS.isLink(url), url.exists,
+              let parent = SafetyGuard.realPath(url.deletingLastPathComponent().path),
+              let expected = SafetyGuard.realPath(folder), parent == expected else { return nil }
+        return url
     }
 
     private static func localized(_ name: String, dir: URL, manifest: [String: Any]) -> String {

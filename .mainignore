@@ -22,3 +22,5 @@ scripts/stable.py
 site/
 .github/workflows/pages.yml
 .github/workflows/macos12.yml
+.github/workflows/security.yml
+scripts/security_audit.sh

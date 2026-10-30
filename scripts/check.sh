@@ -34,6 +34,16 @@ typeset -A MIN_COVERAGE=(
     Features/SpaceLens/SpaceScanner.swift 85
     Core/Formatting.swift 75
     Core/LaunchItemParser.swift 100
+    # What each scan offers and preselects for deletion (R1), and what the Updater opens from the network.
+    Features/Cleanup/TrashScanner.swift 95
+    Features/Cleanup/MailAttachmentsScanner.swift 90
+    Features/Privacy/PrivacyScanner.swift 85
+    Features/Cleanup/SystemJunkScanner.swift 65
+    Features/Uninstaller/AppScanner.swift 50
+    Features/Updater/UpdateService.swift 60
+    Features/Extensions/ExtensionService.swift 40
+    Core/Cleaning/CleanupModel.swift 60
+    Features/Duplicates/DuplicatesModel.swift 45
 )
 
 STEP=0
@@ -138,7 +148,7 @@ if ! ./scripts/test.sh --enable-code-coverage >$LOG 2>&1; then
 fi
 ok "$(grep -oE 'Test run with [0-9]+ tests in [0-9]+ suites' $LOG | sed 's/Test run with/passed:/')"
 # Skipped tests are not failures, but they are not evidence either: always show them, with the reason.
-SKIPPED=$(grep -E 'Test .* skipped' $LOG | sed -E 's/^[^T]*Test /Test /' || true)
+SKIPPED=$(grep -E '" skipped' $LOG | sed -E 's/^[^T]*Test /Test /' || true)
 if [ -n "$SKIPPED" ]; then
     print -P "%F{yellow}  ⚠ skipped on this machine:%f"
     print -r -- "$SKIPPED" | sed 's/^/      /'
@@ -203,6 +213,10 @@ if [ $FULL = 1 ]; then
         [ "$MINOS" = "$MIN_OS" ] || fail "The $ARCH binary needs macOS ${MINOS:-?}, but the Info.plist promises $MIN_OS."
     done
     ok "universal ($ARCHS), signed, version $VERSION, runs on macOS $MIN_OS or later"
+
+    step "Security audit of the built app"
+    ./scripts/security_audit.sh $APP >.build/check-audit.log 2>&1 || { cat .build/check-audit.log; fail "The security audit failed."; }
+    ok "$(grep -c '✓' .build/check-audit.log) checks: entitlements, PIE, stack protector, libraries, rpaths, ATS, secrets"
 
     step "Self-test of the built app"
     # Runs every scan of the real app, read-only. The output stays in .build (it has names of

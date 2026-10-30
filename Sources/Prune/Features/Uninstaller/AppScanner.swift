@@ -95,7 +95,7 @@ enum AppScanner {
     ]
 
     static func expand(_ p: String) -> URL {
-        URL(fileURLWithPath: p.hasPrefix("~") ? home.path + p.dropFirst() : p)
+        URL(fileURLWithPath: p.hasPrefix("~") ? (ScanRoot.home ?? home).path + p.dropFirst() : p)
     }
 
     /// Support files the app has spread across the system.

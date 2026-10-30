@@ -40,12 +40,15 @@ enum SafetyGuard {
     }
 
     static func canDelete(_ url: URL) -> Bool {
-        let path = url.standardizedFileURL.path
+        let standard = url.standardizedFileURL
+        let path = standard.path
         guard !path.isEmpty else { return false }
         // Checks the path as requested and with the parent folder resolved (/var, /tmp and /etc are
         // links to /private/…). The last component is not resolved: deleting a link does not touch its target.
-        let parent = url.standardizedFileURL.deletingLastPathComponent().path
-        let resolved = URL(fileURLWithPath: realPath(parent) ?? parent).appendingPathComponent(url.lastPathComponent).path
+        // Both come from the standardized URL: the original's last component can be "." or ".."
+        // ("/private/var/db/." would otherwise be checked as "/private/var/.").
+        let parent = standard.deletingLastPathComponent().path
+        let resolved = URL(fileURLWithPath: realPath(parent) ?? parent).appendingPathComponent(standard.lastPathComponent).path
         return [path, resolved].allSatisfy(isAllowed)
     }
 
@@ -59,7 +62,8 @@ enum SafetyGuard {
     private static func isAllowed(_ path: String) -> Bool {
         let k = key(path)
         if protectedExact.contains(k) { return false }
-        if protectedPrefixes.contains(where: { k.hasPrefix($0) }) { return false }
+        // A prefix protects its contents and the folder itself ("/private/var/db" as well as "/private/var/db/x").
+        if protectedPrefixes.contains(where: { k.hasPrefix($0) || k + "/" == $0 }) { return false }
         let bundle = key(Bundle.main.bundlePath)
         if k == bundle || k.hasPrefix(bundle + "/") { return false }
         return !AppSettings.shared.isIgnored(path)

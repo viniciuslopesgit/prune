@@ -100,7 +100,7 @@ enum OptimizationService {
         return items.sorted { $0.ownerName.localizedCaseInsensitiveCompare($1.ownerName) == .orderedAscending }
     }
 
-    private static func parseDisabled(_ out: String) -> Set<String> {
+    static func parseDisabled(_ out: String) -> Set<String> {
         var s = Set<String>()
         for line in out.split(separator: "\n") {
             let t = line.trimmingCharacters(in: .whitespaces)
@@ -136,13 +136,23 @@ enum OptimizationService {
             }
             return true
         case .daemon:
-            let path = Shell.quote(item.url.path)
-            let label = Shell.quote("system/\(item.label)")
-            let script = enabled
-                ? "launchctl enable \(label); launchctl bootstrap system \(path)"
-                : "launchctl bootout system \(path); launchctl disable \(label)"
-            return await Shell.admin(script).ok
+            return await Shell.admin(daemonScript(item, enabled: enabled)).ok
         }
+    }
+
+    /// Runs as root. The label and the path come from the daemon's .plist, so both go in quoted.
+    static func daemonScript(_ item: LaunchItem, enabled: Bool) -> String {
+        let path = Shell.quote(item.url.path)
+        let label = Shell.quote("system/\(item.label)")
+        return enabled
+            ? "launchctl enable \(label); launchctl bootstrap system \(path)"
+            : "launchctl bootout system \(path); launchctl disable \(label)"
+    }
+
+    /// Runs as root: unloads the item and deletes only its .plist.
+    static func removeScript(_ item: LaunchItem) -> String {
+        let domain = item.domain == .daemon ? "system" : "gui/\(Shell.uid)"
+        return "/bin/launchctl bootout \(domain) \(Shell.quote(item.url.path)) 2>/dev/null; /bin/rm -f -- \(Shell.quote(item.url.path))"
     }
 
     static func remove(_ item: LaunchItem) async -> Bool {
@@ -151,10 +161,7 @@ enum OptimizationService {
             _ = await Shell.run("/bin/launchctl", ["bootout", "gui/\(Shell.uid)", item.url.path])
             return Cleaner.removeSync(item.url, mode: .trash)
         }
-        let domain = item.domain == .daemon ? "system" : "gui/\(Shell.uid)"
-        let path = Shell.quote(item.url.path)
-        let r = await Shell.admin("/bin/launchctl bootout \(domain) \(path) 2>/dev/null; /bin/rm -f -- \(path)")
-        return r.ok
+        return await Shell.admin(removeScript(item)).ok
     }
 
     static func processes() async -> [ProcessInfoRow] {

@@ -15,6 +15,15 @@ mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 # plist never disagree. Package.swift's platforms must allow it.
 MIN_OS=$(/usr/libexec/PlistBuddy -c "Print LSMinimumSystemVersion" Resources/Info.plist)
 
+# The linker adds the build machine's toolchain folders as rpaths (e.g. inside Xcode.app). The app
+# loads nothing through @rpath, but on a user's Mac such a path is a place where a planted library
+# could be loaded from. Only /usr/lib/swift stays (scripts/security_audit.sh checks it).
+strip_build_rpaths() {
+    otool -l "$1" | awk '$1 == "path" { print $2 }' | while read -r RP; do
+        [ "$RP" = "/usr/lib/swift" ] || install_name_tool -delete_rpath "$RP" "$1" 2>/dev/null
+    done
+}
+
 if [ "$UNIVERSAL" = "1" ]; then
     # Universal binary (Apple silicon + Intel). Without full Xcode there is no multiple `--arch`,
     # so it builds each architecture and joins them with lipo.
@@ -25,11 +34,13 @@ if [ "$UNIVERSAL" = "1" ]; then
     for ARCH in arm64 x86_64; do
         swift build -c "$CONFIG" --triple "$ARCH-apple-macosx$MIN_OS"
         cp "$(swift build -c "$CONFIG" --triple "$ARCH-apple-macosx$MIN_OS" --show-bin-path)/Prune" "$SLICES/Prune-$ARCH"
+        strip_build_rpaths "$SLICES/Prune-$ARCH"
     done
     lipo -create "$SLICES/Prune-arm64" "$SLICES/Prune-x86_64" -output "$APP/Contents/MacOS/Prune"
 else
     swift build -c "$CONFIG"
     cp "$(swift build -c "$CONFIG" --show-bin-path)/Prune" "$APP/Contents/MacOS/Prune"
+    strip_build_rpaths "$APP/Contents/MacOS/Prune"
 fi
 cp Resources/Info.plist "$APP/Contents/Info.plist"
 

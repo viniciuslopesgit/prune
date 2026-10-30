@@ -1,0 +1,161 @@
+# Tests and security: every component test, the tests again under the sanitizers, the isolated
+# penetration tests and an audit of the built app. Runs on every push and Pull Request to dev and
+# once a week (a new macOS image or Xcode can break what did not change).
+#
+#   tests       all unit tests with a JUnit report and the coverage of each file in the job summary
+#   sanitizers  the same tests under AddressSanitizer (memory), UndefinedBehaviorSanitizer and
+#               ThreadSanitizer (data races in the background scans)
+#   pentest     scripts/pentest.sh: the attack tests inside a sandbox with no network that can only
+#               write in its own temporary folder
+#   audit       the universal app, signed: scripts/security_audit.sh (entitlements, PIE, stack
+#               protector, where code is loaded from, ATS, secrets) and the self-test in both interfaces
+name: Tests and security
+
+on:
+  push:
+    branches: [dev]
+  pull_request:
+    branches: [dev]
+  schedule:
+    - cron: "17 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# "shell: bash" turns on pipefail: a failing command piped into tee still fails the step.
+defaults:
+  run:
+    shell: bash
+
+concurrency:
+  group: security-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    name: Component tests
+    runs-on: macos-15
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Runner's latest Xcode
+        run: |
+          XCODE=$(ls -d /Applications/Xcode_*.app | sort -V | tail -1)
+          sudo xcode-select -s "$XCODE"
+          xcodebuild -version
+
+      - name: Unit tests
+        run: ./scripts/test.sh --enable-code-coverage --xunit-output .build/junit.xml 2>&1 | tee .build/tests.log
+
+      - name: Results and coverage in the summary
+        if: always()
+        run: |
+          {
+            echo "## Tests"
+            grep -E "Test run with" .build/tests.log | tail -1 || true
+            echo
+            echo "### Failed"
+            grep -E "^✘ Test" .build/tests.log | sed 's/^/- /' | head -50 || true
+            echo
+            echo "### Skipped"
+            grep -E "\" skipped" .build/tests.log | sed -E 's/^[^T]*/- /' || true
+          } >>"$GITHUB_STEP_SUMMARY"
+          BIN=$(swift build --show-bin-path)
+          T=$BIN/PrunePackageTests.xctest/Contents/MacOS/PrunePackageTests
+          [ -x "$T" ] || T=$BIN/PruneTests.xctest/Contents/MacOS/PruneTests
+          [ -f "$BIN/codecov/default.profdata" ] || exit 0
+          {
+            echo "## Line coverage per file"
+            echo '```'
+            xcrun llvm-cov report "$T" -instr-profile "$BIN/codecov/default.profdata" \
+              -ignore-filename-regex='Tests/|\.build/|View\.swift$' | awk 'NR > 2 && NF >= 10 { printf "%-55s %8s\n", $1, $10 }'
+            echo '```'
+          } >>"$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: junit
+          path: .build/junit*.xml
+          include-hidden-files: true
+          if-no-files-found: ignore
+          retention-days: 14
+
+  sanitizers:
+    name: Tests under ${{ matrix.sanitizer }} sanitizer
+    runs-on: macos-15
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        sanitizer: [address, undefined, thread]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Runner's latest Xcode
+        run: |
+          XCODE=$(ls -d /Applications/Xcode_*.app | sort -V | tail -1)
+          sudo xcode-select -s "$XCODE"
+          xcodebuild -version
+      - name: Unit tests with --sanitize=${{ matrix.sanitizer }}
+        env:
+          # Any report stops the run: a sanitizer finding is a failure, not a warning.
+          ASAN_OPTIONS: halt_on_error=1:detect_stack_use_after_return=1
+          UBSAN_OPTIONS: halt_on_error=1:print_stacktrace=1
+          TSAN_OPTIONS: halt_on_error=1:second_deadlock_stack=1
+        run: |
+          ./scripts/test.sh --sanitize=${{ matrix.sanitizer }} --scratch-path .build/san 2>&1 | tee .build/sanitizer.log
+          ! grep -qE "ERROR: (Address|Thread)Sanitizer|WARNING: ThreadSanitizer|runtime error:" .build/sanitizer.log
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: sanitizer-${{ matrix.sanitizer }}
+          path: .build/sanitizer.log
+          include-hidden-files: true
+          retention-days: 14
+
+  pentest:
+    name: Penetration tests (isolated)
+    runs-on: macos-15
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Runner's latest Xcode
+        run: |
+          XCODE=$(ls -d /Applications/Xcode_*.app | sort -V | tail -1)
+          sudo xcode-select -s "$XCODE"
+          xcodebuild -version
+      - run: ./scripts/pentest.sh
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: pentest-log
+          path: .build/pentest*.log
+          include-hidden-files: true
+          if-no-files-found: ignore
+          retention-days: 14
+
+  audit:
+    name: Audit of the built app
+    runs-on: macos-15
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Runner's latest Xcode
+        run: |
+          XCODE=$(ls -d /Applications/Xcode_*.app | sort -V | tail -1)
+          sudo xcode-select -s "$XCODE"
+          xcodebuild -version
+      - name: Universal app
+        run: ./scripts/build_app.sh
+      - name: ./scripts/security_audit.sh
+        run: ./scripts/security_audit.sh
+      - name: Self-test in both interfaces
+        run: |
+          for LEGACY in 0 1; do
+            PRUNE_LEGACY_UI=$LEGACY perl -e 'alarm shift; exec @ARGV' 300 \
+              build/Prune.app/Contents/MacOS/Prune --selftest >.build/selftest-$LEGACY.log 2>&1
+            grep -F "SafetyGuard blocks critical folders: true" .build/selftest-$LEGACY.log
+            grep -F "Shredder does not follow symbolic links: true" .build/selftest-$LEGACY.log
+            grep -F "window=true menuBar=true" .build/selftest-$LEGACY.log
+          done

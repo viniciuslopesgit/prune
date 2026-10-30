@@ -2,8 +2,14 @@ import AppKit
 
 let home = FileManager.default.homeDirectoryForCurrentUser
 
+/// The home folder the scanners look in. Only the tests change it, to run the scanning rules on a
+/// fake home inside a temporary folder. SafetyGuard always protects the real `home`.
+enum ScanRoot {
+    @TaskLocal static var home: URL?
+}
+
 extension URL {
-    static func home(_ path: String) -> URL { Prune.home.appendingPathComponent(path) }
+    static func home(_ path: String) -> URL { (ScanRoot.home ?? Prune.home).appendingPathComponent(path) }
 
     var isDirectory: Bool {
         (try? resourceValues(forKeys: [.isDirectoryKey]))?.isDirectory ?? false
@@ -29,6 +35,11 @@ enum FS {
     static let sizeKeys: Set<URLResourceKey> = [
         .isDirectoryKey, .isSymbolicLinkKey, .totalFileAllocatedSizeKey, .fileAllocatedSizeKey,
     ]
+
+    /// Whether the entry itself is a symbolic link (the target is not looked at).
+    static func isLink(_ url: URL) -> Bool {
+        (try? FileManager.default.destinationOfSymbolicLink(atPath: url.path)) != nil
+    }
 
     /// Real on-disk size of a file or folder (recursive).
     static func size(of url: URL) -> Int64 {

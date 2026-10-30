@@ -44,20 +44,30 @@ final class MaintenanceModel: ObservableObject {
         let admin = tasks.filter(\.requiresAdmin)
         if !admin.isEmpty {
             // A single password prompt for every administrator task.
-            let script = admin.map { "(\($0.command)) >/dev/null 2>&1; echo \"\($0.id):$?\"" }.joined(separator: "; ")
-            let r = await Shell.admin(script)
+            let r = await Shell.admin(Self.adminScript(admin))
             if !r.ok && r.out.isEmpty {
                 for t in admin { states[t.id] = .failed(r.err.contains("-128") ? String(localized: "Cancelled") : String(localized: "Not authorized")) }
             } else {
-                var codes: [String: String] = [:]
-                for line in r.out.split(separator: "\n") {
-                    let p = line.split(separator: ":")
-                    if p.count == 2 { codes[String(p[0])] = String(p[1]) }
-                }
+                let codes = Self.exitCodes(r.out)
                 for t in admin { finish(t, ok: codes[t.id] == "0", error: String(localized: "Code \(codes[t.id] ?? "?")")) }
             }
         }
         running = false
+    }
+
+    /// One script for every administrator task (a single password prompt). Each task's output is
+    /// discarded; only "<id>:<exit code>" lines come back.
+    nonisolated static func adminScript(_ tasks: [MaintenanceTask]) -> String {
+        tasks.map { "(\($0.command)) >/dev/null 2>&1; echo \"\($0.id):$?\"" }.joined(separator: "; ")
+    }
+
+    nonisolated static func exitCodes(_ out: String) -> [String: String] {
+        var codes: [String: String] = [:]
+        for line in out.split(separator: "\n") {
+            let p = line.split(separator: ":")
+            if p.count == 2 { codes[String(p[0])] = String(p[1]) }
+        }
+        return codes
     }
 
     private func finish(_ t: MaintenanceTask, ok: Bool, error: String) {

@@ -15,20 +15,8 @@ enum SystemJunkScanner {
         var cats: [CleanCategory] = []
 
         p.report(String(localized: "Scanning user caches…"), force: true)
-        cats.append(CleanCategory(
-            id: "userCache", name: String(localized: "User caches"), icon: "shippingbox",
-            info: String(localized: "Temporary files from apps. They are recreated when needed."),
-            items: FS.childItems(of: lib.appendingPathComponent("Caches"), excluding: cacheExclusions.union(["Homebrew", "pip", "Yarn", "CocoaPods", "node-gyp", "ms-playwright", "com.apple.dt.Xcode"]))
-        ))
-
-        // Caches of open apps are not selected (they may be in use).
-        let running = Set(NSWorkspace.shared.runningApplications.compactMap { $0.bundleIdentifier?.lowercased() })
-        if let i = cats.firstIndex(where: { $0.id == "userCache" }) {
-            for j in cats[i].items.indices where running.contains(cats[i].items[j].name.lowercased()) {
-                cats[i].items[j].selected = false
-                cats[i].items[j].detail = String(localized: "App is open. Quit it to clean.")
-            }
-        }
+        let running = Set(NSWorkspace.shared.runningApplications.compactMap { $0.bundleIdentifier })
+        cats.append(userCaches(running: running))
 
         p.report(String(localized: "Scanning system caches…"))
         cats.append(CleanCategory(
@@ -85,6 +73,22 @@ enum SystemJunkScanner {
         cats.append(downloadsJunk())
 
         return cats
+    }
+
+    /// ~/Library/Caches without the caches in use by the system or covered by another category.
+    /// Caches of open apps are not selected (they may be in use).
+    static func userCaches(running: Set<String>) -> CleanCategory {
+        var items = FS.childItems(of: URL.home("Library/Caches"), excluding: cacheExclusions.union(["Homebrew", "pip", "Yarn", "CocoaPods", "node-gyp", "ms-playwright", "com.apple.dt.Xcode"]))
+        let open = Set(running.map { $0.lowercased() })
+        for j in items.indices where open.contains(items[j].name.lowercased()) {
+            items[j].selected = false
+            items[j].detail = String(localized: "App is open. Quit it to clean.")
+        }
+        return CleanCategory(
+            id: "userCache", name: String(localized: "User caches"), icon: "shippingbox",
+            info: String(localized: "Temporary files from apps. They are recreated when needed."),
+            items: items
+        )
     }
 
     static func xcodeJunk() -> CleanCategory {

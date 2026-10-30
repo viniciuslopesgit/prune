@@ -41,10 +41,13 @@ final class AppcastParser: NSObject, XMLParserDelegate {
     func parser(_ parser: XMLParser, didStartElement name: String, namespaceURI: String?, qualifiedName: String?, attributes: [String: String] = [:]) {
         text = ""
         if name == "item" { current = Item() }
-        if name == "enclosure", current != nil {
-            current?.url = attributes["url"] ?? current?.url
-            current?.short = attributes["sparkle:shortVersionString"] ?? current?.short
-            current?.build = attributes["sparkle:version"] ?? current?.build
+        // Read and written through a copy: `current?.x = … ?? current?.x` reads `current` while it is
+        // being modified, which Swift stops as an exclusivity violation (the app crashed here).
+        if name == "enclosure", var item = current {
+            item.url = attributes["url"] ?? item.url
+            item.short = attributes["sparkle:shortVersionString"] ?? item.short
+            item.build = attributes["sparkle:version"] ?? item.build
+            current = item
         }
     }
 
@@ -102,34 +105,7 @@ enum UpdateService {
                     req.setValue("Prune/1.0 Sparkle", forHTTPHeaderField: "User-Agent")
                     guard let (data, _) = try? await URLSession.shared.data(for: req) else { return nil }
                     let os = ProcessInfo.processInfo.operatingSystemVersion
-                    let osString = "\(os.majorVersion).\(os.minorVersion).\(os.patchVersion)"
-                    let items = AppcastParser.parse(data).filter { item in
-                        item.channel == nil && (item.minOS.map { !Version.isNewer($0, than: osString) } ?? true)
-                    }
-                    // Picks the most recent version in the appcast.
-                    let best = items.max { a, b in
-                        let va = a.build ?? a.short ?? "", vb = b.build ?? b.short ?? ""
-                        return Version.isNewer(vb, than: va)
-                    }
-                    guard let best else { return nil }
-                    let sameShape = { (a: String, b: String) in Version.numbers(a).count == Version.numbers(b).count }
-                    let newer: Bool
-                    if let short = best.short, !app.version.isEmpty {
-                        let buildNewer = best.build.map { sameShape($0, app.build) && Version.isNewer($0, than: app.build) } ?? false
-                        newer = Version.isNewer(short, than: app.version)
-                            || (!Version.isNewer(app.version, than: short) && buildNewer)
-                    } else if let build = best.build {
-                        newer = sameShape(build, app.build)
-                            ? Version.isNewer(build, than: app.build)
-                            : Version.isNewer(build, than: app.version)
-                    } else {
-                        newer = false
-                    }
-                    guard newer else { return nil }
-                    return AppUpdate(
-                        name: app.name, current: app.version, latest: best.short ?? best.build ?? "?", source: .sparkle,
-                        appURL: app.url, downloadURL: webURL(best.url), notesURL: webURL(best.notes)
-                    )
+                    return update(for: app, appcast: data, osVersion: "\(os.majorVersion).\(os.minorVersion).\(os.patchVersion)")
                 }
             }
             var result: [AppUpdate] = []
@@ -138,28 +114,70 @@ enum UpdateService {
         }
     }
 
+    /// The update an appcast offers for an app, if any: the newest stable item that runs on this macOS
+    /// and is newer than the installed version (by version, or by build when the version is the same).
+    static func update(for app: AppInfo, appcast data: Data, osVersion: String) -> AppUpdate? {
+        let items = AppcastParser.parse(data).filter { item in
+            item.channel == nil && (item.minOS.map { !Version.isNewer($0, than: osVersion) } ?? true)
+        }
+        // Picks the most recent version in the appcast.
+        let best = items.max { a, b in
+            let va = a.build ?? a.short ?? "", vb = b.build ?? b.short ?? ""
+            return Version.isNewer(vb, than: va)
+        }
+        guard let best else { return nil }
+        let sameShape = { (a: String, b: String) in Version.numbers(a).count == Version.numbers(b).count }
+        let newer: Bool
+        if let short = best.short, !app.version.isEmpty {
+            let buildNewer = best.build.map { sameShape($0, app.build) && Version.isNewer($0, than: app.build) } ?? false
+            newer = Version.isNewer(short, than: app.version)
+                || (!Version.isNewer(app.version, than: short) && buildNewer)
+        } else if let build = best.build {
+            newer = sameShape(build, app.build)
+                ? Version.isNewer(build, than: app.build)
+                : Version.isNewer(build, than: app.version)
+        } else {
+            newer = false
+        }
+        guard newer else { return nil }
+        return AppUpdate(
+            name: app.name, current: app.version, latest: best.short ?? best.build ?? "?", source: .sparkle,
+            appURL: app.url, downloadURL: webURL(best.url), notesURL: webURL(best.notes)
+        )
+    }
+
     static var brew: String? { Shell.which(["/opt/homebrew/bin/brew", "/usr/local/bin/brew"]) }
 
     static func homebrewUpdates() async -> [AppUpdate] {
         guard let brew else { return [] }
         let r = await Shell.run(brew, ["outdated", "--json=v2", "--greedy-auto-updates"], env: ["HOMEBREW_NO_AUTO_UPDATE": "1"])
-        guard let data = r.out.data(using: .utf8),
-              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return [] }
+        return parseOutdated(Data(r.out.utf8))
+    }
+
+    /// `brew outdated --json=v2`: apps (casks) are selected, command-line tools (formulae) are not.
+    /// A name that would read as an option to `brew upgrade` is left out.
+    static func parseOutdated(_ data: Data) -> [AppUpdate] {
+        guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return [] }
         var result: [AppUpdate] = []
         for cask in json["casks"] as? [[String: Any]] ?? [] {
-            let name = cask["name"] as? String ?? "?"
+            guard let name = cask["name"] as? String, isBrewName(name) else { continue }
             result.append(AppUpdate(
                 name: name, current: (cask["installed_versions"] as? [String])?.first ?? "?",
                 latest: cask["current_version"] as? String ?? "?", source: .homebrew, brewName: name
             ))
         }
         for f in json["formulae"] as? [[String: Any]] ?? [] {
-            let name = f["name"] as? String ?? "?"
+            guard let name = f["name"] as? String, isBrewName(name) else { continue }
             result.append(AppUpdate(
                 name: name, current: (f["installed_versions"] as? [String])?.first ?? "?",
                 latest: f["current_version"] as? String ?? "?", source: .homebrewFormula, brewName: name, selected: false
             ))
         }
         return result
+    }
+
+    /// Homebrew names: letters, digits and @ + - _ . /, never starting with "-".
+    static func isBrewName(_ name: String) -> Bool {
+        name.range(of: #"^[A-Za-z0-9@+_./][A-Za-z0-9@+_./-]*$"#, options: .regularExpression) != nil
     }
 }

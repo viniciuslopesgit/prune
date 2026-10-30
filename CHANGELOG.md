@@ -2,6 +2,21 @@
 
 Notable changes in each version. Format [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions [SemVer](https://semver.org/).
 
+## [1.8.1] - 2026-10-30
+
+A security and reliability update. New tests on every part of Prune that chooses what to delete found several ways a planted link or a modified browser file could make Prune offer files outside the folders it cleans. All of them are fixed. The update check no longer crashes on some apps.
+
+### Fixed
+- Privacy no longer offers files from other folders when a Chrome, Edge, Brave, Opera, Vivaldi, Arc or Firefox profile is a link to somewhere else, and clearing Firefox history never changes another database through a link.
+- Extensions only lists a Firefox extension that really lives in that profile's extensions folder. A modified extension list could make "Remove" move any folder to the Trash. Browser profiles and extensions that are links are no longer listed.
+- The protection of system folders also covers `/private/var/db`, `/usr/bin` and similar folders themselves (not only their contents), and paths written with `.` or `..` can no longer get around it.
+- Updater: checking apps that publish their updates with Sparkle no longer crashes Prune.
+- Duplicates: after removing copies, the copies that stay are no longer left marked.
+- Updater: names from Homebrew that are not valid package names (for example ones that start with "-") are ignored.
+
+### Changed
+- The app no longer looks for code in the developer tools folder of the computer it was built on.
+
 ## [1.8.0] - 2026-10-29
 
 Prune now runs on macOS 12 Monterey and macOS 13 Ventura, not only on macOS 14 or later. On macOS 14 and newer nothing changes.
@@ -266,6 +281,7 @@ First public version.
 
 - First version: Smart Scan, Dashboard, cleanup, privacy, optimization, maintenance, uninstaller, updater, extensions, Space Lens, large files, duplicates and shredder.
 
+[1.8.1]: https://github.com/viniciuslopesgit/prune/releases/tag/v1.8.1
 [1.8.0]: https://github.com/viniciuslopesgit/prune/releases/tag/v1.8.0
 [1.7.0]: https://github.com/viniciuslopesgit/prune/releases/tag/v1.7.0
 [1.6.4]: https://github.com/viniciuslopesgit/prune/releases/tag/v1.6.4

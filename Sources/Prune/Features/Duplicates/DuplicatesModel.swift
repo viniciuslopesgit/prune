@@ -67,7 +67,20 @@ final class DuplicatesModel: ObservableObject {
 
     /// Selects every copy except the oldest in each group.
     func autoSelect() {
-        marked = Set(groups.filter { !$0.similar }.flatMap { $0.files.dropFirst().map(\.id) })
+        marked = Self.autoMarked(groups)
+    }
+
+    /// Every copy but the first (oldest) of each exact group. Similar photos are never chosen automatically.
+    nonisolated static func autoMarked(_ groups: [DupGroup]) -> Set<String> {
+        Set(groups.filter { !$0.similar }.flatMap { $0.files.dropFirst().map(\.id) })
+    }
+
+    /// What gets deleted: the marked files, but never every copy in a group (the first one then stays).
+    nonisolated static func toRemove(_ groups: [DupGroup], marked: Set<String>) -> [URL] {
+        groups.flatMap { group -> [URL] in
+            let files = group.files.allSatisfy { marked.contains($0.id) } ? Array(group.files.dropFirst()) : group.files
+            return files.filter { marked.contains($0.id) }.map(\.url)
+        }
     }
 
     func toggle(_ f: DupFile) {
@@ -75,16 +88,13 @@ final class DuplicatesModel: ObservableObject {
     }
 
     func removeMarked() async {
-        // Never deletes every copy in a group: if they are all marked, the first one stays.
-        let urls = groups.flatMap { group -> [URL] in
-            let files = group.files.allSatisfy { marked.contains($0.id) } ? Array(group.files.dropFirst()) : group.files
-            return files.filter { marked.contains($0.id) }.map(\.url)
-        }
+        let urls = Self.toRemove(groups, marked: marked)
         let r = await Cleaner.remove(urls: urls, mode: AppSettings.shared.filesDeleteMode)
         let removed = Set(urls.map(\.path)).subtracting(r.failed.map(\.path))
         for i in groups.indices { groups[i].files.removeAll { removed.contains($0.id) } }
         groups.removeAll { $0.files.count < 2 }
-        marked.subtract(removed)
+        // Only files still shown can stay marked (a group with one copy left is no longer listed).
+        marked.formIntersection(groups.flatMap { $0.files.map(\.id) })
         message = Fmt.freedMessage(r.freed, failed: r.failed.count)
     }
 }

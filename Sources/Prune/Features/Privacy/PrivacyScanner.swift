@@ -77,9 +77,10 @@ enum PrivacyScanner {
     static func chromium(_ b: Chromium) -> CleanCategory? {
         let base = URL.home(b.support)
         guard base.exists else { return nil }
+        // A profile that is a link would offer the files of the folder it points to.
         let profiles = FS.children(base).filter {
             let n = $0.lastPathComponent
-            return n == "Default" || n.hasPrefix("Profile ") || n == "Guest Profile"
+            return (n == "Default" || n.hasPrefix("Profile ") || n == "Guest Profile") && !FS.isLink($0)
         }
         var items: [CleanItem] = []
         for profile in profiles {
@@ -107,10 +108,11 @@ enum PrivacyScanner {
         let base = URL.home("Library/Application Support/Firefox/Profiles")
         guard base.exists else { return nil }
         var items: [CleanItem] = []
-        for profile in FS.children(base) where profile.isDirectory {
+        for profile in FS.children(base) where profile.isDirectory && !FS.isLink(profile) {
             let tag = " (\(profile.lastPathComponent))"
             let places = profile.appendingPathComponent("places.sqlite")
-            if places.exists {
+            // The SQL below changes the file in place: through a link it would change another database.
+            if places.exists && !FS.isLink(places) {
                 let path = places.path
                 // Deletes the history but keeps the bookmarks (which live in the same file).
                 items.append(CleanItem(

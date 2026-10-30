@@ -49,6 +49,7 @@ The README's "Download the latest version" link points to **Latest**, which is a
 | Q7 | Minimum line coverage of the files that delete or choose what is deleted (`MIN_COVERAGE`) | B | `llvm-cov` report |
 | Q8 | Every interface text has a translation and every translation is used, with the same placeholders (`scripts/check_localization.py`) | B | Check output |
 | Q9 | Penetration tests in an isolated environment (`scripts/pentest.sh`): the sandbox is first proven to block the network, osascript and writes outside its folder; deleting, administrator and shell calls only in reviewed files; the `Security` suite passes inside it | B | `.build/pentest.log` |
+| Q10 | The unit tests also pass under AddressSanitizer, UndefinedBehaviorSanitizer and ThreadSanitizer (`security.yml`, every push and weekly) | B | Pipeline "Tests and security" |
 
 ### 3.2 Before each beta (`check.sh --full`, `ship.sh`, pre-push hook)
 
@@ -57,7 +58,8 @@ The README's "Download the latest version" link points to **Latest**, which is a
 | R1 | Everything in section 3.1 | B | — |
 | R2 | `X.Y.Z` version in `Info.plist`, with a filled-in CHANGELOG section | B | CHANGELOG |
 | R3 | Universal app (arm64 + x86_64), signed, right version | B | `lipo`, `codesign --verify` |
-| R4 | Self-test of the built app: every scan runs read-only and 6 checks give the expected result | B | `.build/check-selftest.log` |
+| R4 | Self-test of the built app: every scan runs read-only and 7 checks give the expected result, in both interfaces (macOS 13+ and macOS 12) | B | `.build/check-selftest.log` |
+| R4b | Security audit of the built app (`scripts/security_audit.sh`): valid signature, no entitlements, PIE and stack protector on both architectures, only system libraries, no rpath outside `/usr/lib/swift`, no ATS exceptions, no cleartext endpoints or keys | B | `.build/check-audit.log` |
 | R5 | What is tested is exactly what is pushed (git tree comparison) | B | `.build/check-passed` |
 | R6 | DMG and `SHA256SUMS` attached to the Release | B | GitHub Release |
 
