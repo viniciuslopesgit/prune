@@ -9,7 +9,7 @@ Clean junk, uninstall apps completely, protect your privacy and keep an eye on y
 <a href="https://github.com/viniciuslopesgit/prune/releases/latest"><img alt="Download for macOS" src="https://img.shields.io/badge/Download%20for%20macOS-000000?style=for-the-badge&logo=apple&logoColor=white" height="44"></a>
 
 ![Latest release](https://img.shields.io/github/v/release/viniciuslopesgit/prune?label=version&color=2ea44f)
-![macOS 14+](https://img.shields.io/badge/macOS-14%2B-lightgrey?logo=apple)
+![macOS 12+](https://img.shields.io/badge/macOS-12%2B-lightgrey?logo=apple)
 ![Apple silicon & Intel](https://img.shields.io/badge/Apple%20silicon%20%26%20Intel-universal-blue)
 ![License GPL-3.0](https://img.shields.io/badge/license-GPL--3.0-orange)
 
@@ -60,7 +60,7 @@ The interface is shown in English or Portuguese, depending on the language of yo
 
 ## Development
 
-Requires macOS 14 or later and the Xcode Command Line Tools (`xcode-select --install`).
+Requires macOS 12 or later and the Xcode Command Line Tools (`xcode-select --install`).
 
 ```bash
 ./scripts/setup_signing.sh   # once: local certificate, so macOS keeps the permissions

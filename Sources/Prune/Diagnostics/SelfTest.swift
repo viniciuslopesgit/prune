@@ -85,6 +85,11 @@ enum SelfTest {
             let viaSymlink = !SafetyGuard.canDelete(URL(fileURLWithPath: "/var/db/test"))
             print("  SafetyGuard resolves links (/var/db → /private/var/db): \(viaSymlink)")
             print("  Shredder does not follow symbolic links: \(shredderKeepsSymlinkTarget())")
+            // The interface really came up (on macOS 12, or with PRUNE_LEGACY_UI=1, through AppKit).
+            let ui = await MainActor.run { () -> (window: Bool, menuBar: Bool) in
+                (WindowOpener.shared.mainWindow != nil, !PruneMain.legacyUI || !BackgroundMode.menuBarEnabled || LegacyMenuBar.shared.isInstalled)
+            }
+            print("  Interface: legacy=\(PruneMain.legacyUI) window=\(ui.window) menuBar=\(ui.menuBar)")
             exit(0)
         }
     }

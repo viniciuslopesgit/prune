@@ -90,7 +90,7 @@ struct ModuleArtwork: View {
     let module: Module
     var symbol: String?
     var swaying = false
-    @State private var tilt: Double = 0
+    @ViewState private var tilt: Double = 0
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
@@ -168,7 +168,7 @@ struct BigActionButton: View {
     let title: String
     var disabled = false
     let action: () -> Void
-    @State private var hover = false
+    @ViewState private var hover = false
 
     var body: some View {
         Button(action: action) {

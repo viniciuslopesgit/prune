@@ -1,9 +1,7 @@
 import AppKit
-import Observation
 
 @MainActor
-@Observable
-final class UninstallerModel {
+final class UninstallerModel: ObservableObject {
     enum Filter: String, CaseIterable, Identifiable {
         case all, unused, large, appStore, leftovers
         var id: String { rawValue }
@@ -18,18 +16,18 @@ final class UninstallerModel {
         }
     }
 
-    var apps: [AppInfo] = []
-    var loading = false
-    var loaded = false
-    var filter: Filter = .all
-    var search = ""
-    var focused: AppInfo?
-    var leftovers: [CleanItem] = []
-    var loadingLeftovers = false
-    var checked: Set<AppInfo> = []
-    var orphans: [CleanItem] = []
-    var working = false
-    var message: String?
+    @Published var apps: [AppInfo] = []
+    @Published var loading = false
+    @Published var loaded = false
+    @Published var filter: Filter = .all
+    @Published var search = ""
+    @Published var focused: AppInfo?
+    @Published var leftovers: [CleanItem] = []
+    @Published var loadingLeftovers = false
+    @Published var checked: Set<AppInfo> = []
+    @Published var orphans: [CleanItem] = []
+    @Published var working = false
+    @Published var message: String?
 
     func load() async {
         loading = true

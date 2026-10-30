@@ -1,17 +1,16 @@
 import Foundation
-import Observation
+import Combine
 
 @MainActor
-@Observable
-final class SpaceLensModel {
-    var root: DiskNode?
-    var current: DiskNode?
-    var scanning = false
-    var progressText = ""
-    var target: URL = home
-    var marked: Set<DiskNode> = []
-    var hovered: DiskNode?
-    var message: String?
+final class SpaceLensModel: ObservableObject {
+    @Published var root: DiskNode?
+    @Published var current: DiskNode?
+    @Published var scanning = false
+    @Published var progressText = ""
+    @Published var target: URL = home
+    @Published var marked: Set<DiskNode> = []
+    @Published var hovered: DiskNode?
+    @Published var message: String?
     private var scanner: SpaceScanner?
 
     var volumes: [URL] {

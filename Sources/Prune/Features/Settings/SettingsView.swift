@@ -1,18 +1,20 @@
 import SwiftUI
 
 struct SettingsView: View {
-    @Bindable private var settings = AppSettings.shared
+    @ObservedObject private var settings = AppSettings.shared
     @AppStorage("showMenuBar") private var showMenuBar = true
-    @State private var launchAtLogin = AppSettings.shared.launchAtLogin
-    @State private var hasFDA = Permissions.hasFullDiskAccess
+    @ViewState private var launchAtLogin = AppSettings.shared.launchAtLogin
+    @ViewState private var hasFDA = Permissions.hasFullDiskAccess
 
     var body: some View {
         TabView {
             Form {
                 Section("General") {
                     Toggle("Show monitor in the menu bar", isOn: $showMenuBar)
-                    Toggle("Open at login", isOn: $launchAtLogin)
-                        .onChange(of: launchAtLogin) { _, v in settings.launchAtLogin = v }
+                    if AppSettings.launchAtLoginSupported {
+                        Toggle("Open at login", isOn: $launchAtLogin)
+                            .onChange(of: launchAtLogin) { v in settings.launchAtLogin = v }
+                    }
                 }
                 Section("Removal") {
                     Picker("System junk (caches, logs)", selection: $settings.junkDeleteMode) {
@@ -46,7 +48,7 @@ struct SettingsView: View {
                         get: { !settings.fdaOnboardingDismissed }, set: { settings.fdaOnboardingDismissed = !$0 }))
                 }
             }
-            .formStyle(.grouped)
+            .groupedFormStyle()
             .tabItem { Label("General", systemImage: "gearshape") }
 
             Form {
@@ -75,7 +77,7 @@ struct SettingsView: View {
                     Text("Prune never removes these files and folders")
                 }
             }
-            .formStyle(.grouped)
+            .groupedFormStyle()
             .tabItem { Label("Exclusion list", systemImage: "hand.raised") }
         }
         .frame(width: 560, height: 460)

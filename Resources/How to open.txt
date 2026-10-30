@@ -15,7 +15,7 @@ first launch. Allow it once:
   macOS 15 or later
     System Settings ▸ Privacy & Security ▸ Open Anyway
 
-  macOS 14
+  macOS 12, 13 and 14
     Right-click Prune ▸ Open ▸ Open
 
   Terminal (any version)
@@ -28,4 +28,4 @@ Follow the assistant to give Prune Full Disk Access.
 
 The interface follows the language of your Mac (English or Portuguese).
 
-Requirements: macOS 14 or later. Apple silicon and Intel.
+Requirements: macOS 12 or later. Apple silicon and Intel.

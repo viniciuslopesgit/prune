@@ -1,12 +1,12 @@
 import SwiftUI
 
 struct LargeFilesView: View {
-    @Environment(AppState.self) private var state
-    @State private var confirm: Bool = false
-    @State private var shredMode = false
+    private var state: AppState { .shared }
+    @ObservedObject private var model = AppState.shared.largeFiles
+    @ViewState private var confirm: Bool = false
+    @ViewState private var shredMode = false
 
     var body: some View {
-        @Bindable var model = state.largeFiles
         VStack(spacing: 0) {
             if model.scanning {
                 ScanningView(module: .largeFiles, title: String(localized: "Looking for large files…"), detail: model.progressText)
@@ -42,9 +42,9 @@ struct LargeFilesView: View {
                             .background(model.kind == k ? Theme.selection : .clear, in: RoundedRectangle(cornerRadius: 8))
                             .contentShape(Rectangle())
                             .onTapGesture { model.kind = k }
-                            .listRowBackground(Color.clear).listRowSeparator(.hidden)
+                            .listRowBackground(Color.clear).hiddenRowSeparator()
                         }
-                        .scrollContentBackground(.hidden)
+                        .hiddenScrollBackground()
                     }
                     .frame(width: 220)
                     GlassPanel {
@@ -65,7 +65,7 @@ struct LargeFilesView: View {
                             }
                             .listRowBackground(Color.clear)
                         }
-                        .scrollContentBackground(.hidden)
+                        .hiddenScrollBackground()
                         .overlay { if model.filtered.isEmpty { EmptyStateView(icon: "doc", title: String(localized: "No files match these filters")) } }
                     }
                 }
@@ -87,7 +87,6 @@ struct LargeFilesView: View {
     }
 
     private func filters(_ model: LargeFilesModel) -> some View {
-        @Bindable var model = model
         return HStack(spacing: 16) {
             Picker("Minimum size", selection: $model.minMB) {
                 ForEach([10, 50, 100, 500, 1000, 5000], id: \.self) { Text($0 >= 1000 ? "\($0 / 1000) GB" : "\($0) MB").tag($0) }

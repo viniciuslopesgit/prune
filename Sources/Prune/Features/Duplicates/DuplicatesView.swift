@@ -2,11 +2,11 @@ import SwiftUI
 import UniformTypeIdentifiers
 
 struct DuplicatesView: View {
-    @Environment(AppState.self) private var state
-    @State private var confirm = false
+    private var state: AppState { .shared }
+    @ObservedObject private var model = AppState.shared.duplicates
+    @ViewState private var confirm = false
 
     var body: some View {
-        @Bindable var model = state.duplicates
         VStack(spacing: 0) {
             if model.scanning {
                 ScanningView(module: .duplicates, title: model.mode == .exact ? String(localized: "Looking for duplicates…") : String(localized: "Comparing photos…"), detail: model.progressText)
@@ -42,7 +42,6 @@ struct DuplicatesView: View {
     }
 
     private func setup(_ model: DuplicatesModel) -> some View {
-        @Bindable var model = model
         return VStack(spacing: 20) {
             ModuleArtwork(module: .duplicates).frame(width: 200, height: 200)
             Picker("", selection: $model.mode) {
@@ -112,9 +111,9 @@ struct DuplicatesView: View {
             .background(model.focusedGroup == g.id ? Theme.selection : .clear, in: RoundedRectangle(cornerRadius: 8))
             .contentShape(Rectangle())
             .onTapGesture { model.focusedGroup = g.id }
-            .listRowBackground(Color.clear).listRowSeparator(.hidden)
+            .listRowBackground(Color.clear).hiddenRowSeparator()
         }
-        .scrollContentBackground(.hidden)
+        .hiddenScrollBackground()
     }
 
     @ViewBuilder

@@ -1,9 +1,8 @@
 import Foundation
-import Observation
+import Combine
 
 @MainActor
-@Observable
-final class OptimizationModel {
+final class OptimizationModel: ObservableObject {
     enum Tab: String, CaseIterable, Identifiable {
         case loginItems, agents, heavy
         var id: String { rawValue }
@@ -23,15 +22,15 @@ final class OptimizationModel {
         }
     }
 
-    var tab: Tab = .loginItems
-    var loginItems: [LoginItem] = []
-    var launchItems: [LaunchItem] = []
-    var processes: [ProcessInfoRow] = []
-    var loading = false
-    var loaded = false
-    var loadingLoginItems = false
-    var message: String?
-    var sortByMemory = false
+    @Published var tab: Tab = .loginItems
+    @Published var loginItems: [LoginItem] = []
+    @Published var launchItems: [LaunchItem] = []
+    @Published var processes: [ProcessInfoRow] = []
+    @Published var loading = false
+    @Published var loaded = false
+    @Published var loadingLoginItems = false
+    @Published var message: String?
+    @Published var sortByMemory = false
 
     func load() async {
         loading = true

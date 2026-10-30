@@ -1,10 +1,10 @@
 import SwiftUI
 
 struct MaintenanceView: View {
-    @Environment(AppState.self) private var state
+    private var state: AppState { .shared }
+    @ObservedObject private var model = AppState.shared.maintenance
 
     var body: some View {
-        @Bindable var model = state.maintenance
         VStack(spacing: 0) {
             ModuleHeader(module: .maintenance, subtitle: String(localized: "Tasks to keep macOS stable"))
             HStack(spacing: 14) {
@@ -34,10 +34,10 @@ struct MaintenanceView: View {
                             .contentShape(Rectangle())
                             .onTapGesture { model.focused = t.id }
                             .listRowBackground(Color.clear)
-                            .listRowSeparator(.hidden)
+                            .hiddenRowSeparator()
                         }
                     }
-                    .scrollContentBackground(.hidden)
+                    .hiddenScrollBackground()
                 }
                 .frame(width: 360)
 

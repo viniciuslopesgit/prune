@@ -11,16 +11,22 @@ APP=build/Prune.app
 rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 
+# The oldest supported macOS comes from the Info.plist (LSMinimumSystemVersion), so the binary and the
+# plist never disagree. Package.swift's platforms must allow it.
+MIN_OS=$(/usr/libexec/PlistBuddy -c "Print LSMinimumSystemVersion" Resources/Info.plist)
+
 if [ "$UNIVERSAL" = "1" ]; then
     # Universal binary (Apple silicon + Intel). Without full Xcode there is no multiple `--arch`,
     # so it builds each architecture and joins them with lipo.
+    # Each binary is copied out right after its build: with swiftbuild (SwiftPM 6.4+) both architectures
+    # share one output folder, and a stale binary from an older build must never be picked up.
+    SLICES=.build/universal
+    rm -rf "$SLICES" && mkdir -p "$SLICES"
     for ARCH in arm64 x86_64; do
-        swift build -c "$CONFIG" --triple "$ARCH-apple-macosx14.0"
+        swift build -c "$CONFIG" --triple "$ARCH-apple-macosx$MIN_OS"
+        cp "$(swift build -c "$CONFIG" --triple "$ARCH-apple-macosx$MIN_OS" --show-bin-path)/Prune" "$SLICES/Prune-$ARCH"
     done
-    lipo -create \
-        ".build/arm64-apple-macosx/$CONFIG/Prune" \
-        ".build/x86_64-apple-macosx/$CONFIG/Prune" \
-        -output "$APP/Contents/MacOS/Prune"
+    lipo -create "$SLICES/Prune-arm64" "$SLICES/Prune-x86_64" -output "$APP/Contents/MacOS/Prune"
 else
     swift build -c "$CONFIG"
     cp "$(swift build -c "$CONFIG" --show-bin-path)/Prune" "$APP/Contents/MacOS/Prune"

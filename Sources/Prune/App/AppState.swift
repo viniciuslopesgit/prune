@@ -1,10 +1,10 @@
 import Foundation
+import Combine
 
 @MainActor
-@Observable
-final class AppState {
+final class AppState: ObservableObject {
     static let shared = AppState()
-    var selection: Module = .smartScan
+    @Published var selection: Module = .smartScan
 
     let smartScan = SmartScanModel()
     let systemJunk = CleanupModel(mode: { AppSettings.shared.junkDeleteMode }, scanner: { await SystemJunkScanner.scan($0) })

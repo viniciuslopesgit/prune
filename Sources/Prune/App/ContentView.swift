@@ -1,63 +1,17 @@
 import SwiftUI
 
 struct ContentView: View {
-    @Environment(AppState.self) private var state
-    @State private var access: Permissions.AccessState = Permissions.hasFullDiskAccess ? .granted : .denied
-    @State private var showFDA = false
-    @State private var showConsent = false
+    @ObservedObject private var state = AppState.shared
+    // The sidebar badges follow these models.
+    @ObservedObject private var systemJunk = AppState.shared.systemJunk
+    @ObservedObject private var trash = AppState.shared.trash
+    @ObservedObject private var updater = AppState.shared.updater
+    @ViewState private var access: Permissions.AccessState = Permissions.hasFullDiskAccess ? .granted : .denied
+    @ViewState private var showFDA = false
+    @ViewState private var showConsent = false
 
     var body: some View {
-        @Bindable var state = state
-        NavigationSplitView {
-            List(selection: $state.selection) {
-                ForEach(ModuleSection.allCases, id: \.self) { section in
-                    let modules = Module.allCases.filter { $0.section == section }
-                    if section == .none {
-                        ForEach(modules) { row($0) }
-                    } else {
-                        Section(section.title) {
-                            ForEach(modules) { row($0) }
-                        }
-                    }
-                }
-            }
-            .listStyle(.sidebar)
-            .navigationSplitViewColumnWidth(min: 210, ideal: 230, max: 260)
-            .safeAreaInset(edge: .bottom) {
-                if access != .granted {
-                    Button {
-                        showFDA = true
-                    } label: {
-                        HStack(alignment: .top, spacing: 8) {
-                            Image(systemName: access == .needsRelaunch ? "arrow.clockwise.circle" : "lock.open.trianglebadge.exclamationmark")
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(access == .needsRelaunch ? "Reopen Prune" : "Full Disk Access").font(.caption.bold())
-                                Text(access == .needsRelaunch
-                                     ? "Permission granted. Reopen Prune to apply it."
-                                     : "Needed to scan Safari, Mail and protected folders.").font(.caption2)
-                                    .foregroundStyle(.secondary)
-                            }
-                        }
-                        .padding(10)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(Theme.amber.opacity(0.16), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-                    }
-                    .buttonStyle(.plain)
-                    .padding(10)
-                }
-            }
-        } detail: {
-            // Pins the content to the column's real size (the background must not dictate the height).
-            GeometryReader { geo in
-                detail(for: state.selection)
-                    .id(state.selection)
-                    .transition(.opacity)
-                    .frame(width: geo.size.width, height: geo.size.height)
-            }
-            .background(ModuleBackground(module: state.selection))
-            .animation(.easeInOut(duration: 0.25), value: state.selection)
-            .onChange(of: state.selection) { _, m in Analytics.track("module_view", ["module": m.rawValue]) }
-        }
+        split
         .sheet(isPresented: $showFDA, onDismiss: { Task { access = await Permissions.accessState() } }) {
             FullDiskAccessView(initialState: access)
         }
@@ -76,6 +30,80 @@ struct ContentView: View {
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
             Task { access = await Permissions.accessState() }
         }
+    }
+
+    /// macOS 13 or later: NavigationSplitView. macOS 12: NavigationView with a sidebar.
+    @ViewBuilder
+    private var split: some View {
+        if #available(macOS 13, *) {
+            NavigationSplitView {
+                sidebar.navigationSplitViewColumnWidth(min: 210, ideal: 230, max: 260)
+            } detail: {
+                detailPane
+            }
+        } else {
+            NavigationView {
+                sidebar.frame(minWidth: 210, idealWidth: 230, maxWidth: 260)
+                detailPane
+            }
+        }
+    }
+
+    /// List(selection:) with a non-optional value only exists from macOS 13.
+    private var selection: Binding<Module?> {
+        Binding(get: { state.selection }, set: { if let m = $0 { state.selection = m } })
+    }
+
+    private var sidebar: some View {
+        List(selection: selection) {
+            ForEach(ModuleSection.allCases, id: \.self) { section in
+                let modules = Module.allCases.filter { $0.section == section }
+                if section == .none {
+                    ForEach(modules) { row($0) }
+                } else {
+                    Section(section.title) {
+                        ForEach(modules) { row($0) }
+                    }
+                }
+            }
+        }
+        .listStyle(.sidebar)
+        .safeAreaInset(edge: .bottom) {
+            if access != .granted {
+                Button {
+                    showFDA = true
+                } label: {
+                    HStack(alignment: .top, spacing: 8) {
+                        Image(systemName: access == .needsRelaunch ? "arrow.clockwise.circle" : "lock.open.trianglebadge.exclamationmark")
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(access == .needsRelaunch ? "Reopen Prune" : "Full Disk Access").font(.caption.bold())
+                            Text(access == .needsRelaunch
+                                 ? "Permission granted. Reopen Prune to apply it."
+                                 : "Needed to scan Safari, Mail and protected folders.").font(.caption2)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    .padding(10)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(Theme.amber.opacity(0.16), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                }
+                .buttonStyle(.plain)
+                .padding(10)
+            }
+        }
+    }
+
+    private var detailPane: some View {
+        // Pins the content to the column's real size (the background must not dictate the height).
+        GeometryReader { geo in
+            detail(for: state.selection)
+                .id(state.selection)
+                .transition(.opacity)
+                .frame(width: geo.size.width, height: geo.size.height)
+        }
+        .background(ModuleBackground(module: state.selection))
+        .animation(.easeInOut(duration: 0.25), value: state.selection)
+        .onChange(of: state.selection) { m in Analytics.track("module_view", ["module": m.rawValue]) }
     }
 
     /// Right after an update, macOS may not recognize the new app for a moment.
@@ -112,12 +140,12 @@ struct ContentView: View {
     @ViewBuilder
     private func badge(for m: Module) -> some View {
         switch m {
-        case .systemJunk where state.systemJunk.phase == .results:
-            Text(Fmt.bytes(state.systemJunk.totalSize)).font(.caption2).foregroundStyle(.secondary)
-        case .trashBins where state.trash.phase == .results:
-            Text(Fmt.bytes(state.trash.totalSize)).font(.caption2).foregroundStyle(.secondary)
-        case .updater where !state.updater.updates.isEmpty:
-            Text("\(state.updater.updates.count)").font(.caption2.bold()).padding(.horizontal, 5).foregroundStyle(Theme.onAccent).background(Theme.accent, in: Capsule())
+        case .systemJunk where systemJunk.phase == .results:
+            Text(Fmt.bytes(systemJunk.totalSize)).font(.caption2).foregroundStyle(.secondary)
+        case .trashBins where trash.phase == .results:
+            Text(Fmt.bytes(trash.totalSize)).font(.caption2).foregroundStyle(.secondary)
+        case .updater where !updater.updates.isEmpty:
+            Text("\(updater.updates.count)").font(.caption2.bold()).padding(.horizontal, 5).foregroundStyle(Theme.onAccent).background(Theme.accent, in: Capsule())
         default:
             EmptyView()
         }

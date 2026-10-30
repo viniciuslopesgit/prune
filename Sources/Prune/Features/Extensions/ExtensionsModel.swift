@@ -1,17 +1,15 @@
 import AppKit
-import Observation
 
 @MainActor
-@Observable
-final class ExtensionsModel {
-    var category: ExtensionCategory = .safari
-    var system: [SystemExtension] = []
-    var browser: [BrowserExtension] = []
-    var files: [ExtensionCategory: [PluginFile]] = [:]
-    var showSystem = false
-    var loading = false
-    var loaded = false
-    var message: String?
+final class ExtensionsModel: ObservableObject {
+    @Published var category: ExtensionCategory = .safari
+    @Published var system: [SystemExtension] = []
+    @Published var browser: [BrowserExtension] = []
+    @Published var files: [ExtensionCategory: [PluginFile]] = [:]
+    @Published var showSystem = false
+    @Published var loading = false
+    @Published var loaded = false
+    @Published var message: String?
 
     func load() async {
         loading = true

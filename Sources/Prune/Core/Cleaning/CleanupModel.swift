@@ -1,23 +1,21 @@
 import AppKit
-import Observation
 
 /// Generic model used by the category-based cleanup modules
 /// (System Junk, Mail Attachments, Trash Bins, Privacy).
 @MainActor
-@Observable
-final class CleanupModel {
+final class CleanupModel: ObservableObject {
     enum Phase { case idle, scanning, results, cleaning, done }
 
-    var phase: Phase = .idle
-    var categories: [CleanCategory] = []
-    var selectedCategoryID: String?
-    var progressText = ""
-    var report = CleanReport()
-    var lastScan: Date?
+    @Published var phase: Phase = .idle
+    @Published var categories: [CleanCategory] = []
+    @Published var selectedCategoryID: String?
+    @Published var progressText = ""
+    @Published var report = CleanReport()
+    @Published var lastScan: Date?
     /// Apps that must be closed before cleaning (bundle IDs → name).
-    var appsToClose: [String: String] = [:]
+    @Published var appsToClose: [String: String] = [:]
     /// Module name in the statistics (e.g. "systemJunk").
-    var analyticsName = ""
+    @Published var analyticsName = ""
 
     private let scanner: @Sendable (ProgressReporter) async -> [CleanCategory]
     private let modeProvider: () -> DeleteMode

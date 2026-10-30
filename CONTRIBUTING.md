@@ -9,7 +9,7 @@ Thank you for your interest. Prune deletes files, so the priority is that it nev
 
 ## Setup
 
-Requires macOS 14 or later and the Xcode Command Line Tools (`xcode-select --install`), or Xcode.
+Requires macOS 12 or later and the Xcode Command Line Tools (`xcode-select --install`), or Xcode.
 
 ```bash
 git clone -b dev https://github.com/viniciuslopesgit/prune.git
@@ -31,7 +31,7 @@ cd prune
 7. **Privacy:** nothing leaves the Mac without consent; telemetry never includes paths, file names or app names.
 8. **Code, comments, commits and CHANGELOG in English.** Interface texts are written in English with `String(localized:)` or as SwiftUI literals, and each one gets its translation in `Resources/pt-PT.lproj/Localizable.strings` (`scripts/check_localization.py` checks it).
 
-CI runs `./scripts/check.sh --full` on macOS 14 and 15 on every Pull Request to `dev`, and it must pass.
+CI runs `./scripts/check.sh --full` on macOS 14 and 15 on every Pull Request to `dev`, and it must pass. The macOS 12 pipeline (`.github/workflows/macos12.yml`) builds the app for macOS 12, runs it with the macOS 12 interface and, when a self-hosted macOS 12 runner is registered, runs it on macOS 12 itself.
 
 ## Reporting bugs
 

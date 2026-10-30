@@ -2,6 +2,17 @@
 
 Notable changes in each version. Format [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), versions [SemVer](https://semver.org/).
 
+## [1.8.0] - 2026-10-29
+
+Prune now runs on macOS 12 Monterey and macOS 13 Ventura, not only on macOS 14 or later. On macOS 14 and newer nothing changes.
+
+### Added
+- Support for macOS 12 Monterey and macOS 13 Ventura (Apple silicon and Intel).
+- On macOS 12 the menu bar monitor and the main window work as on newer systems: click the leaf in the menu bar to see the monitor, and open Prune from there or from the Dock.
+
+### Changed
+- On macOS 12, "Open at login" is not shown in Settings, because macOS 12 does not offer it to apps like Prune. Titles use the standard system font instead of the wide one, and some lists keep their usual background.
+
 ## [1.7.0] - 2026-10-23
 
 Prune now keeps running in the background, like WireGuard. Closing the window or choosing Quit in the Dock hides it and removes its Dock icon, while the monitor stays in the menu bar.
@@ -255,6 +266,7 @@ First public version.
 
 - First version: Smart Scan, Dashboard, cleanup, privacy, optimization, maintenance, uninstaller, updater, extensions, Space Lens, large files, duplicates and shredder.
 
+[1.8.0]: https://github.com/viniciuslopesgit/prune/releases/tag/v1.8.0
 [1.7.0]: https://github.com/viniciuslopesgit/prune/releases/tag/v1.7.0
 [1.6.4]: https://github.com/viniciuslopesgit/prune/releases/tag/v1.6.4
 [1.6.3]: https://github.com/viniciuslopesgit/prune/releases/tag/v1.6.3

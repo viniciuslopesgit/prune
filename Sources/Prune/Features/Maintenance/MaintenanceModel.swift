@@ -1,15 +1,13 @@
 import AppKit
-import Observation
 
 @MainActor
-@Observable
-final class MaintenanceModel {
+final class MaintenanceModel: ObservableObject {
     enum TaskState: Equatable { case idle, running, done, failed(String) }
 
-    var selected: Set<String> = []
-    var states: [String: TaskState] = [:]
-    var running = false
-    var focused: String? = MaintenanceCatalog.tasks.first?.id
+    @Published var selected: Set<String> = []
+    @Published var states: [String: TaskState] = [:]
+    @Published var running = false
+    @Published var focused: String? = MaintenanceCatalog.tasks.first?.id
 
     private let defaults = UserDefaults.standard
 

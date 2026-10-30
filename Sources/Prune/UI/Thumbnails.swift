@@ -43,7 +43,7 @@ struct ThumbnailView: View {
     var maxPixel = 400
     var iconSize: CGFloat = 64
     var fill = false
-    @State private var image: NSImage?
+    @ViewState private var image: NSImage?
 
     var body: some View {
         Group {

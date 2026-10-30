@@ -1,19 +1,18 @@
 import Foundation
-import Observation
+import Combine
 
 /// Smart Scan: cleanup + protection status in a single click.
 @MainActor
-@Observable
-final class SmartScanModel {
+final class SmartScanModel: ObservableObject {
     enum Phase { case idle, scanning, results, running, done }
 
-    var phase: Phase = .idle
-    var step = ""
-    var progressText = ""
-    var junk: [CleanCategory] = []
-    var security = SecurityStatus()
-    var cleanReport = CleanReport()
-    var runCleanup = true
+    @Published var phase: Phase = .idle
+    @Published var step = ""
+    @Published var progressText = ""
+    @Published var junk: [CleanCategory] = []
+    @Published var security = SecurityStatus()
+    @Published var cleanReport = CleanReport()
+    @Published var runCleanup = true
 
     var junkSize: Int64 { junk.reduce(0) { $0 + $1.selectedSize } }
 

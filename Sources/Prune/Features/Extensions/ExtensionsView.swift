@@ -1,10 +1,10 @@
 import SwiftUI
 
 struct ExtensionsView: View {
-    @Environment(AppState.self) private var state
+    private var state: AppState { .shared }
+    @ObservedObject private var model = AppState.shared.extensions
 
     var body: some View {
-        @Bindable var model = state.extensions
         VStack(spacing: 0) {
             ModuleHeader(module: .extensions, subtitle: String(localized: "Extensions, plug-ins and widgets")) {
                 Toggle("Show system", isOn: $model.showSystem).toggleStyle(.switch)
@@ -28,9 +28,9 @@ struct ExtensionsView: View {
                         .contentShape(Rectangle())
                         .onTapGesture { model.category = cat }
                         .listRowBackground(Color.clear)
-                        .listRowSeparator(.hidden)
+                        .hiddenRowSeparator()
                     }
-                    .scrollContentBackground(.hidden)
+                    .hiddenScrollBackground()
                 }
                 .frame(width: 260)
                 GlassPanel {
@@ -69,7 +69,7 @@ struct ExtensionsView: View {
                     }
                     .listRowBackground(Color.clear)
                 }
-                .scrollContentBackground(.hidden)
+                .hiddenScrollBackground()
             }
         } else {
             let exts = model.extensions(in: cat)
@@ -120,7 +120,7 @@ struct ExtensionsView: View {
                         }
                     }
                 }
-                .scrollContentBackground(.hidden)
+                .hiddenScrollBackground()
             }
         }
     }

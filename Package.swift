@@ -23,6 +23,6 @@ if FileManager.default.fileExists(atPath: Context.packageDirectory + "/Tests/Pru
 
 let package = Package(
     name: "Prune",
-    platforms: [.macOS(.v14)],
+    platforms: [.macOS(.v12)],
     targets: targets
 )

@@ -1,26 +1,25 @@
 import Foundation
-import Observation
+import Combine
 
 @MainActor
-@Observable
-final class DuplicatesModel {
+final class DuplicatesModel: ObservableObject {
     enum Mode: String, CaseIterable, Identifiable {
         case exact, similar
         var id: String { rawValue }
         var title: String { self == .exact ? String(localized: "Duplicates") : String(localized: "Similar photos") }
     }
 
-    var mode: Mode = .exact
-    var roots: [URL] = [URL.home("Downloads"), URL.home("Documents"), URL.home("Desktop"), URL.home("Pictures")].filter(\.exists)
-    var groups: [DupGroup] = []
-    var marked: Set<String> = []
-    var scanning = false
-    var scanned = false
-    var progressText = ""
-    var minKB = 100
-    var similarity: Double = 0.45
-    var message: String?
-    var focusedGroup: UUID?
+    @Published var mode: Mode = .exact
+    @Published var roots: [URL] = [URL.home("Downloads"), URL.home("Documents"), URL.home("Desktop"), URL.home("Pictures")].filter(\.exists)
+    @Published var groups: [DupGroup] = []
+    @Published var marked: Set<String> = []
+    @Published var scanning = false
+    @Published var scanned = false
+    @Published var progressText = ""
+    @Published var minKB = 100
+    @Published var similarity: Double = 0.45
+    @Published var message: String?
+    @Published var focusedGroup: UUID?
 
     var markedSize: Int64 {
         groups.flatMap(\.files).filter { marked.contains($0.id) }.reduce(0) { $0 + $1.size }

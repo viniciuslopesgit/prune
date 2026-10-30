@@ -1,12 +1,12 @@
 import SwiftUI
 
 struct ShredderView: View {
-    @Environment(AppState.self) private var state
-    @State private var confirm = false
-    @State private var targeted = false
+    private var state: AppState { .shared }
+    @ObservedObject private var model = AppState.shared.shredder
+    @ViewState private var confirm = false
+    @ViewState private var targeted = false
 
     var body: some View {
-        let model = state.shredder
         VStack(spacing: 0) {
             ModuleHeader(module: .shredder, subtitle: String(localized: "Delete sensitive files without a trace"))
             if let msg = model.message {
@@ -38,7 +38,7 @@ struct ShredderView: View {
                             .listRowBackground(Color.clear)
                         }
                     }
-                    .scrollContentBackground(.hidden)
+                    .hiddenScrollBackground()
                 }
             }
             .overlay(RoundedRectangle(cornerRadius: 14).strokeBorder(style: StrokeStyle(lineWidth: 2, dash: [8])).opacity(targeted ? 0.8 : 0.25))

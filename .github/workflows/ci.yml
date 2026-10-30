@@ -22,7 +22,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Prune supports macOS 14 or later. GitHub's runners are Apple silicon;
+        # Prune supports macOS 12 or later; GitHub no longer has macOS 12 or 13 runners, so macOS 12
+        # has its own pipeline (macos12.yml). GitHub's runners are Apple silicon;
         # the Intel binary is built and checked (lipo), but not run here.
         os: [macos-14, macos-15]
     runs-on: ${{ matrix.os }}

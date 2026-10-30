@@ -1,5 +1,5 @@
 import Foundation
-import Observation
+import Combine
 import UniformTypeIdentifiers
 
 enum FileKind: String, CaseIterable, Identifiable {
@@ -76,20 +76,19 @@ struct LargeFile: Identifiable, Hashable {
 }
 
 @MainActor
-@Observable
-final class LargeFilesModel {
-    var files: [LargeFile] = []
-    var scanning = false
-    var scanned = false
-    var progressText = ""
-    var kind: FileKind = .all
-    var age: FileAge = .any
-    var minMB: Int = AppSettings.shared.largeFileMinMB
-    var includeLibrary = false
-    var roots: [URL] = [home]
-    var selected: Set<String> = []
-    var message: String?
-    var working = false
+final class LargeFilesModel: ObservableObject {
+    @Published var files: [LargeFile] = []
+    @Published var scanning = false
+    @Published var scanned = false
+    @Published var progressText = ""
+    @Published var kind: FileKind = .all
+    @Published var age: FileAge = .any
+    @Published var minMB: Int = AppSettings.shared.largeFileMinMB
+    @Published var includeLibrary = false
+    @Published var roots: [URL] = [home]
+    @Published var selected: Set<String> = []
+    @Published var message: String?
+    @Published var working = false
 
     var filtered: [LargeFile] {
         files.filter { f in

@@ -1,15 +1,13 @@
 import AppKit
-import Observation
 
 @MainActor
-@Observable
-final class UpdaterModel {
-    var updates: [AppUpdate] = []
-    var checking = false
-    var checked = false
-    var progressText = ""
-    var log: [String] = []
-    var installing = false
+final class UpdaterModel: ObservableObject {
+    @Published var updates: [AppUpdate] = []
+    @Published var checking = false
+    @Published var checked = false
+    @Published var progressText = ""
+    @Published var log: [String] = []
+    @Published var installing = false
     var hasBrew: Bool { UpdateService.brew != nil }
 
     func check() async {

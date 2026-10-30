@@ -1,10 +1,10 @@
 import SwiftUI
 
 struct UpdaterView: View {
-    @Environment(AppState.self) private var state
+    private var state: AppState { .shared }
+    @ObservedObject private var model = AppState.shared.updater
 
     var body: some View {
-        @Bindable var model = state.updater
         VStack(spacing: 0) {
             if model.checking {
                 ScanningView(module: .updater, title: String(localized: "Looking for updates…"), detail: model.progressText)
@@ -46,7 +46,7 @@ struct UpdaterView: View {
                                 .listRowBackground(Color.clear)
                             }
                         }
-                        .scrollContentBackground(.hidden)
+                        .hiddenScrollBackground()
                     }
                 }
                 .padding(.horizontal, 32).padding(.bottom, 10)

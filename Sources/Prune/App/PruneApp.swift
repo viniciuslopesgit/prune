@@ -1,12 +1,28 @@
 import SwiftUI
 
+/// macOS 13 or later runs the SwiftUI scenes (Window, MenuBarExtra). macOS 12 has neither,
+/// so it runs PruneLegacyApp: the main window and the menu bar monitor come from AppKit.
+/// PRUNE_LEGACY_UI=1 forces the macOS 12 path on newer systems (CI tests it this way).
 @main
-struct PruneApp: App {
-    @State private var state = AppState.shared
-    @AppStorage("showMenuBar") private var showMenuBar = true
-    @NSApplicationDelegateAdaptor(AppDelegate.self) private var delegate
+enum PruneMain {
+    static let legacyUI: Bool = {
+        if #available(macOS 13, *) { return usesLegacyUI(hasSceneAPIs: true, environment: ProcessInfo.processInfo.environment) }
+        return true
+    }()
 
-    init() {
+    static func usesLegacyUI(hasSceneAPIs: Bool, environment: [String: String]) -> Bool {
+        !hasSceneAPIs || environment["PRUNE_LEGACY_UI"] == "1"
+    }
+
+    static func main() {
+        if #available(macOS 13, *), !legacyUI {
+            PruneApp.main()
+        } else {
+            PruneLegacyApp.main()
+        }
+    }
+
+    static func startDiagnostics() {
         // The diagnostic tools start only once the main run loop is running. Started from here, their
         // background scans could touch AppKit (e.g. NSWorkspace) before the main event queue exists,
         // and on macOS 14 AppKit then stops the app (_NSAssertMainEventQueueIsCurrentEventQueue).
@@ -16,13 +32,18 @@ struct PruneApp: App {
             MemoryBench.runIfRequested()
         }
     }
+}
+
+@available(macOS 13, *)
+struct PruneApp: App {
+    @AppStorage("showMenuBar") private var showMenuBar = true
+    @NSApplicationDelegateAdaptor(AppDelegate.self) private var delegate
+
+    init() { PruneMain.startDiagnostics() }
 
     var body: some Scene {
         Window("Prune", id: "main") {
-            ContentView()
-                .environment(state)
-                .frame(minWidth: 1040, minHeight: 680)
-                .tint(Theme.leaf)
+            MainWindowContent()
         }
         .windowStyle(.hiddenTitleBar)
         .defaultSize(width: 1180, height: 760)
@@ -36,11 +57,27 @@ struct PruneApp: App {
 
         MenuBarExtra(isInserted: $showMenuBar) {
             MenuBarView()
-                .environment(state)
         } label: {
             MenuBarLabel()
         }
         .menuBarExtraStyle(.window)
+    }
+}
+
+/// macOS 12: only the Settings scene comes from SwiftUI; WindowOpener creates the main
+/// window and LegacyMenuBar the menu bar monitor.
+struct PruneLegacyApp: App {
+    @NSApplicationDelegateAdaptor(AppDelegate.self) private var delegate
+
+    init() { PruneMain.startDiagnostics() }
+
+    var body: some Scene {
+        Settings {
+            SettingsView()
+        }
+        .commands {
+            CommandGroup(replacing: .newItem) {}
+        }
     }
 }
 
@@ -76,6 +113,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         memoryPressure = source
 
         Task { @MainActor in Analytics.track("app_open") }
+
+        if PruneMain.legacyUI {
+            Task { @MainActor in LegacyMenuBar.shared.start() }
+        }
 
         // Always opens the main window on launch (even if it was closed in the last session).
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {

@@ -1,10 +1,10 @@
 import SwiftUI
 
 struct DashboardView: View {
-    @Environment(AppState.self) private var state
-    private var stats: SystemStats { SystemStats.shared }
-    @State private var security: SecurityStatus?
-    @State private var checkingSecurity = false
+    private var state: AppState { .shared }
+    @ObservedObject private var stats = SystemStats.shared
+    @ViewState private var security: SecurityStatus?
+    @ViewState private var checkingSecurity = false
 
     var body: some View {
         VStack(spacing: 0) {

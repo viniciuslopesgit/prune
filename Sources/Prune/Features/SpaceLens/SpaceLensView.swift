@@ -1,11 +1,11 @@
 import SwiftUI
 
 struct SpaceLensView: View {
-    @Environment(AppState.self) private var state
-    @State private var confirming = false
+    private var state: AppState { .shared }
+    @ObservedObject private var model = AppState.shared.spaceLens
+    @ViewState private var confirming = false
 
     var body: some View {
-        let model = state.spaceLens
         VStack(spacing: 0) {
             if model.scanning {
                 ScanningView(module: .spaceLens, title: String(localized: "Building the map of \(model.target.lastPathComponent)…"),
@@ -122,6 +122,6 @@ struct SpaceLensView: View {
             .contextMenu { if !n.isAggregate { Button("Show in Finder") { FS.reveal(n.url) } } }
             .listRowBackground(Color.clear)
         }
-        .scrollContentBackground(.hidden)
+        .hiddenScrollBackground()
     }
 }

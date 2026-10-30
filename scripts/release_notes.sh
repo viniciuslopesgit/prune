@@ -30,7 +30,7 @@ print(f"""
 
 Verify the file: `shasum -a 256 -c SHA256SUMS` in the folder where you downloaded both files.
 
-macOS 14 or later · Apple silicon and Intel. The interface follows the system language (English or Portuguese).
+macOS 12 or later · Apple silicon and Intel. The interface follows the system language (English or Portuguese).
 """)
 if lists:
     print(re.sub(r"^### ", "## ", lists.strip(), flags=re.M))

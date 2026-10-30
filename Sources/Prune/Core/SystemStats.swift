@@ -1,7 +1,7 @@
 import Foundation
+import Combine
 import IOKit
 import IOKit.ps
-import Observation
 
 struct BatteryInfo {
     var percent: Int
@@ -15,23 +15,22 @@ struct BatteryInfo {
 
 /// System monitor: CPU, memory, disk, network and battery.
 @MainActor
-@Observable
-final class SystemStats {
+final class SystemStats: ObservableObject {
     static let shared = SystemStats()
 
-    var cpu: Double = 0
-    var cpuHistory: [Double] = Array(repeating: 0, count: 60)
-    var memoryUsed: Int64 = 0
-    var memoryTotal: Int64 = Int64(ProcessInfo.processInfo.physicalMemory)
-    var memoryPressure: Double = 0
-    var swapUsed: Int64 = 0
-    var diskTotal: Int64 = 0
-    var diskFree: Int64 = 0
-    var netDown: Double = 0
-    var netUp: Double = 0
-    var battery: BatteryInfo?
-    var uptime: TimeInterval = 0
-    var thermal: ProcessInfo.ThermalState = .nominal
+    @Published var cpu: Double = 0
+    @Published var cpuHistory: [Double] = Array(repeating: 0, count: 60)
+    @Published var memoryUsed: Int64 = 0
+    @Published var memoryTotal: Int64 = Int64(ProcessInfo.processInfo.physicalMemory)
+    @Published var memoryPressure: Double = 0
+    @Published var swapUsed: Int64 = 0
+    @Published var diskTotal: Int64 = 0
+    @Published var diskFree: Int64 = 0
+    @Published var netDown: Double = 0
+    @Published var netUp: Double = 0
+    @Published var battery: BatteryInfo?
+    @Published var uptime: TimeInterval = 0
+    @Published var thermal: ProcessInfo.ThermalState = .nominal
 
     private var prevTicks: (used: UInt64, total: UInt64)?
     private var prevNet: (rx: UInt64, tx: UInt64, time: Date)?

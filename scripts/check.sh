@@ -146,7 +146,10 @@ fi
 
 step "Minimum coverage"
 BIN=$(swift build --show-bin-path)
-REPORT=$(xcrun llvm-cov report "$BIN/PrunePackageTests.xctest/Contents/MacOS/PrunePackageTests" \
+# SwiftPM's native build system names the bundle PrunePackageTests; swiftbuild (SwiftPM 6.4+) PruneTests.
+TESTS_BIN=$BIN/PrunePackageTests.xctest/Contents/MacOS/PrunePackageTests
+[ -x "$TESTS_BIN" ] || TESTS_BIN=$BIN/PruneTests.xctest/Contents/MacOS/PruneTests
+REPORT=$(xcrun llvm-cov report "$TESTS_BIN" \
     -instr-profile "$BIN/codecov/default.profdata" -ignore-filename-regex='Tests/|\.build/')
 LOW=0
 # Without an inference context (some virtual machines) the similar-photos test is skipped, and with it
@@ -193,7 +196,13 @@ if [ $FULL = 1 ]; then
     codesign --verify --deep --strict $APP 2>/dev/null || fail "Invalid signature."
     [ "$(/usr/libexec/PlistBuddy -c 'Print CFBundleShortVersionString' $APP/Contents/Info.plist)" = "$VERSION" ] \
         || fail "The built app's version is not $VERSION."
-    ok "universal ($ARCHS), signed, version $VERSION"
+    # Both architectures must run on the oldest supported macOS (LSMinimumSystemVersion).
+    MIN_OS=$(/usr/libexec/PlistBuddy -c "Print LSMinimumSystemVersion" Resources/Info.plist)
+    for ARCH in arm64 x86_64; do
+        MINOS=$(otool -arch $ARCH -l $APP/Contents/MacOS/Prune | awk '$1 == "minos" { print $2; exit }')
+        [ "$MINOS" = "$MIN_OS" ] || fail "The $ARCH binary needs macOS ${MINOS:-?}, but the Info.plist promises $MIN_OS."
+    done
+    ok "universal ($ARCHS), signed, version $VERSION, runs on macOS $MIN_OS or later"
 
     step "Self-test of the built app"
     # Runs every scan of the real app, read-only. The output stays in .build (it has names of
@@ -224,10 +233,20 @@ if [ $FULL = 1 ]; then
         "Versions: true false false" \
         "SafetyGuard blocks critical folders: true" \
         "SafetyGuard resolves links (/var/db → /private/var/db): true" \
-        "Shredder does not follow symbolic links: true"; do
+        "Shredder does not follow symbolic links: true" \
+        "window=true menuBar=true"; do
         grep -qF -- "$expected" $OUT || fail "Self-test: missing \"$expected\" (see $OUT)."
     done
-    ok "every scan ran; 6 checks correct"
+    ok "every scan ran; 7 checks correct"
+
+    # The interface macOS 12 uses (AppKit window and menu bar), forced on this Mac.
+    OUT=.build/check-selftest-legacy.log
+    RC=0
+    PRUNE_LEGACY_UI=1 perl -e 'alarm shift; exec @ARGV' 300 $APP/Contents/MacOS/Prune --selftest >$OUT 2>&1 || RC=$?
+    [ $RC = 0 ] || { tail -20 $OUT; fail "The self-test with the macOS 12 interface exited with code $RC (log in $OUT)."; }
+    grep -qF -- "Interface: legacy=true window=true menuBar=true" $OUT \
+        || fail "Self-test: the macOS 12 interface did not come up (see $OUT)."
+    ok "macOS 12 interface (AppKit window and menu bar) came up"
 
     worktree_hash >.build/check-passed
 fi

@@ -31,3 +31,4 @@ To add a language, create `Resources/<code>.lproj/` with `Localizable.strings` a
 - [RELEASE_CRITERIA.md](RELEASE_CRITERIA.md): states of a version (alpha, beta, candidate, stable), quality gates, governance and the criteria for the first "certified GA" version.
 - [RISK_REGISTER.md](RISK_REGISTER.md): known risks, priority and state.
 - CI (`.github/workflows/ci.yml`) runs `./scripts/check.sh --full` on macOS 14 and 15 on every push and Pull Request to `dev`.
+- The macOS 12 pipeline (`.github/workflows/macos12.yml`): GitHub no longer has macOS 12 runners, so it builds the universal app on macOS 15, checks that both architectures ask for macOS 12.0 and runs the self-test with the macOS 12 interface (`PRUNE_LEGACY_UI=1`). With the repository variable `MACOS12_RUNNER=true` and a self-hosted runner labelled `macos-12` (a Mac with macOS 12, the runner started from a logged-in session so the app can open its window), it also runs that app on macOS 12 itself.

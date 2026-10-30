@@ -1,12 +1,11 @@
 import Foundation
-import Observation
+import Combine
 
 @MainActor
-@Observable
-final class ShredderModel {
-    var items: [URL] = []
-    var working = false
-    var message: String?
+final class ShredderModel: ObservableObject {
+    @Published var items: [URL] = []
+    @Published var working = false
+    @Published var message: String?
 
     var totalSize: Int64 { items.reduce(0) { $0 + FS.size(of: $1) } }
 

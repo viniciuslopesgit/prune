@@ -1,0 +1,133 @@
+# macOS 12 (Monterey): the oldest macOS Prune supports.
+#
+# GitHub retired its hosted macOS 12 runners (and macOS 13's), so this pipeline has two parts:
+#   1. build (hosted, Apple silicon): builds the universal app for macOS 12, checks that both
+#      architectures really ask for macOS 12.0 and runs the self-test with the interface macOS 12
+#      uses (PRUNE_LEGACY_UI=1: AppKit window and menu bar instead of Window/MenuBarExtra).
+#   2. run-on-macos-12 (self-hosted): runs that same app on a real Mac with macOS 12. It only runs
+#      when the repository variable MACOS12_RUNNER is "true" and a runner with the labels
+#      self-hosted, macOS and macos-12 is registered (Settings → Actions → Runners); otherwise it is
+#      skipped instead of waiting forever for a runner. The Mac only needs macOS 12, not Xcode.
+name: macOS 12
+
+on:
+  push:
+    branches: [dev]
+  pull_request:
+    branches: [dev]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: macos12-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build for macOS 12
+    runs-on: macos-15
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Runner's latest Xcode
+        run: |
+          XCODE=$(ls -d /Applications/Xcode_*.app | sort -V | tail -1)
+          sudo xcode-select -s "$XCODE"
+          xcodebuild -version
+
+      - name: The Info.plist promises macOS 12
+        run: |
+          MIN_OS=$(/usr/libexec/PlistBuddy -c "Print LSMinimumSystemVersion" Resources/Info.plist)
+          echo "LSMinimumSystemVersion=$MIN_OS"
+          [ "$MIN_OS" = "12.0" ] || { echo "::error::LSMinimumSystemVersion is $MIN_OS, not 12.0"; exit 1; }
+          grep -q '\.macOS(\.v12)' Package.swift || { echo "::error::Package.swift does not target macOS 12"; exit 1; }
+
+      # Any API newer than macOS 12 without an #available check is a compile error here.
+      - name: Universal build (deployment target 12.0)
+        run: ./scripts/build_app.sh
+
+      - name: Both architectures run on macOS 12.0
+        run: |
+          BIN=build/Prune.app/Contents/MacOS/Prune
+          for ARCH in arm64 x86_64; do
+            MINOS=$(otool -arch $ARCH -l $BIN | awk '$1 == "minos" { print $2; exit }')
+            echo "$ARCH: minos $MINOS"
+            [ "$MINOS" = "12.0" ] || { echo "::error::$ARCH needs macOS $MINOS"; exit 1; }
+          done
+
+      - name: Self-test with the macOS 12 interface
+        run: |
+          PRUNE_LEGACY_UI=1 perl -e 'alarm shift; exec @ARGV' 300 \
+            build/Prune.app/Contents/MacOS/Prune --selftest >.build/macos12-selftest.log 2>&1
+          grep -F "Interface: legacy=true window=true menuBar=true" .build/macos12-selftest.log
+
+      - name: Keep the app for the macOS 12 run
+        run: ditto -c -k --keepParent build/Prune.app Prune-macOS12.zip
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Prune-macOS12
+          path: Prune-macOS12.zip
+          retention-days: 7
+
+      - name: Logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: logs-macos12-build
+          path: .build/*selftest*.log
+          include-hidden-files: true
+          if-no-files-found: ignore
+          retention-days: 14
+
+  run-on-macos-12:
+    name: Self-test on macOS 12
+    needs: build
+    if: vars.MACOS12_RUNNER == 'true'
+    runs-on: [self-hosted, macOS, macos-12]
+    timeout-minutes: 20
+    steps:
+      - name: This Mac runs macOS 12
+        run: |
+          sw_vers
+          case "$(sw_vers -productVersion)" in
+            12.*) ;;
+            *) echo "::error::The runner has macOS $(sw_vers -productVersion), not 12"; exit 1 ;;
+          esac
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: Prune-macOS12
+
+      - name: Self-test of the built app
+        run: |
+          rm -rf Prune.app && ditto -x -k Prune-macOS12.zip .
+          set +e
+          perl -e 'alarm shift; exec @ARGV' 300 Prune.app/Contents/MacOS/Prune --selftest >selftest.log 2>&1
+          RC=$?
+          set -e
+          tail -5 selftest.log
+          [ $RC = 0 ] || { echo "::error::The self-test exited with code $RC"; exit 1; }
+          for expected in \
+            "AppleScript in process: ok=true lines=2" \
+            "Treemap: total area 240000" \
+            "Versions: true false false" \
+            "SafetyGuard blocks critical folders: true" \
+            "SafetyGuard resolves links (/var/db → /private/var/db): true" \
+            "Shredder does not follow symbolic links: true" \
+            "Interface: legacy=true window=true menuBar=true"; do
+            grep -qF -- "$expected" selftest.log || { echo "::error::Missing \"$expected\""; exit 1; }
+          done
+          echo "All checks passed on macOS $(sw_vers -productVersion)"
+
+      - name: Logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: logs-macos12-run
+          path: selftest.log
+          if-no-files-found: ignore
+          retention-days: 14

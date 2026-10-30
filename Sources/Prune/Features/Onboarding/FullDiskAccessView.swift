@@ -4,8 +4,8 @@ import SwiftUI
 /// folder by folder (Documents, Desktop, Downloads, other apps' data, Mail, Safari…).
 struct FullDiskAccessView: View {
     @Environment(\.dismiss) private var dismiss
-    @State private var state: Permissions.AccessState
-    @State private var checking = false
+    @ViewState private var state: Permissions.AccessState
+    @ViewState private var checking = false
 
     init(initialState: Permissions.AccessState = Permissions.hasFullDiskAccess ? .granted : .denied) {
         _state = State(initialValue: initialState)

@@ -1,10 +1,10 @@
 import SwiftUI
 
 struct SmartScanView: View {
-    @Environment(AppState.self) private var state
+    private var state: AppState { .shared }
+    @ObservedObject private var model = AppState.shared.smartScan
 
     var body: some View {
-        let model = state.smartScan
         VStack(spacing: 0) {
             switch model.phase {
             case .idle:
@@ -44,7 +44,6 @@ struct SmartScanView: View {
 
     @ViewBuilder
     private func results(_ model: SmartScanModel) -> some View {
-        @Bindable var model = model
         HStack(spacing: 16) {
             ResultCard(
                 icon: "externaldrive.badge.xmark", title: String(localized: "Cleanup"),

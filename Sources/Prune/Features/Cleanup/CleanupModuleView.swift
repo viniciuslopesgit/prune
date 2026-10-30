@@ -2,14 +2,14 @@ import SwiftUI
 
 /// View shared by the category-based cleanup modules.
 struct CleanupModuleView: View {
-    let model: CleanupModel
+    @ObservedObject var model: CleanupModel
     let module: Module
     let headline: String
     let message: String
     var features: [(String, String)] = []
     var cleanTitle = String(localized: "Clean")
 
-    @State private var confirming = false
+    @ViewState private var confirming = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -63,7 +63,7 @@ struct CleanupModuleView: View {
                             categoryRow(cat)
                         }
                     }
-                    .scrollContentBackground(.hidden)
+                    .hiddenScrollBackground()
                 }
                 .frame(width: 320)
 
@@ -108,7 +108,7 @@ struct CleanupModuleView: View {
         .contentShape(Rectangle())
         .onTapGesture { model.selectedCategoryID = cat.id }
         .listRowBackground(Color.clear)
-        .listRowSeparator(.hidden)
+        .hiddenRowSeparator()
     }
 
     private func itemsList(_ cat: CleanCategory) -> some View {
@@ -147,7 +147,7 @@ struct CleanupModuleView: View {
                     }
                 }
             }
-            .scrollContentBackground(.hidden)
+            .hiddenScrollBackground()
         }
     }
 }

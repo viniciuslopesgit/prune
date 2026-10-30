@@ -1,31 +1,27 @@
 import SwiftUI
 
 struct MenuBarLabel: View {
-    @Environment(\.openWindow) private var openWindow
-    private var stats: SystemStats { SystemStats.shared }
+    @ObservedObject private var stats = SystemStats.shared
     var body: some View {
         HStack(spacing: 3) {
             Image(nsImage: Self.leafTemplate)
             Text("\(Int(stats.cpu * 100))%").monospacedDigit()
         }
-        .onAppear { WindowOpener.shared.action = openWindow }
+        .capturesOpenWindow()
     }
 
     /// The brand's leaf as a "template" image, so the menu bar can paint it light/dark.
-    @MainActor private static let leafTemplate: NSImage = {
-        let renderer = ImageRenderer(content: LeafMark(size: 16, color: .black))
-        renderer.scale = 2
-        let image = renderer.nsImage ?? NSImage()
+    @MainActor static let leafTemplate: NSImage = {
+        let image = Snapshot.image(LeafMark(size: 16, color: .black), size: CGSize(width: 16, height: 16))
         image.isTemplate = true
         return image
     }()
 }
 
 struct MenuBarView: View {
-    @Environment(AppState.self) private var state
-    @Environment(\.openWindow) private var openWindow
-    private var stats: SystemStats { SystemStats.shared }
-    @State private var topApps: [ProcessInfoRow] = []
+    private var state: AppState { .shared }
+    @ObservedObject private var stats = SystemStats.shared
+    @ViewState private var topApps: [ProcessInfoRow] = []
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -94,6 +90,7 @@ struct MenuBarView: View {
         }
         .padding(14)
         .frame(width: 340)
+        .capturesOpenWindow()
         .task {
             while !Task.isCancelled {
                 let all = await OptimizationService.processes()
@@ -104,7 +101,6 @@ struct MenuBarView: View {
     }
 
     private func openMain() {
-        WindowOpener.shared.action = openWindow
         WindowOpener.shared.openMain()
     }
 

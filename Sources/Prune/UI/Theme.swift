@@ -30,9 +30,10 @@ enum Theme {
     static let inset = Color.primary.opacity(0.045)
     static let selection = Color.primary.opacity(0.09)
 
-    /// Titles and numbers: SF Pro Expanded.
+    /// Titles and numbers: SF Pro Expanded (macOS 12 has no font widths: plain SF Pro).
     static func display(_ size: CGFloat, _ weight: Font.Weight = .semibold) -> Font {
-        .system(size: size, weight: weight).width(.expanded)
+        if #available(macOS 13, *) { return .system(size: size, weight: weight).width(.expanded) }
+        return .system(size: size, weight: weight)
     }
 
     static func adaptive(light: UInt32, dark: UInt32) -> Color {

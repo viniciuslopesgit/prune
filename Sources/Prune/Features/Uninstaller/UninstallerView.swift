@@ -1,13 +1,13 @@
 import SwiftUI
 
 struct UninstallerView: View {
-    @Environment(AppState.self) private var state
-    @State private var confirmUninstall = false
-    @State private var confirmReset = false
-    @State private var confirmBatch = false
+    private var state: AppState { .shared }
+    @ObservedObject private var model = AppState.shared.uninstaller
+    @ViewState private var confirmUninstall = false
+    @ViewState private var confirmReset = false
+    @ViewState private var confirmBatch = false
 
     var body: some View {
-        @Bindable var model = state.uninstaller
         VStack(spacing: 0) {
             ModuleHeader(module: .uninstaller, subtitle: model.loaded ? "\(Fmt.count(model.apps.count, "app", "apps")) · \(Fmt.bytes(model.apps.reduce(0) { $0 + $1.size }))" : nil) {
                 TextField("Search", text: $model.search).textFieldStyle(.roundedBorder).frame(width: 200)
@@ -70,14 +70,13 @@ struct UninstallerView: View {
             .contentShape(Rectangle())
             .onTapGesture { Task { await model.focus(app) } }
             .listRowBackground(Color.clear)
-            .listRowSeparator(.hidden)
+            .hiddenRowSeparator()
         }
-        .scrollContentBackground(.hidden)
+        .hiddenScrollBackground()
     }
 
     @ViewBuilder
     private func detail(_ model: UninstallerModel) -> some View {
-        @Bindable var model = model
         if let app = model.focused {
             VStack(alignment: .leading, spacing: 0) {
                 HStack(spacing: 14) {
@@ -122,7 +121,7 @@ struct UninstallerView: View {
                             }
                         }
                     }
-                    .scrollContentBackground(.hidden)
+                    .hiddenScrollBackground()
                 }
                 Divider().opacity(0.3)
                 HStack {
@@ -153,7 +152,6 @@ struct UninstallerView: View {
 
     @ViewBuilder
     private func orphans(_ model: UninstallerModel) -> some View {
-        @Bindable var model = model
         GlassPanel {
             if model.orphans.isEmpty {
                 EmptyStateView(icon: "checkmark.circle", title: String(localized: "No leftovers from removed apps"))
@@ -178,7 +176,7 @@ struct UninstallerView: View {
                         Text("Files from apps that are no longer installed. Review before removing.")
                     }
                 }
-                .scrollContentBackground(.hidden)
+                .hiddenScrollBackground()
             }
         }
         .padding(.horizontal, 32).padding(.bottom, 14)

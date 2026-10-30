@@ -67,7 +67,7 @@ The README's "Download the latest version" link points to **Latest**, which is a
 |---|---|---|---|
 | S1 | Published Release, with DMG and `SHA256SUMS` | B | Whoever downloads must be able to verify the file |
 | S2 | Tag in `dev`'s history, with `.mainignore` | B | `main` only builds from 1.2.9 on |
-| S3 | **Green CI on the tag's commit** on macOS 14 and 15 | B | It is the only evidence of compatibility outside the publisher's machine |
+| S3 | **Green CI on the tag's commit** on macOS 14 and 15, and the macOS 12 pipeline (build for 12.0 and self-test with the macOS 12 interface; on macOS 12 itself when a self-hosted runner exists, R23) | B | It is the only evidence of compatibility outside the publisher's machine |
 | S4 | No open issue labelled `bug` mentioning the version | B | For an app that deletes files, a reported and unresolved bug blocks. To keep a minor bug from blocking, do not give it the `bug` label and explain why in the issue |
 | S5 | No version published later brings `### Fixed` | B | If there was a fix, the earlier version had a known defect |
 | S6 | Published at least 24 h ago (`STABLE_SOAK_HOURS`) | B | It is a waiting time, **not proof of reliability**: with few users, 24 h without complaints means nothing. It lets the maintainer use the beta and CI run |
@@ -133,6 +133,7 @@ On a Mac or a test account that is not the main one:
 - [ ] Interface in English and in Portuguese (System Settings ▸ General ▸ Language & Region ▸ Applications ▸ Prune): no untranslated or cut-off texts.
 - [ ] Uninstall Prune with another app's uninstaller and through the Finder: no agents or processes are left.
 - [ ] On Intel (major only): open, run Smart Scan and a cache cleanup.
+- [ ] On macOS 12 (until a self-hosted macOS 12 runner exists, R23): open, the menu bar monitor shows, run Smart Scan, close and reopen the window from the menu bar.
 - [ ] Similar photos on a physical Mac with macOS 14: a folder with two copies of the same photo and one different photo gives one group (CI skips this test on macOS 14, see R16).
 
 ## 7. Criteria for the first "certified GA" version

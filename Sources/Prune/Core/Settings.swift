@@ -1,5 +1,5 @@
 import Foundation
-import Observation
+import Combine
 import ServiceManagement
 
 enum DeleteMode: String, CaseIterable, Identifiable {
@@ -8,35 +8,34 @@ enum DeleteMode: String, CaseIterable, Identifiable {
     var title: String { self == .trash ? String(localized: "Move to Trash") : String(localized: "Delete permanently") }
 }
 
-@Observable
-final class AppSettings {
+final class AppSettings: ObservableObject {
     static let shared = AppSettings()
     private let d = UserDefaults.standard
 
     /// Caches, logs and regenerable junk.
-    var junkDeleteMode: DeleteMode {
+    @Published var junkDeleteMode: DeleteMode {
         didSet { d.set(junkDeleteMode.rawValue, forKey: "junkDeleteMode") }
     }
     /// User files (large files, duplicates, apps).
-    var filesDeleteMode: DeleteMode {
+    @Published var filesDeleteMode: DeleteMode {
         didSet { d.set(filesDeleteMode.rawValue, forKey: "filesDeleteMode") }
     }
-    var ignoredPaths: [String] {
+    @Published var ignoredPaths: [String] {
         didSet { d.set(ignoredPaths, forKey: "ignoredPaths") }
     }
-    var largeFileMinMB: Int {
+    @Published var largeFileMinMB: Int {
         didSet { d.set(largeFileMinMB, forKey: "largeFileMinMB") }
     }
-    var shredPasses: Int {
+    @Published var shredPasses: Int {
         didSet { d.set(shredPasses, forKey: "shredPasses") }
     }
     /// The user chose not to see the Full Disk Access assistant.
-    var fdaOnboardingDismissed: Bool {
+    @Published var fdaOnboardingDismissed: Bool {
         didSet { d.set(fdaOnboardingDismissed, forKey: "fdaOnboardingDismissed") }
     }
 
     /// Anonymous usage statistics (Google Analytics). Off until the user accepts.
-    var analyticsEnabled: Bool {
+    @Published var analyticsEnabled: Bool {
         didSet {
             d.set(analyticsEnabled, forKey: "analyticsEnabled")
             // When declining, forgets this installation's random identifier.
@@ -44,7 +43,7 @@ final class AppSettings {
         }
     }
     /// The user has already answered the statistics prompt (yes or no).
-    var analyticsAsked: Bool {
+    @Published var analyticsAsked: Bool {
         didSet { d.set(analyticsAsked, forKey: "analyticsAsked") }
     }
 
@@ -64,9 +63,19 @@ final class AppSettings {
         return ignoredPaths.contains { let i = SafetyGuard.key($0); return p == i || p.hasPrefix(i + "/") }
     }
 
+    /// SMAppService (open at login without a helper app) only exists from macOS 13.
+    static var launchAtLoginSupported: Bool {
+        if #available(macOS 13, *) { return true }
+        return false
+    }
+
     var launchAtLogin: Bool {
-        get { SMAppService.mainApp.status == .enabled }
+        get {
+            guard #available(macOS 13, *) else { return false }
+            return SMAppService.mainApp.status == .enabled
+        }
         set {
+            guard #available(macOS 13, *) else { return }
             do {
                 if newValue { try SMAppService.mainApp.register() } else { try SMAppService.mainApp.unregister() }
             } catch {

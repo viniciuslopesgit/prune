@@ -1,10 +1,10 @@
 import SwiftUI
 
 struct OptimizationView: View {
-    @Environment(AppState.self) private var state
+    private var state: AppState { .shared }
+    @ObservedObject private var model = AppState.shared.optimization
 
     var body: some View {
-        @Bindable var model = state.optimization
         VStack(spacing: 0) {
             ModuleHeader(module: .optimization, subtitle: String(localized: "What starts with your Mac and what uses resources")) {
                 Button { Task { await model.load() } } label: { Label("Refresh", systemImage: "arrow.clockwise") }.buttonStyle(.bordered)
@@ -67,7 +67,7 @@ struct OptimizationView: View {
                     }
                     .listRowBackground(Color.clear)
                 }
-                .scrollContentBackground(.hidden)
+                .hiddenScrollBackground()
             }
             Divider().opacity(0.3)
             HStack {
@@ -108,14 +108,13 @@ struct OptimizationView: View {
             .padding(.vertical, 3)
             .listRowBackground(Color.clear)
         }
-        .scrollContentBackground(.hidden)
+        .hiddenScrollBackground()
         .overlay {
             if model.launchItems.isEmpty { EmptyStateView(icon: "bolt.slash", title: String(localized: "No third-party launch agents")) }
         }
     }
 
     private func heavy(_ model: OptimizationModel) -> some View {
-        @Bindable var model = model
         return VStack(spacing: 0) {
             HStack {
                 Picker("Sort by", selection: $model.sortByMemory) {
@@ -142,7 +141,7 @@ struct OptimizationView: View {
                 }
                 .listRowBackground(Color.clear)
             }
-            .scrollContentBackground(.hidden)
+            .hiddenScrollBackground()
         }
     }
 }
